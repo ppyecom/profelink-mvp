@@ -46,7 +46,7 @@ export default async function EstudianteDashboard() {
       </div>
 
       {/* ── STATS ──────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-3 gap-3 md:gap-4">
         {[
           { label: "Próximas",   val: sesionesProximas.length, icon: Calendar,  color: "from-indigo-500 to-violet-500" },
           { label: "Completadas",val: sesionesCompletadas,     icon: Star,       color: "from-emerald-500 to-teal-500"  },
