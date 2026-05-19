@@ -55,7 +55,7 @@ export default function Sidebar({ rol, nombre }: { rol: RolUsuario; nombre: stri
 
   return (
     <aside className={cn(
-      "flex flex-col bg-white border-r border-indigo-50 h-screen sticky top-0 transition-all duration-300 shadow-elev-1 z-30",
+      "flex flex-col bg-cream-200 border-r border-amber-100 h-screen sticky top-0 transition-all duration-300 shadow-elev-1 z-30",
       collapsed ? "w-[70px]" : "w-[240px]"
     )}>
 
@@ -73,10 +73,10 @@ export default function Sidebar({ rol, nombre }: { rol: RolUsuario; nombre: stri
             <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 group",
-                active ? "bg-indigo-600 text-white shadow-elev-2 shadow-indigo-200/50" : "text-gray-500 hover:bg-indigo-50 hover:text-indigo-600",
+                active ? "bg-amber-600 text-white shadow-elev-2 shadow-amber-200/50" : "text-gray-600 hover:bg-amber-50 hover:text-amber-700",
                 collapsed && "justify-center px-2.5"
               )}>
-              <item.icon className={cn("flex-shrink-0 transition-transform group-hover:scale-110", active ? "text-white" : "text-gray-400 group-hover:text-indigo-500")} style={{width:18,height:18}} />
+              <item.icon className={cn("flex-shrink-0 transition-transform group-hover:scale-110", active ? "text-white" : "text-gray-400 group-hover:text-amber-600")} style={{width:18,height:18}} />
               {!collapsed && (
                 <>
                   <span className="flex-1">{item.label}</span>
@@ -89,10 +89,10 @@ export default function Sidebar({ rol, nombre }: { rol: RolUsuario; nombre: stri
       </nav>
 
       {/* Bottom */}
-      <div className="p-3 border-t border-indigo-50 space-y-2">
+      <div className="p-3 border-t border-amber-100 space-y-2">
         {/* User card */}
         {!collapsed && (
-          <div className="bg-indigo-50 rounded-2xl p-3 mb-1">
+          <div className="bg-cream-300 rounded-2xl p-3 mb-1">
             <div className="flex items-center gap-2.5">
               <div className={cn("w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center text-white text-sm font-bold font-heading flex-shrink-0", ROL_GRADIENT[rol])}>
                 {initials}

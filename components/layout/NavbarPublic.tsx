@@ -106,7 +106,7 @@ export default function NavbarPublic() {
                 Iniciar sesión
               </Link>
               <Link href="/register"
-                className="bg-navy-600 hover:bg-navy-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all shadow-elev-2 hover:-translate-y-0.5">
+                className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all shadow-elev-2 hover:-translate-y-0.5">
                 Comenzar gratis
               </Link>
             </>
@@ -122,7 +122,7 @@ export default function NavbarPublic() {
             </Link>
           )}
           <button onClick={() => setMobileOpen(!mobileOpen)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors">
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
