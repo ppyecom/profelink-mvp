@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RolUsuario {
+  ESTUDIANTE
+  PROFESOR
+  ADMIN
+}
+
+enum EstadoProfesor {
+  PENDIENTE
+  VERIFICADO
+  RECHAZADO
+}
+
+enum EstadoSesion {
+  PENDIENTE
+  CONFIRMADA
+  COMPLETADA
+  CANCELADA
+}
+
+enum ModalidadSesion {
+  VIRTUAL
+  PRESENCIAL
+}
+
+enum NivelAcademico {
+  SECUNDARIA
+  TECNICA
+  UNIVERSITARIA
+}
+
+model Usuario {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre       String     @db.VarChar(120)
+  email        String     @unique @db.VarChar(255)
+  passwordHash String     @map("password_hash")
+  rol          RolUsuario
+  activo       Boolean    @default(true)
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  perfilProfesor PerfilProfesor?
+  sesionesComoEstudiante Sesion[]  @relation("EstudianteSesiones")
+  resenasEscritas        Resena[]  @relation("EstudianteResenas")
+  mensajesEnviados       Mensaje[] @relation("MensajesEnviados")
+
+  @@map("usuarios")
+}
+
+model PerfilProfesor {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId       String           @unique @map("usuario_id") @db.Uuid
+  fotoUrl         String?          @map("foto_url")
+  bio             String?
+  nivel           NivelAcademico[]
+  precioHora      Decimal          @map("precio_hora") @db.Decimal(8, 2)
+  modalidad       ModalidadSesion  @default(VIRTUAL)
+  estado          EstadoProfesor   @default(PENDIENTE)
+  ciudad          String?          @db.VarChar(80)
+  anosExperiencia Int              @default(0) @map("anos_experiencia")
+  institucion     String?          @db.VarChar(120)
+  ratingPromedio  Decimal          @default(0) @map("rating_promedio") @db.Decimal(3, 2)
+  totalResenas    Int              @default(0) @map("total_resenas")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  usuario         Usuario          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  especialidades  Especialidad[]
+  disponibilidad  Disponibilidad[]
+  sesiones        Sesion[]         @relation("ProfesorSesiones")
+  resenas         Resena[]         @relation("ProfesorResenas")
+
+  @@map("perfiles_profesor")
+}
+
+model Especialidad {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profesorId String   @map("profesor_id") @db.Uuid
+  materia    String   @db.VarChar(100)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  profesor   PerfilProfesor @relation(fields: [profesorId], references: [id], onDelete: Cascade)
+
+  @@map("especialidades")
+}
+
+model Disponibilidad {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profesorId  String   @map("profesor_id") @db.Uuid
+  diaSemana   Int      @map("dia_semana") @db.SmallInt
+  horaInicio  DateTime @map("hora_inicio") @db.Time()
+  horaFin     DateTime @map("hora_fin") @db.Time()
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  profesor    PerfilProfesor @relation(fields: [profesorId], references: [id], onDelete: Cascade)
+
+  @@map("disponibilidad")
+}
+
+model Sesion {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  estudianteId    String          @map("estudiante_id") @db.Uuid
+  profesorId      String          @map("profesor_id") @db.Uuid
+  fechaInicio     DateTime        @map("fecha_inicio") @db.Timestamptz()
+  fechaFin        DateTime        @map("fecha_fin") @db.Timestamptz()
+  modalidad       ModalidadSesion
+  estado          EstadoSesion    @default(PENDIENTE)
+  precioAcordado  Decimal         @map("precio_acordado") @db.Decimal(8, 2)
+  notas           String?
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  estudiante      Usuario        @relation("EstudianteSesiones", fields: [estudianteId], references: [id], onDelete: Cascade)
+  profesor        PerfilProfesor @relation("ProfesorSesiones",   fields: [profesorId],   references: [id], onDelete: Cascade)
+  resena          Resena?
+  mensajes        Mensaje[]
+
+  @@map("sesiones")
+}
+
+model Mensaje {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sesionId    String   @map("sesion_id") @db.Uuid
+  remitenteId String   @map("remitente_id") @db.Uuid
+  contenido   String
+  leido       Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  sesion      Sesion   @relation(fields: [sesionId],    references: [id], onDelete: Cascade)
+  remitente   Usuario  @relation("MensajesEnviados",    fields: [remitenteId], references: [id], onDelete: Cascade)
+
+  @@map("mensajes")
+}
+
+model Resena {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sesionId      String   @unique @map("sesion_id") @db.Uuid
+  estudianteId  String   @map("estudiante_id") @db.Uuid
+  profesorId    String   @map("profesor_id") @db.Uuid
+  calificacion  Int      @db.SmallInt
+  comentario    String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  sesion        Sesion         @relation(fields: [sesionId],     references: [id], onDelete: Cascade)
+  estudiante    Usuario        @relation("EstudianteResenas",    fields: [estudianteId], references: [id], onDelete: Cascade)
+  profesor      PerfilProfesor @relation("ProfesorResenas",      fields: [profesorId],   references: [id], onDelete: Cascade)
+
+  @@map("resenas")
+}
