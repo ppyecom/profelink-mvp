@@ -37,7 +37,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Stats bento */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {[
           { label: "Total usuarios",    val: totalUsuarios,               sub: `${totalEstudiantes} est · ${totalProfesores} prof`, icon: Users,      color: "from-indigo-500 to-violet-500"  },
           { label: "Total sesiones",    val: totalSesiones,               sub: `${sesionesCompletadas} completadas`,                icon: BookOpen,   color: "from-violet-500 to-fuchsia-500" },
@@ -77,7 +77,7 @@ export default async function AdminDashboard() {
       )}
 
       {/* Quick stats visuales */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <div className="bento p-5 elev-1 text-center">
           <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-violet-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <TrendingUp className="w-6 h-6 text-indigo-600" />

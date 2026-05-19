@@ -59,14 +59,14 @@ export default function HomePage() {
                 Más de 500 profesores verificados en Perú
               </div>
 
-              <h1 className="font-heading font-extrabold text-5xl md:text-6xl xl:text-7xl text-white leading-[1.05] mb-6 animate-fade-up stagger-1">
+              <h1 className="font-heading font-extrabold text-4xl sm:text-5xl md:text-6xl xl:text-7xl text-white leading-[1.05] mb-6 animate-fade-up stagger-1">
                 Aprende con los
                 <br className="hidden sm:block" />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-violet-300 to-emerald-300">
                   mejores profes
                 </span>
                 <br className="hidden sm:block" />
-                <span className="text-white/80 text-4xl md:text-5xl xl:text-6xl">del Perú</span>
+                <span className="text-white/80 text-3xl sm:text-4xl md:text-5xl xl:text-6xl">del Perú</span>
               </h1>
 
               <p className="text-white/70 text-lg leading-relaxed mb-8 max-w-md animate-fade-up stagger-2">
@@ -85,7 +85,7 @@ export default function HomePage() {
               </div>
 
               {/* Stats — fondo blanco para visibilidad */}
-              <div className="grid grid-cols-4 gap-2 animate-fade-up stagger-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 animate-fade-up stagger-4">
                 {STATS.map(s => (
                   <div key={s.label} className="bg-white rounded-2xl p-3 text-center shadow-elev-2">
                     <p className={`font-heading font-extrabold text-lg bg-gradient-to-br ${s.color} bg-clip-text text-transparent`}>{s.val}</p>
