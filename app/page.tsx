@@ -18,10 +18,10 @@ const TESTIMONIOS = [
 ];
 
 const STATS = [
-  { val: "500+",  label: "Profesores",          color: "from-indigo-400 to-indigo-600" },
-  { val: "4.9★",  label: "Rating promedio",     color: "from-amber-400 to-orange-500" },
-  { val: "10k+",  label: "Sesiones",            color: "from-emerald-400 to-teal-500" },
-  { val: "98%",   label: "Satisfacción",        color: "from-violet-400 to-purple-600" },
+  { val: "500+",  label: "Profesores",      color: "from-navy-500 to-navy-700" },
+  { val: "4.9★",  label: "Rating promedio", color: "from-amber-500 to-orange-500" },
+  { val: "10k+",  label: "Sesiones",        color: "from-emerald-500 to-emerald-600" },
+  { val: "98%",   label: "Satisfacción",    color: "from-amber-400 to-amber-600" },
 ];
 
 const FEATURES = [
@@ -320,10 +320,8 @@ export default function HomePage() {
       <footer className="border-t border-brand-border py-8 md:py-10 px-5 bg-white">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-heading font-bold text-lg text-brand-text">ProfeLink</span>
+            <img src="/logo-owl.png" alt="ProfeLink" className="w-8 h-8 object-contain" />
+            <span className="font-heading font-bold text-lg text-navy-700">ProfeLink</span>
           </div>
           <p className="text-sm text-gray-400 text-center">© 2025 ProfeLink · Asesorías académicas en Perú</p>
           <div className="flex gap-5 text-sm text-gray-400">

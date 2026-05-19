@@ -54,10 +54,8 @@ export default function NavbarPublic() {
       <div className="max-w-6xl mx-auto px-5 py-3.5 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg">
-            <BookOpen style={{width:18,height:18}} className="text-white" />
-          </div>
-          <span className="font-heading font-bold text-xl text-brand-text">ProfeLink</span>
+          <img src="/logo-owl.png" alt="ProfeLink" className="w-10 h-10 object-contain" />
+          <span className="font-heading font-bold text-xl text-navy-700">ProfeLink</span>
         </Link>
 
         {/* Desktop */}
@@ -108,7 +106,7 @@ export default function NavbarPublic() {
                 Iniciar sesión
               </Link>
               <Link href="/register"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all shadow-elev-2 hover:-translate-y-0.5">
+                className="bg-navy-600 hover:bg-navy-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all shadow-elev-2 hover:-translate-y-0.5">
                 Comenzar gratis
               </Link>
             </>

@@ -60,11 +60,9 @@ export default function Sidebar({ rol, nombre }: { rol: RolUsuario; nombre: stri
     )}>
 
       {/* Logo */}
-      <div className={cn("flex items-center gap-2.5 px-4 py-5 border-b border-indigo-50", collapsed && "justify-center px-3")}>
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-elev-2 flex-shrink-0">
-          <BookOpen className="w-4 h-4 text-white" />
-        </div>
-        {!collapsed && <span className="font-heading font-bold text-lg text-brand-text">ProfeLink</span>}
+      <div className={cn("flex items-center gap-2.5 px-4 py-4 border-b border-amber-100", collapsed && "justify-center px-3")}>
+        <img src="/logo-owl.png" alt="ProfeLink" className="w-9 h-9 object-contain flex-shrink-0" />
+        {!collapsed && <span className="font-heading font-bold text-lg text-navy-700">ProfeLink</span>}
       </div>
 
       {/* Nav */}
