@@ -1,0 +1,61 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getSessionFromRequest } from "@/lib/auth";
+import { actualizarEstadoSchema } from "@/lib/validations/sesion";
+
+// PATCH /api/sesiones/[id]/estado
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const session = await getSessionFromRequest(req);
+  if (!session) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const body = await req.json();
+  const parsed = actualizarEstadoSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
+  }
+
+  const { estado } = parsed.data;
+
+  const sesion = await prisma.sesion.findUnique({
+    where: { id },
+    include: {
+      profesor: { select: { usuarioId: true } },
+    },
+  });
+
+  if (!sesion) {
+    return NextResponse.json({ error: "Sesión no encontrada" }, { status: 404 });
+  }
+
+  // Reglas de quién puede cambiar a qué estado
+  const esEstudiante = session.rol === "ESTUDIANTE" && sesion.estudianteId === session.sub;
+  const esProfesor = session.rol === "PROFESOR" && sesion.profesor.usuarioId === session.sub;
+  const esAdmin = session.rol === "ADMIN";
+
+  const transicionesPermitidas: Record<string, string[]> = {
+    PENDIENTE: esProfesor ? ["CONFIRMADA", "CANCELADA"] : (esEstudiante ? ["CANCELADA"] : []),
+    CONFIRMADA: esProfesor ? ["COMPLETADA", "CANCELADA"] : (esEstudiante ? ["CANCELADA"] : []),
+    COMPLETADA: [],
+    CANCELADA: [],
+  };
+
+  if (esAdmin) {
+    // Admin puede forzar cualquier transición
+    const updated = await prisma.sesion.update({ where: { id }, data: { estado } });
+    return NextResponse.json(updated);
+  }
+
+  const permitidas = transicionesPermitidas[sesion.estado] ?? [];
+  if (!permitidas.includes(estado)) {
+    return NextResponse.json(
+      { error: `No puedes cambiar el estado de ${sesion.estado} a ${estado}` },
+      { status: 403 }
+    );
+  }
+
+  const updated = await prisma.sesion.update({ where: { id }, data: { estado } });
+  return NextResponse.json(updated);
+}
