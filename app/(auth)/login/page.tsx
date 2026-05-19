@@ -16,9 +16,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-11 h-11 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center backdrop-blur-sm">
-              <BookOpen className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo-owl.png" alt="ProfeLink" className="w-12 h-12 object-contain drop-shadow-lg" />
             <span className="font-heading font-bold text-2xl text-white">ProfeLink</span>
           </Link>
           <p className="text-white/60 text-sm mt-2">Plataforma de asesorías académicas</p>

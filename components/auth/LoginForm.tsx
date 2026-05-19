@@ -54,7 +54,7 @@ export default function LoginForm() {
           <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} autoComplete="email"
             placeholder="tu@email.com"
-            className="w-full pl-10 pr-4 py-3 border-2 border-indigo-50 bg-indigo-50/50 rounded-2xl text-sm focus:outline-none focus:border-indigo-400 focus:bg-white transition-all placeholder:text-gray-300" />
+            className="w-full pl-10 pr-4 py-3 border-2 border-indigo-50 bg-indigo-50/50 rounded-2xl text-sm focus:outline-none focus:border-navy-500 focus:bg-white transition-all placeholder:text-gray-300" />
         </div>
         {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
       </div>
@@ -66,7 +66,7 @@ export default function LoginForm() {
           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input type={showPass ? "text" : "password"} value={form.password} onChange={e => setForm({...form, password: e.target.value})} autoComplete="current-password"
             placeholder="••••••••"
-            className="w-full pl-10 pr-11 py-3 border-2 border-indigo-50 bg-indigo-50/50 rounded-2xl text-sm focus:outline-none focus:border-indigo-400 focus:bg-white transition-all placeholder:text-gray-300" />
+            className="w-full pl-10 pr-11 py-3 border-2 border-indigo-50 bg-indigo-50/50 rounded-2xl text-sm focus:outline-none focus:border-navy-500 focus:bg-white transition-all placeholder:text-gray-300" />
           <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
             {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -75,19 +75,19 @@ export default function LoginForm() {
       </div>
 
       <button type="submit" disabled={loading}
-        className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-60 text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-elev-2 hover:shadow-glow-indigo/30 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+        className="w-full bg-gradient-to-r from-navy-600 to-navy-800 hover:from-navy-500 hover:to-navy-700 disabled:opacity-60 text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-elev-2 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
         {loading ? "Ingresando..." : <><span>Iniciar sesión</span><ArrowRight className="w-4 h-4" /></>}
       </button>
 
       <p className="text-center text-sm text-gray-500">
         ¿No tienes cuenta?{" "}
-        <Link href="/register" className="text-indigo-600 hover:text-indigo-700 font-semibold">Regístrate gratis</Link>
+        <Link href="/register" className="text-navy-600 hover:text-navy-700 font-semibold">Regístrate gratis</Link>
       </p>
 
       {/* Demo credentials */}
-      <div className="bg-indigo-50 rounded-2xl p-3 text-center">
-        <p className="text-xs text-indigo-500 font-medium mb-1">Cuentas de demo</p>
-        <div className="text-xs text-indigo-700 space-y-0.5">
+      <div className="bg-cream-200 rounded-2xl p-3 text-center border border-amber-200">
+        <p className="text-xs text-navy-600 font-medium mb-1">Cuentas de demo</p>
+        <div className="text-xs text-navy-700 space-y-0.5">
           <p>📚 <strong>luis@profelink.pe</strong> (Estudiante)</p>
           <p>👩‍🏫 <strong>maria@profelink.pe</strong> (Profesora)</p>
           <p>🔑 Contraseña: <strong>password123</strong></p>
