@@ -4,6 +4,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "ProfeLink — Asesorías académicas en Perú",
   description: "Conecta con los mejores profesores particulares verificados del Perú. Matemáticas, idiomas, programación y más.",
+  icons: {
+    icon:    "/logo-owl.png",
+    shortcut:"/logo-owl.png",
+    apple:   "/logo-owl.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
