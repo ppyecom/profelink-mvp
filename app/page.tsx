@@ -18,19 +18,19 @@ const TESTIMONIOS = [
 ];
 
 const STATS = [
-  { val: "500+",  label: "Profesores",      color: "from-navy-500 to-navy-700" },
-  { val: "4.9★",  label: "Rating promedio", color: "from-amber-500 to-orange-500" },
-  { val: "10k+",  label: "Sesiones",        color: "from-emerald-500 to-emerald-600" },
-  { val: "98%",   label: "Satisfacción",    color: "from-amber-400 to-amber-600" },
+  { val: "500+",  label: "Profesores",      color: "from-amber-600 to-orange-600" },
+  { val: "4.9★",  label: "Rating promedio", color: "from-amber-500 to-amber-700" },
+  { val: "10k+",  label: "Sesiones",        color: "from-emerald-500 to-emerald-700" },
+  { val: "98%",   label: "Satisfacción",    color: "from-orange-500 to-red-600" },
 ];
 
 const FEATURES = [
-  { icon: Shield,    color: "bg-indigo-100 text-indigo-600",  title: "Docentes verificados",  desc: "Cada profesor pasa por revisión manual antes de publicar su perfil." },
-  { icon: Star,      color: "bg-amber-100 text-amber-600",    title: "Reseñas auténticas",    desc: "Solo estudiantes con sesiones completadas pueden dejar reseñas." },
+  { icon: Shield,    color: "bg-amber-100 text-amber-700",    title: "Docentes verificados",  desc: "Cada profesor pasa por revisión manual antes de publicar su perfil." },
+  { icon: Star,      color: "bg-orange-100 text-orange-600",  title: "Reseñas auténticas",    desc: "Solo estudiantes con sesiones completadas pueden dejar reseñas." },
   { icon: Clock,     color: "bg-emerald-100 text-emerald-600",title: "Agenda flexible",       desc: "Horarios según disponibilidad del profesor. Virtual o presencial." },
-  { icon: Zap,       color: "bg-violet-100 text-violet-600",  title: "Reserva en segundos",   desc: "Sin trámites. Elige horario, paga con Yape o tarjeta al instante." },
-  { icon: Monitor,   color: "bg-blue-100 text-blue-600",      title: "Chat en tiempo real",   desc: "Coordina tu clase directamente con el profesor desde la plataforma." },
-  { icon: TrendingUp,color: "bg-rose-100 text-rose-600",      title: "Resultados reales",     desc: "Los estudiantes mejoran en promedio 3 puntos en sus calificaciones." },
+  { icon: Zap,       color: "bg-amber-50 text-amber-600",     title: "Reserva en segundos",   desc: "Sin trámites. Elige horario, paga con Yape o tarjeta al instante." },
+  { icon: Monitor,   color: "bg-cream-300 text-brown-600",    title: "Chat en tiempo real",   desc: "Coordina tu clase directamente con el profesor desde la plataforma." },
+  { icon: TrendingUp,color: "bg-orange-50 text-orange-700",   title: "Resultados reales",     desc: "Los estudiantes mejoran en promedio 3 puntos en sus calificaciones." },
 ];
 
 const PASOS = [
