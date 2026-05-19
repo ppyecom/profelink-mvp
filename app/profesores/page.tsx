@@ -126,16 +126,26 @@ export default async function ProfesoresPage({ searchParams }: PageProps) {
   const params = await searchParams;
   return (
     <div className="min-h-screen bg-brand-bg">
-      {/* Header con gradiente */}
-      <div className="mesh-gradient py-12 px-5 mb-0">
+      {/* Header */}
+      <div className="mesh-gradient py-10 md:py-14 px-5">
         <div className="max-w-6xl mx-auto">
           <Link href="/" className="inline-flex items-center gap-1.5 text-white/60 hover:text-white text-sm mb-4 transition-colors">
             ← Volver al inicio
           </Link>
-          <h1 className="font-heading font-extrabold text-4xl md:text-5xl text-white mb-2">
+          <h1 className="font-heading font-extrabold text-3xl md:text-5xl text-white mb-2">
             Profesores verificados
           </h1>
-          <p className="text-white/60 text-lg">Encuentra el mejor asesor para tus necesidades académicas</p>
+          <p className="text-white/60 text-base md:text-lg">Encuentra el mejor asesor para tus necesidades académicas</p>
+
+          {/* Categorías rápidas */}
+          <div className="flex flex-wrap gap-2 mt-5">
+            {["Matemáticas","Física","Inglés","Programación","Química","Historia","Economía"].map(c => (
+              <Link key={c} href={`/profesores?materia=${encodeURIComponent(c)}`}
+                className="text-xs font-semibold bg-white/15 hover:bg-white/25 border border-white/20 text-white px-3 py-1.5 rounded-full transition-all hover:-translate-y-0.5">
+                {c}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 

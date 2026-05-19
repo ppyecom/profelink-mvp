@@ -185,6 +185,11 @@
               linear-gradient(135deg, #0F0C29 0%, #1a1744 40%, #1E1B4B 100%);
 }
 
+/* ── Safe area para iOS ──────────────────────────────────────────────────── */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
 /* ── Scrollbar ───────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #F5F3FF; }
