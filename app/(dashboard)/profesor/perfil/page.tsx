@@ -59,10 +59,16 @@ export default function ProfesorPerfilPage() {
     const res = await fetch("/api/profesores", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, precioHora: Number(form.precioHora) }),
+      body: JSON.stringify({ ...form, precioHora: Number(form.precioHora) || 50 }),
     });
     if (res.ok) { setOk(true); setTimeout(() => setOk(false), 3000); }
-    else { const d = await res.json(); setError(d.error ?? "Error al guardar"); }
+    else {
+      const d = await res.json();
+      const detail = d.details?.fieldErrors
+        ? Object.entries(d.details.fieldErrors).map(([k,v]) => `${k}: ${(v as string[]).join(", ")}`).join(" | ")
+        : null;
+      setError(detail ?? d.error ?? "Error al guardar");
+    }
     setSaving(false);
   };
 

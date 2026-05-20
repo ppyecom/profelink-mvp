@@ -31,12 +31,12 @@ export const disponibilidadSchema = z.object({
 );
 
 export const perfilProfesorSchema = z.object({
-  bio: z.string().max(1000).optional(),
+  bio: z.string().max(1000).optional().or(z.literal("")),
   fotoUrl: z.string().url("URL inválida").optional().or(z.literal("")),
-  nivel: z.array(z.enum(["SECUNDARIA", "TECNICA", "UNIVERSITARIA"])).min(1, "Selecciona al menos un nivel"),
-  precioHora: z.number().positive("El precio debe ser mayor a 0"),
-  modalidad: z.enum(["VIRTUAL", "PRESENCIAL"]),
-  especialidades: z.array(z.string().min(2).max(100)).min(1, "Agrega al menos una especialidad"),
+  nivel: z.array(z.enum(["SECUNDARIA", "TECNICA", "UNIVERSITARIA"])).default([]),
+  precioHora: z.number().min(0, "El precio no puede ser negativo").default(50),
+  modalidad: z.enum(["VIRTUAL", "PRESENCIAL"]).default("VIRTUAL"),
+  especialidades: z.array(z.string().min(1).max(100)).default([]),
 });
 
 export type CrearSesionInput = z.infer<typeof crearSesionSchema>;
