@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
         ...(rol === "PROFESOR" && {
           perfilProfesor: {
             create: {
-              precioHora: 0,
+              precioHora: 50, // precio por defecto, el profesor lo actualiza en su perfil
               modalidad: "VIRTUAL",
               estado: "PENDIENTE",
             },
