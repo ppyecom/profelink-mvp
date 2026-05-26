@@ -20,6 +20,10 @@ npm-debug.log*
 # Claude Code skill
 .claude/
 
+# Archivos subidos por usuarios (no se versionan)
+public/uploads/profesores/*
+!public/uploads/profesores/.gitkeep
+
 # OS
 .DS_Store
 Thumbs.db
