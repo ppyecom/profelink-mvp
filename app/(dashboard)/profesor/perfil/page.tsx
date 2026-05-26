@@ -117,7 +117,7 @@ export default function ProfesorPerfilPage() {
                   <Image
                     src={form.fotoUrl} alt="Foto" width={96} height={96}
                     className="w-full h-full object-cover"
-                    unoptimized={form.fotoUrl.startsWith("/uploads/")}
+                    unoptimized={form.fotoUrl.startsWith("/uploads/") || form.fotoUrl.startsWith("/api/uploads/")}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-100">

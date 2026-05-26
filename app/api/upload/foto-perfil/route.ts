@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     console.log(`[upload] Foto guardada: ${filePath} (${buffer.length} bytes)`);
 
     // URL pública para servir el archivo
-    const publicUrl = `/uploads/profesores/${fileName}`;
+    const publicUrl = `/api/uploads/profesores/${fileName}`;
 
     // Si es profesor, actualizar fotoUrl en BD inmediatamente
     if (session.rol === "PROFESOR") {

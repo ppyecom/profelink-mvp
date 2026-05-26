@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
     ],
     localPatterns: [
       { pathname: "/uploads/**" },
+      { pathname: "/api/uploads/**" },
     ],
     unoptimized: true,
   },
