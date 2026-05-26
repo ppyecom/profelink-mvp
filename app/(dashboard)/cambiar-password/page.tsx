@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Lock, Eye, EyeOff, CheckCircle, Shield } from "lucide-react";
+import TwoFactorSection from "@/components/auth/TwoFactorSection";
 
 export default function CambiarPasswordPage() {
   const [form, setForm] = useState({ actual: "", nueva: "", confirmar: "" });
@@ -28,14 +29,16 @@ export default function CambiarPasswordPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto">
-      <div className="mb-6">
+    <div className="max-w-xl mx-auto space-y-5">
+      <div className="mb-2">
         <h1 className="font-heading font-extrabold text-2xl md:text-3xl text-brand-text flex items-center gap-2">
           <Shield className="w-6 h-6 text-amber-600" />
           Seguridad
         </h1>
-        <p className="text-gray-500 text-sm mt-1">Cambia tu contraseña para mantener tu cuenta segura</p>
+        <p className="text-gray-500 text-sm mt-1">Protege tu cuenta con contraseña fuerte y 2FA</p>
       </div>
+
+      <TwoFactorSection />
 
       <form onSubmit={handleSubmit} className="bento p-6 elev-1 space-y-5">
         {ok && (

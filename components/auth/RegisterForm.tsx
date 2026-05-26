@@ -9,6 +9,7 @@ export default function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [form, setForm] = useState({ nombre: "", email: "", password: "", rol: "ESTUDIANTE" });
+  const [acepta, setAcepta] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,6 +20,11 @@ export default function RegisterForm() {
     e.preventDefault();
     setServerError("");
     setErrors({});
+
+    if (!acepta) {
+      setErrors({ acepta: "Debes aceptar los términos y la política de privacidad" });
+      return;
+    }
 
     const parsed = registerSchema.safeParse(form);
     if (!parsed.success) {
@@ -126,10 +132,26 @@ export default function RegisterForm() {
         {errors.rol && <p className="text-red-500 text-xs mt-1">{errors.rol}</p>}
       </div>
 
+      <label className="flex items-start gap-2.5 cursor-pointer group">
+        <input
+          type="checkbox"
+          checked={acepta}
+          onChange={e => { setAcepta(e.target.checked); if (errors.acepta) setErrors({ ...errors, acepta: "" }); }}
+          className="mt-0.5 w-4 h-4 rounded border-2 border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+        />
+        <span className="text-xs text-gray-600 leading-relaxed">
+          Acepto los{" "}
+          <Link href="/terminos" target="_blank" className="text-amber-700 hover:underline font-semibold">Términos y Condiciones</Link>
+          {" "}y la{" "}
+          <Link href="/privacidad" target="_blank" className="text-amber-700 hover:underline font-semibold">Política de Privacidad</Link>.
+        </span>
+      </label>
+      {errors.acepta && <p className="text-red-500 text-xs -mt-2">{errors.acepta}</p>}
+
       <button
         type="submit"
-        disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm"
+        disabled={loading || !acepta}
+        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm"
       >
         {loading ? "Creando cuenta..." : "Crear cuenta"}
       </button>

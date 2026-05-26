@@ -324,10 +324,12 @@ export default function HomePage() {
             <span className="font-heading font-bold text-lg text-navy-700">ProfeLink</span>
           </div>
           <p className="text-sm text-gray-400 text-center">© 2025 ProfeLink · Asesorías académicas en Perú</p>
-          <div className="flex gap-5 text-sm text-gray-400">
+          <div className="flex flex-wrap gap-5 text-sm text-gray-400 justify-center">
             <Link href="/profesores" className="hover:text-indigo-600 transition-colors">Profesores</Link>
             <Link href="/register"   className="hover:text-indigo-600 transition-colors">Registro</Link>
             <Link href="/login"      className="hover:text-indigo-600 transition-colors">Login</Link>
+            <Link href="/terminos"   className="hover:text-indigo-600 transition-colors">Términos</Link>
+            <Link href="/privacidad" className="hover:text-indigo-600 transition-colors">Privacidad</Link>
           </div>
         </div>
       </footer>

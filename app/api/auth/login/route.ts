@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { signToken, setAuthCookie } from "@/lib/auth";
 import { loginSchema } from "@/lib/validations/auth";
+import { verificarCodigo } from "@/lib/totp";
 import bcrypt from "bcryptjs";
 
 const MAX_INTENTOS = 5;
@@ -63,6 +64,17 @@ export async function POST(req: NextRequest) {
         { error: `Credenciales incorrectas. Te quedan ${intentosRestantes} intento(s).` },
         { status: 401 }
       );
+    }
+
+    // Si tiene 2FA habilitado, verificar código TOTP
+    if (usuario.totpHabilitado && usuario.totpSecret) {
+      const codigo = (body as { codigo2fa?: string }).codigo2fa;
+      if (!codigo) {
+        return NextResponse.json({ requiere2fa: true }, { status: 200 });
+      }
+      if (!verificarCodigo(usuario.totpSecret, codigo)) {
+        return NextResponse.json({ requiere2fa: true, error: "Código 2FA incorrecto" }, { status: 401 });
+      }
     }
 
     // Login exitoso — resetear intentos fallidos
