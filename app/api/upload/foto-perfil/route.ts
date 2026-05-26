@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const filePath = path.join(uploadDir, fileName);
     await writeFile(filePath, buffer);
+    console.log(`[upload] Foto guardada: ${filePath} (${buffer.length} bytes)`);
 
     // URL pública para servir el archivo
     const publicUrl = `/uploads/profesores/${fileName}`;

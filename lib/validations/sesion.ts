@@ -32,7 +32,11 @@ export const disponibilidadSchema = z.object({
 
 export const perfilProfesorSchema = z.object({
   bio: z.string().max(1000).optional().or(z.literal("")),
-  fotoUrl: z.string().url("URL inválida").optional().or(z.literal("")),
+  fotoUrl: z.union([
+    z.string().url("URL inválida"),
+    z.string().startsWith("/uploads/", "Ruta inválida"),
+    z.literal(""),
+  ]).optional(),
   nivel: z.array(z.enum(["SECUNDARIA", "TECNICA", "UNIVERSITARIA"])).default([]),
   precioHora: z.number().min(0, "El precio no puede ser negativo").default(50),
   modalidad: z.enum(["VIRTUAL", "PRESENCIAL"]).default("VIRTUAL"),
