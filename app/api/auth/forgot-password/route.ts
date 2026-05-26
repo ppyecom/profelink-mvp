@@ -3,10 +3,16 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import crypto from "crypto";
 import { enviarEmailRecuperacion } from "@/lib/email";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 const schema = z.object({ email: z.string().email("Email inválido") });
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 3 emails por IP cada 10 minutos (anti-spam)
+  const rl = checkRateLimit(req, { key: "forgot-pwd", max: 3, windowMs: 10 * 60 * 1000 });
+  const rlRes = rateLimitResponse(rl);
+  if (rlRes) return rlRes;
+
   const body = await req.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

@@ -2,11 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { signToken, setAuthCookie } from "@/lib/auth";
 import { registerSchema } from "@/lib/validations/auth";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { enviarEmailVerificacion, enviarEmailBienvenida } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 5 registros por IP cada 15 minutos
+  const rl = checkRateLimit(req, { key: "register", max: 5, windowMs: 15 * 60 * 1000 });
+  const rlRes = rateLimitResponse(rl);
+  if (rlRes) return rlRes;
+
   try {
     const body = await req.json();
     const parsed = registerSchema.safeParse(body);
