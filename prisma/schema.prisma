@@ -38,21 +38,68 @@ enum NivelAcademico {
 }
 
 model Usuario {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nombre       String     @db.VarChar(120)
-  email        String     @unique @db.VarChar(255)
-  passwordHash String     @map("password_hash")
-  rol          RolUsuario
-  activo       Boolean    @default(true)
-  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt    DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  id               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre           String     @db.VarChar(120)
+  email            String     @unique @db.VarChar(255)
+  passwordHash     String     @map("password_hash")
+  rol              RolUsuario
+  activo           Boolean    @default(true)
+  emailVerificado  Boolean    @default(false) @map("email_verificado")
+  intentosFallidos Int        @default(0) @map("intentos_fallidos")
+  bloqueadoHasta   DateTime?  @map("bloqueado_hasta") @db.Timestamptz()
+  createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
   perfilProfesor PerfilProfesor?
   sesionesComoEstudiante Sesion[]  @relation("EstudianteSesiones")
   resenasEscritas        Resena[]  @relation("EstudianteResenas")
   mensajesEnviados       Mensaje[] @relation("MensajesEnviados")
+  notificaciones         Notificacion[]
+  tokensPasswordReset    TokenPasswordReset[]
+  tokensEmailVerif       TokenEmailVerificacion[]
 
   @@map("usuarios")
+}
+
+model Notificacion {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId  String   @map("usuario_id") @db.Uuid
+  tipo       String   @db.VarChar(40)
+  titulo     String   @db.VarChar(120)
+  mensaje    String
+  url        String?  @db.VarChar(200)
+  leida      Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("notificaciones")
+}
+
+model TokenPasswordReset {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId  String   @map("usuario_id") @db.Uuid
+  token      String   @unique @db.VarChar(120)
+  expiraEn   DateTime @map("expira_en") @db.Timestamptz()
+  usado      Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("tokens_password_reset")
+}
+
+model TokenEmailVerificacion {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId  String   @map("usuario_id") @db.Uuid
+  token      String   @unique @db.VarChar(120)
+  expiraEn   DateTime @map("expira_en") @db.Timestamptz()
+  usado      Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("tokens_email_verificacion")
 }
 
 model PerfilProfesor {

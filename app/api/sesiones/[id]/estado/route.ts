@@ -2,6 +2,45 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/lib/auth";
 import { actualizarEstadoSchema } from "@/lib/validations/sesion";
+import { crearNotificacion, Notif } from "@/lib/notificaciones";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+
+async function notificarCambioEstado(
+  sesionId: string,
+  nuevoEstado: string,
+  quienCambio: "ESTUDIANTE" | "PROFESOR" | "ADMIN",
+  cambiadorNombre: string
+) {
+  const sesion = await prisma.sesion.findUnique({
+    where: { id: sesionId },
+    include: {
+      estudiante: { select: { id: true, nombre: true } },
+      profesor: { include: { usuario: { select: { id: true, nombre: true } } } },
+    },
+  });
+  if (!sesion) return;
+
+  const fechaStr = format(sesion.fechaInicio, "EEEE d MMM 'a las' HH:mm", { locale: es });
+
+  if (nuevoEstado === "CONFIRMADA") {
+    // Notificar al estudiante que el profesor confirmó
+    await crearNotificacion({
+      usuarioId: sesion.estudianteId,
+      ...Notif.sesionConfirmada(sesion.profesor.usuario.nombre, fechaStr),
+    });
+  }
+
+  if (nuevoEstado === "CANCELADA") {
+    // Notificar al otro participante
+    const cancelaEstudiante = quienCambio === "ESTUDIANTE";
+    const destinatarioId = cancelaEstudiante ? sesion.profesor.usuario.id : sesion.estudianteId;
+    await crearNotificacion({
+      usuarioId: destinatarioId,
+      ...Notif.sesionCancelada(cambiadorNombre, fechaStr),
+    });
+  }
+}
 
 // PATCH /api/sesiones/[id]/estado
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -57,5 +96,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const updated = await prisma.sesion.update({ where: { id }, data: { estado } });
+
+  // Disparar notificación según el cambio
+  try {
+    await notificarCambioEstado(
+      id,
+      estado,
+      session.rol as "ESTUDIANTE" | "PROFESOR" | "ADMIN",
+      session.nombre
+    );
+  } catch (e) { console.error("[notif]", e); }
+
   return NextResponse.json(updated);
 }

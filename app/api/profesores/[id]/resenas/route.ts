@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/lib/auth";
 import { crearResenaSchema } from "@/lib/validations/sesion";
+import { crearNotificacion, Notif } from "@/lib/notificaciones";
 
 // POST /api/profesores/[id]/resenas
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -52,6 +53,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       comentario,
     },
   });
+
+  // Notificar al profesor sobre la nueva reseña
+  try {
+    const profesor = await prisma.perfilProfesor.findUnique({
+      where: { id: profesorId },
+      select: { usuarioId: true },
+    });
+    if (profesor) {
+      await crearNotificacion({
+        usuarioId: profesor.usuarioId,
+        ...Notif.resenaRecibida(calificacion, session.nombre),
+      });
+    }
+  } catch (e) { console.error("[notif]", e); }
 
   return NextResponse.json(resena, { status: 201 });
 }
