@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import crypto from "crypto";
+import { enviarEmailRecuperacion } from "@/lib/email";
 
 const schema = z.object({ email: z.string().email("Email inválido") });
 
@@ -15,8 +16,7 @@ export async function POST(req: NextRequest) {
   const { email } = parsed.data;
   const usuario = await prisma.usuario.findUnique({ where: { email } });
 
-  // Por seguridad, siempre respondemos OK (no revelar si el email existe)
-  // Pero solo creamos token si existe
+  // Por seguridad, respondemos OK siempre (no revelar si el email existe)
   if (usuario) {
     // Invalidar tokens previos
     await prisma.tokenPasswordReset.updateMany({
@@ -31,15 +31,8 @@ export async function POST(req: NextRequest) {
       data: { usuarioId: usuario.id, token, expiraEn },
     });
 
-    // MVP: devolver el token en la respuesta (en producción se enviaría por email)
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/reset-password/${token}`;
-    return NextResponse.json({
-      ok: true,
-      mensaje: "Si el email existe, recibirás un enlace de recuperación.",
-      // ⚠️ Solo para MVP — en producción NO devolver el token
-      _devToken: token,
-      _devUrl: resetUrl,
-    });
+    // Enviar email real con Resend
+    await enviarEmailRecuperacion(usuario.email, usuario.nombre, token);
   }
 
   return NextResponse.json({

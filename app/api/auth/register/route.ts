@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { signToken, setAuthCookie } from "@/lib/auth";
 import { registerSchema } from "@/lib/validations/auth";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { enviarEmailVerificacion, enviarEmailBienvenida } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,6 +44,24 @@ export async function POST(req: NextRequest) {
         }),
       },
     });
+
+    // Crear token de verificación de email
+    try {
+      const verifToken = crypto.randomBytes(32).toString("hex");
+      await prisma.tokenEmailVerificacion.create({
+        data: {
+          usuarioId: usuario.id,
+          token: verifToken,
+          expiraEn: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 horas
+        },
+      });
+      // Enviar emails (verificación + bienvenida)
+      await enviarEmailVerificacion(usuario.email, usuario.nombre, verifToken);
+      await enviarEmailBienvenida(usuario.email, usuario.nombre, usuario.rol);
+    } catch (e) {
+      console.error("[register-email]", e);
+      // No fallar el registro si falla el email
+    }
 
     const token = await signToken({
       sub: usuario.id,
