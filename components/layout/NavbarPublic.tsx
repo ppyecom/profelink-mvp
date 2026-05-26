@@ -115,7 +115,7 @@ export default function NavbarPublic() {
               </Link>
               <Link href="/register"
                 className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all shadow-elev-2 hover:-translate-y-0.5">
-                Comenzar gratis
+                Crear cuenta
               </Link>
             </>
           )}
@@ -175,7 +175,7 @@ export default function NavbarPublic() {
               </Link>
               <Link href="/register" onClick={() => setMobileOpen(false)}
                 className="flex items-center justify-center px-4 py-3 rounded-2xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors">
-                Comenzar gratis
+                Crear cuenta
               </Link>
             </>
           )}
