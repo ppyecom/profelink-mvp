@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { CheckCircle, Save, Plus, X } from "lucide-react";
+import { CheckCircle, Save, Plus, X, Upload, Camera, Loader2 } from "lucide-react";
 
 const NIVELES = ["SECUNDARIA", "TECNICA", "UNIVERSITARIA"] as const;
 const NIVEL_LABELS: Record<string, string> = { SECUNDARIA: "Secundaria", TECNICA: "Técnica", UNIVERSITARIA: "Universitaria" };
@@ -22,6 +22,28 @@ export default function ProfesorPerfilPage() {
     especialidades: [] as string[],
   });
   const [nuevaEsp, setNuevaEsp] = useState("");
+  const [subiendo, setSubiendo] = useState(false);
+  const [errorFoto, setErrorFoto] = useState("");
+  const inputFotoRef = useRef<HTMLInputElement>(null);
+
+  const handleSubirFoto = async (file: File) => {
+    setErrorFoto("");
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorFoto("La imagen debe ser menor a 5 MB");
+      return;
+    }
+    setSubiendo(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload/foto-perfil", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) { setErrorFoto(data.error ?? "Error al subir"); return; }
+      setForm(f => ({ ...f, fotoUrl: data.url }));
+    } finally {
+      setSubiendo(false);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/profesores/me")
@@ -86,25 +108,58 @@ export default function ProfesorPerfilPage() {
       <form onSubmit={guardar} className="space-y-5 max-w-2xl">
 
         {/* Foto */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h2 className="font-semibold text-gray-900 mb-4">Foto de perfil</h2>
-          <div className="flex items-center gap-4">
-            <Image
-              src={form.fotoUrl || `https://ui-avatars.com/api/?name=P&background=2563EB&color=fff&size=96`}
-              alt="Foto"
-              width={72}
-              height={72}
-              className="rounded-2xl w-18 h-18 object-cover border border-gray-100"
-            />
+        <div className="bento p-5 elev-1">
+          <h2 className="font-heading font-bold text-brand-text mb-4">Foto de perfil</h2>
+          <div className="flex items-center gap-5">
+            <div className="relative group flex-shrink-0">
+              <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-amber-100 bg-amber-50">
+                {form.fotoUrl ? (
+                  <Image
+                    src={form.fotoUrl} alt="Foto" width={96} height={96}
+                    className="w-full h-full object-cover"
+                    unoptimized={form.fotoUrl.startsWith("/uploads/")}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-100">
+                    <Camera className="w-8 h-8 text-amber-600" />
+                  </div>
+                )}
+              </div>
+              {subiendo && (
+                <div className="absolute inset-0 bg-black/60 rounded-3xl flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                </div>
+              )}
+            </div>
+
             <div className="flex-1">
               <input
-                type="url"
-                value={form.fotoUrl}
-                onChange={e => setForm(f => ({ ...f, fotoUrl: e.target.value }))}
-                placeholder="https://..."
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ref={inputFotoRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleSubirFoto(f); }}
+                className="hidden"
               />
-              <p className="text-xs text-gray-400 mt-1">URL de tu foto (JPG, PNG). Puedes usar randomuser.me o similar.</p>
+              <button
+                type="button"
+                onClick={() => inputFotoRef.current?.click()}
+                disabled={subiendo}
+                className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors shadow-sm"
+              >
+                <Upload className="w-4 h-4" />
+                {subiendo ? "Subiendo..." : form.fotoUrl ? "Cambiar foto" : "Subir foto"}
+              </button>
+              {form.fotoUrl && !subiendo && (
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, fotoUrl: "" }))}
+                  className="ml-2 text-xs text-gray-400 hover:text-red-500 underline"
+                >
+                  Quitar
+                </button>
+              )}
+              <p className="text-xs text-gray-400 mt-2">JPG, PNG o WebP · Máximo 5 MB</p>
+              {errorFoto && <p className="text-red-500 text-xs mt-1">{errorFoto}</p>}
             </div>
           </div>
         </div>
