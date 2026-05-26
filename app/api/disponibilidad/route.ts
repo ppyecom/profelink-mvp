@@ -15,6 +15,25 @@ function serializeSlot(slot: { id: string; profesorId: string; diaSemana: number
   };
 }
 
+function timeStringToDate(time: string) {
+  const [hoursRaw, minutesRaw] = time.split(":");
+  const hours = Number(hoursRaw);
+  const minutes = Number(minutesRaw);
+
+  if (
+    !Number.isInteger(hours) ||
+    !Number.isInteger(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return null;
+  }
+
+  return new Date(Date.UTC(1970, 0, 1, hours, minutes, 0, 0));
+}
+
 export async function GET(req: NextRequest) {
   const session = await getSessionFromRequest(req);
   if (!session || session.rol !== "PROFESOR") {
@@ -48,8 +67,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
   }
 
+  const horaInicio = timeStringToDate(parsed.data.horaInicio);
+  const horaFin = timeStringToDate(parsed.data.horaFin);
+  if (!horaInicio || !horaFin) {
+    return NextResponse.json({ error: "Formato de hora inválido" }, { status: 400 });
+  }
+
   const slot = await prisma.disponibilidad.create({
-    data: { ...parsed.data, profesorId: perfil.id },
+    data: {
+      diaSemana: parsed.data.diaSemana,
+      horaInicio,
+      horaFin,
+      profesorId: perfil.id,
+    },
   });
 
   return NextResponse.json(serializeSlot(slot), { status: 201 });
