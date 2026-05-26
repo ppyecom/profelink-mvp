@@ -8,7 +8,8 @@ export type TipoNotificacion =
   | "RECORDATORIO_SESION"
   | "RESENA_RECIBIDA"
   | "VERIFICACION_APROBADA"
-  | "VERIFICACION_RECHAZADA";
+  | "VERIFICACION_RECHAZADA"
+  | "RETIRO";
 
 interface CrearNotificacionInput {
   usuarioId: string;

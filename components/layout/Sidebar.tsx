@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen, TrendingUp, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RolUsuario } from "@/types";
 
@@ -25,6 +25,8 @@ const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
   ADMIN: [
     { href: "/admin",            label: "Panel",      icon: LayoutDashboard },
     { href: "/admin/profesores", label: "Profesores", icon: Users },
+    { href: "/admin/retiros",    label: "Retiros",    icon: Wallet },
+    { href: "/admin/metricas",   label: "Métricas",   icon: TrendingUp },
   ],
 };
 

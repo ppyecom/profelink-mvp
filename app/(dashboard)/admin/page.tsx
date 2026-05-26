@@ -102,26 +102,37 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Links rápidos */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link href="/admin/profesores" className="bento p-5 elev-1 hover:elev-3 hover:-translate-y-0.5 transition-all group flex items-center gap-4">
           <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-elev-2 group-hover:scale-110 transition-transform">
             <Users className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="font-heading font-bold text-brand-text">Gestionar profesores</p>
-            <p className="text-xs text-gray-400">Verificar y rechazar perfiles</p>
+            <p className="font-heading font-bold text-brand-text">Profesores</p>
+            <p className="text-xs text-gray-400">Verificar perfiles</p>
           </div>
           <ArrowRight className="w-4 h-4 text-gray-300 ml-auto group-hover:text-indigo-500 transition-colors" />
         </Link>
-        <div className="bento p-5 elev-1 flex items-center gap-4 opacity-60">
-          <div className="w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center flex-shrink-0">
-            <BookOpen className="w-6 h-6 text-gray-500" />
+        <Link href="/admin/retiros" className="bento p-5 elev-1 hover:elev-3 hover:-translate-y-0.5 transition-all group flex items-center gap-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-elev-2 group-hover:scale-110 transition-transform">
+            <DollarSign className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="font-heading font-bold text-brand-text">Todas las sesiones</p>
-            <p className="text-xs text-gray-400">Próximamente</p>
+            <p className="font-heading font-bold text-brand-text">Retiros</p>
+            <p className="text-xs text-gray-400">Aprobar y pagar</p>
           </div>
-        </div>
+          <ArrowRight className="w-4 h-4 text-gray-300 ml-auto group-hover:text-emerald-500 transition-colors" />
+        </Link>
+        <Link href="/admin/metricas" className="bento p-5 elev-1 hover:elev-3 hover:-translate-y-0.5 transition-all group flex items-center gap-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-elev-2 group-hover:scale-110 transition-transform">
+            <TrendingUp className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <p className="font-heading font-bold text-brand-text">Métricas</p>
+            <p className="text-xs text-gray-400">Reportes globales</p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-gray-300 ml-auto group-hover:text-amber-500 transition-colors" />
+        </Link>
       </div>
     </div>
   );
