@@ -3,12 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { signToken, setAuthCookie } from "@/lib/auth";
 import { loginSchema } from "@/lib/validations/auth";
 import { verificarCodigo } from "@/lib/totp";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 
 const MAX_INTENTOS = 5;
 const BLOQUEO_MINUTOS = 15;
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 10 intentos por IP cada 5 minutos
+  const rl = checkRateLimit(req, { key: "login", max: 10, windowMs: 5 * 60 * 1000 });
+  const rlRes = rateLimitResponse(rl);
+  if (rlRes) return rlRes;
+
   try {
     const body = await req.json();
     const parsed = loginSchema.safeParse(body);
