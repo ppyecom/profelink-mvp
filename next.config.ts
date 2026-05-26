@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "ui-avatars.com" },
       { protocol: "https", hostname: "randomuser.me" },
     ],
+    localPatterns: [
+      { pathname: "/uploads/**" },
+    ],
+    unoptimized: true,
   },
 };
 
