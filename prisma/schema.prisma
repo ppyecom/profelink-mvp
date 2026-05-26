@@ -54,6 +54,8 @@ model Usuario {
   emailVerificado  Boolean    @default(false) @map("email_verificado")
   intentosFallidos Int        @default(0) @map("intentos_fallidos")
   bloqueadoHasta   DateTime?  @map("bloqueado_hasta") @db.Timestamptz()
+  totpSecret       String?    @map("totp_secret")
+  totpHabilitado   Boolean    @default(false) @map("totp_habilitado")
   createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt        DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 

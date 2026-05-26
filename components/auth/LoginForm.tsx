@@ -30,22 +30,38 @@ export default function LoginForm() {
   const [errors, setErrors]     = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState(oauthError ? (OAUTH_ERRORS[oauthError] ?? "Error de autenticación") : "");
   const [loading, setLoading]   = useState(false);
+  const [paso2fa, setPaso2fa]   = useState(false);
+  const [codigo2fa, setCodigo2fa] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setServerError(""); setErrors({});
 
-    const parsed = loginSchema.safeParse(form);
-    if (!parsed.success) {
-      const fe: Record<string, string> = {};
-      parsed.error.errors.forEach(err => { if (err.path[0]) fe[err.path[0] as string] = err.message; });
-      setErrors(fe); return;
+    if (!paso2fa) {
+      const parsed = loginSchema.safeParse(form);
+      if (!parsed.success) {
+        const fe: Record<string, string> = {};
+        parsed.error.errors.forEach(err => { if (err.path[0]) fe[err.path[0] as string] = err.message; });
+        setErrors(fe); return;
+      }
+    } else if (!/^\d{6}$/.test(codigo2fa)) {
+      setServerError("El código debe tener 6 dígitos");
+      return;
     }
 
     setLoading(true);
     try {
-      const res  = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(parsed.data) });
+      const payload = paso2fa ? { ...form, codigo2fa } : form;
+      const res  = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const data = await res.json();
+
+      // Si el servidor pide 2FA, mostrar el paso
+      if (data.requiere2fa) {
+        setPaso2fa(true);
+        if (data.error) setServerError(data.error);
+        return;
+      }
+
       if (!res.ok) { setServerError(data.error ?? "Error al iniciar sesión"); return; }
       const destinos: Record<string, string> = { ESTUDIANTE: "/estudiante", PROFESOR: "/profesor", ADMIN: "/admin" };
       router.push(destinos[data.usuario.rol] ?? redirect);
@@ -60,6 +76,32 @@ export default function LoginForm() {
           {serverError}
         </div>
       )}
+
+      {paso2fa ? (
+        <>
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-sm text-amber-800">
+            🔐 Tu cuenta tiene <strong>verificación en dos pasos</strong>. Ingresa el código de tu app autenticadora.
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Código de 6 dígitos</label>
+            <input
+              type="text" inputMode="numeric" pattern="\d{6}" maxLength={6} autoFocus
+              value={codigo2fa}
+              onChange={e => setCodigo2fa(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="123456"
+              className="w-full text-center text-2xl tracking-widest font-mono font-bold border-2 border-amber-100 bg-amber-50/50 rounded-2xl py-3 focus:outline-none focus:border-amber-500 focus:bg-white" />
+          </div>
+          <button type="submit" disabled={loading || codigo2fa.length !== 6}
+            className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 disabled:opacity-60 text-white font-bold py-3.5 rounded-2xl transition-all shadow-elev-2">
+            {loading ? "Verificando..." : "Verificar e ingresar"}
+          </button>
+          <button type="button" onClick={() => { setPaso2fa(false); setCodigo2fa(""); setServerError(""); }}
+            className="w-full text-xs text-gray-400 hover:text-gray-600">
+            ← Cambiar de cuenta
+          </button>
+        </>
+      ) : (
+      <>
 
       {/* Email */}
       <div>
@@ -115,17 +157,7 @@ export default function LoginForm() {
           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
         </svg>
-        Google
-      </a>
-
-      <a
-        href={googleAuthHref}
-        className="w-full border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-700 font-semibold py-3.5 px-4 rounded-2xl transition-all flex items-center justify-center gap-3"
-      >
-        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-gray-200 text-xs font-bold">
-          G
-        </span>
-        <span>Continuar con Google</span>
+        Continuar con Google
       </a>
 
       <p className="text-center text-sm text-gray-500">
@@ -142,6 +174,8 @@ export default function LoginForm() {
           <p>🔑 Contraseña: <strong>password123</strong></p>
         </div>
       </div>
+      </>
+      )}
     </form>
   );
 }
