@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, Menu, X, ChevronDown, LayoutDashboard, LogOut, User } from "lucide-react";
+import { BookOpen, Menu, X, ChevronDown, LayoutDashboard, LogOut, User, Shield } from "lucide-react";
+import NotificacionesDropdown from "./NotificacionesDropdown";
 
 interface UserSession { nombre: string; rol: string }
 
@@ -68,6 +69,8 @@ export default function NavbarPublic() {
             <div className="w-24 h-8 bg-gray-100 rounded-xl animate-pulse" />
           ) : user ? (
             /* Usuario logueado */
+            <>
+            <NotificacionesDropdown />
             <div className="relative">
               <button onClick={() => setUserOpen(!userOpen)}
                 className="flex items-center gap-2.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 px-3 py-2 rounded-2xl transition-all group">
@@ -89,8 +92,12 @@ export default function NavbarPublic() {
                     <p className="text-xs text-indigo-500">{ROL_LABEL[user.rol]}</p>
                   </div>
                   <Link href={ROL_DEST[user.rol] ?? "/"} onClick={() => setUserOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition-colors text-sm text-gray-700 font-medium">
-                    <LayoutDashboard className="w-4 h-4 text-indigo-500" /> Mi panel
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-amber-50 transition-colors text-sm text-gray-700 font-medium">
+                    <LayoutDashboard className="w-4 h-4 text-amber-600" /> Mi panel
+                  </Link>
+                  <Link href="/cambiar-password" onClick={() => setUserOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-amber-50 transition-colors text-sm text-gray-700 font-medium">
+                    <Shield className="w-4 h-4 text-amber-600" /> Cambiar contraseña
                   </Link>
                   <button onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-sm text-red-500 font-medium border-t border-gray-50">
@@ -99,6 +106,7 @@ export default function NavbarPublic() {
                 </div>
               )}
             </div>
+            </>
           ) : (
             /* No logueado */
             <>

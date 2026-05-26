@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/lib/auth";
+import { crearNotificacion, Notif } from "@/lib/notificaciones";
 
 // GET /api/admin/profesores
 export async function GET(req: NextRequest) {
@@ -66,8 +67,17 @@ export async function PATCH(req: NextRequest) {
   const updated = await prisma.perfilProfesor.update({
     where: { id: profesorId },
     data: { estado },
-    include: { usuario: { select: { nombre: true } } },
+    include: { usuario: { select: { id: true, nombre: true } } },
   });
+
+  // Notificar al profesor
+  try {
+    if (estado === "VERIFICADO") {
+      await crearNotificacion({ usuarioId: updated.usuario.id, ...Notif.verificacionAprobada() });
+    } else if (estado === "RECHAZADO") {
+      await crearNotificacion({ usuarioId: updated.usuario.id, ...Notif.verificacionRechazada() });
+    }
+  } catch (e) { console.error("[notif]", e); }
 
   return NextResponse.json({ id: updated.id, estado: updated.estado, nombre: updated.usuario.nombre });
 }

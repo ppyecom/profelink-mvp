@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/lib/auth";
+import { crearNotificacion, Notif } from "@/lib/notificaciones";
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromRequest(req);
@@ -91,6 +92,23 @@ export async function POST(req: NextRequest) {
       where: { id: sesionId },
       data: { estado: "CONFIRMADA" },
     });
+
+    // Notificar al profesor sobre el pago
+    try {
+      const sesionFull = await prisma.sesion.findUnique({
+        where: { id: sesionId },
+        include: {
+          estudiante: { select: { nombre: true } },
+          profesor: { select: { usuarioId: true } },
+        },
+      });
+      if (sesionFull) {
+        await crearNotificacion({
+          usuarioId: sesionFull.profesor.usuarioId,
+          ...Notif.pagoRecibido(montoProfe, sesionFull.estudiante.nombre),
+        });
+      }
+    } catch (e) { console.error("[notif]", e); }
 
     return NextResponse.json({ ok: true, referencia, monto, montoProfe, comision });
   } catch (err) {

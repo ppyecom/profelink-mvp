@@ -4,6 +4,9 @@ import { signToken, setAuthCookie } from "@/lib/auth";
 import { loginSchema } from "@/lib/validations/auth";
 import bcrypt from "bcryptjs";
 
+const MAX_INTENTOS = 5;
+const BLOQUEO_MINUTOS = 15;
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -23,9 +26,51 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
     }
 
+    // Verificar bloqueo por intentos fallidos
+    if (usuario.bloqueadoHasta && usuario.bloqueadoHasta > new Date()) {
+      const minutos = Math.ceil((usuario.bloqueadoHasta.getTime() - Date.now()) / 60000);
+      return NextResponse.json(
+        { error: `Cuenta bloqueada por intentos fallidos. Intenta en ${minutos} minuto(s).` },
+        { status: 423 }
+      );
+    }
+
     const passwordValida = await bcrypt.compare(password, usuario.passwordHash);
+
     if (!passwordValida) {
-      return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
+      const nuevosIntentos = usuario.intentosFallidos + 1;
+      const debeBloquear = nuevosIntentos >= MAX_INTENTOS;
+
+      await prisma.usuario.update({
+        where: { id: usuario.id },
+        data: {
+          intentosFallidos: nuevosIntentos,
+          bloqueadoHasta: debeBloquear
+            ? new Date(Date.now() + BLOQUEO_MINUTOS * 60 * 1000)
+            : null,
+        },
+      });
+
+      if (debeBloquear) {
+        return NextResponse.json(
+          { error: `Demasiados intentos fallidos. Cuenta bloqueada por ${BLOQUEO_MINUTOS} minutos.` },
+          { status: 423 }
+        );
+      }
+
+      const intentosRestantes = MAX_INTENTOS - nuevosIntentos;
+      return NextResponse.json(
+        { error: `Credenciales incorrectas. Te quedan ${intentosRestantes} intento(s).` },
+        { status: 401 }
+      );
+    }
+
+    // Login exitoso — resetear intentos fallidos
+    if (usuario.intentosFallidos > 0 || usuario.bloqueadoHasta) {
+      await prisma.usuario.update({
+        where: { id: usuario.id },
+        data: { intentosFallidos: 0, bloqueadoHasta: null },
+      });
     }
 
     const token = await signToken({
@@ -40,7 +85,6 @@ export async function POST(req: NextRequest) {
     });
 
     response.cookies.set(setAuthCookie(token));
-
     return response;
   } catch (error) {
     console.error("[login]", error);

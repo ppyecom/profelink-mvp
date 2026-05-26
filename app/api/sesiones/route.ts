@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/lib/auth";
 import { crearSesionSchema } from "@/lib/validations/sesion";
+import { crearNotificacion, Notif } from "@/lib/notificaciones";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 // GET /api/sesiones — sesiones del usuario autenticado
 export async function GET(req: NextRequest) {
@@ -103,6 +106,15 @@ export async function POST(req: NextRequest) {
         notas,
       },
     });
+
+    // Notificar al profesor sobre la nueva reserva
+    try {
+      const fechaStr = format(new Date(fechaInicio), "EEEE d MMM 'a las' HH:mm", { locale: es });
+      await crearNotificacion({
+        usuarioId: perfil.usuarioId,
+        ...Notif.nuevaReserva(session.nombre, fechaStr),
+      });
+    } catch (e) { console.error("[notif]", e); }
 
     return NextResponse.json(sesion, { status: 201 });
   } catch (error: unknown) {

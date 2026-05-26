@@ -74,6 +74,12 @@ export default function LoginForm() {
         {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
       </div>
 
+      <div className="text-right">
+        <Link href="/forgot-password" className="text-xs text-amber-600 hover:text-amber-800 font-semibold">
+          ¿Olvidaste tu contraseña?
+        </Link>
+      </div>
+
       <button type="submit" disabled={loading}
         className="w-full bg-gradient-to-r from-navy-600 to-navy-800 hover:from-navy-500 hover:to-navy-700 disabled:opacity-60 text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-elev-2 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
         {loading ? "Ingresando..." : <><span>Iniciar sesión</span><ArrowRight className="w-4 h-4" /></>}
