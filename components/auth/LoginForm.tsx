@@ -6,15 +6,29 @@ import Link from "next/link";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import { loginSchema } from "@/lib/validations/auth";
 
+const OAUTH_ERRORS: Record<string, string> = {
+  oauth_cancelado: "Cancelaste el inicio de sesión con Google.",
+  oauth_state_invalido: "Error de seguridad. Intenta de nuevo.",
+  oauth_config: "Google Login no está configurado correctamente.",
+  oauth_token: "No pudimos completar el inicio de sesión con Google.",
+  oauth_userinfo: "No pudimos obtener tu información de Google.",
+  oauth_email_faltante: "Tu cuenta de Google no tiene un email asociado.",
+  oauth_cuenta_inactiva: "Tu cuenta está desactivada. Contacta al administrador.",
+  oauth_cuenta_bloqueada: "Tu cuenta está temporalmente bloqueada. Intenta más tarde.",
+  oauth_error: "Error inesperado durante el inicio de sesión con Google.",
+};
+
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/";
+  const oauthError = searchParams.get("error");
+  const googleAuthHref = `/api/auth/google${redirect && redirect !== "/" ? `?redirect=${encodeURIComponent(redirect)}` : ""}`;
 
   const [form, setForm]         = useState({ email: "", password: "" });
   const [showPass, setShowPass] = useState(false);
   const [errors, setErrors]     = useState<Record<string, string>>({});
-  const [serverError, setServerError] = useState("");
+  const [serverError, setServerError] = useState(oauthError ? (OAUTH_ERRORS[oauthError] ?? "Error de autenticación") : "");
   const [loading, setLoading]   = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,6 +98,16 @@ export default function LoginForm() {
         className="w-full bg-gradient-to-r from-navy-600 to-navy-800 hover:from-navy-500 hover:to-navy-700 disabled:opacity-60 text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-elev-2 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
         {loading ? "Ingresando..." : <><span>Iniciar sesión</span><ArrowRight className="w-4 h-4" /></>}
       </button>
+
+      <a
+        href={googleAuthHref}
+        className="w-full border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-700 font-semibold py-3.5 px-4 rounded-2xl transition-all flex items-center justify-center gap-3"
+      >
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-gray-200 text-xs font-bold">
+          G
+        </span>
+        <span>Continuar con Google</span>
+      </a>
 
       <p className="text-center text-sm text-gray-500">
         ¿No tienes cuenta?{" "}

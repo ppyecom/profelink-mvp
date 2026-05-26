@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
 import LoginForm from "@/components/auth/LoginForm";
 import { Suspense } from "react";
 

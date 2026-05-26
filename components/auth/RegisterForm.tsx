@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { registerSchema } from "@/lib/validations/auth";
 
 export default function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState({ nombre: "", email: "", password: "", rol: "ESTUDIANTE" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
+  const redirect = searchParams.get("redirect");
+  const googleAuthHref = `/api/auth/google?rol=${form.rol}${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,6 +133,16 @@ export default function RegisterForm() {
       >
         {loading ? "Creando cuenta..." : "Crear cuenta"}
       </button>
+
+      <a
+        href={googleAuthHref}
+        className="w-full border border-gray-300 hover:border-gray-400 bg-white text-gray-700 font-medium py-2.5 px-4 rounded-lg transition-colors text-sm flex items-center justify-center gap-3"
+      >
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs font-bold">
+          G
+        </span>
+        <span>Registrarme con Google como {form.rol === "PROFESOR" ? "profesor" : "estudiante"}</span>
+      </a>
 
       <p className="text-center text-sm text-gray-600">
         ¿Ya tienes cuenta?{" "}

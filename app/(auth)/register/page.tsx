@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
 import RegisterForm from "@/components/auth/RegisterForm";
+import { Suspense } from "react";
 
 export const metadata = { title: "Crear cuenta — ProfeLink" };
 
@@ -22,7 +22,9 @@ export default function RegisterPage() {
         <div className="glass rounded-4xl shadow-elev-4 p-8 border-white/30">
           <h1 className="font-heading font-extrabold text-2xl text-brand-text mb-1">Crear cuenta</h1>
           <p className="text-gray-500 text-sm mb-6">Gratis · Sin tarjeta requerida</p>
-          <RegisterForm />
+          <Suspense>
+            <RegisterForm />
+          </Suspense>
         </div>
       </div>
     </div>

@@ -37,6 +37,13 @@ enum NivelAcademico {
   UNIVERSITARIA
 }
 
+enum EstadoRetiro {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+  PAGADO
+}
+
 model Usuario {
   id               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nombre           String     @db.VarChar(120)
@@ -124,8 +131,27 @@ model PerfilProfesor {
   disponibilidad  Disponibilidad[]
   sesiones        Sesion[]         @relation("ProfesorSesiones")
   resenas         Resena[]         @relation("ProfesorResenas")
+  retiros         SolicitudRetiro[]
 
   @@map("perfiles_profesor")
+}
+
+model SolicitudRetiro {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profesorId    String       @map("profesor_id") @db.Uuid
+  monto         Decimal      @db.Decimal(10, 2)
+  metodo        String       @db.VarChar(40)
+  cuentaDestino String       @map("cuenta_destino") @db.VarChar(120)
+  estado        EstadoRetiro @default(PENDIENTE)
+  notaAdmin     String?      @map("nota_admin")
+  procesadoEn   DateTime?    @map("procesado_en") @db.Timestamptz()
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  profesor      PerfilProfesor @relation(fields: [profesorId], references: [id], onDelete: Cascade)
+
+  @@index([profesorId, estado])
+  @@map("solicitudes_retiro")
 }
 
 model Especialidad {

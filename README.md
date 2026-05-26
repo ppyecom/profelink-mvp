@@ -49,7 +49,14 @@ DATABASE_URL="postgresql://postgres:TU_PASSWORD@localhost:5432/profelink"
 JWT_SECRET="genera_un_secreto_de_al_menos_32_caracteres_aqui"
 JWT_EXPIRES_IN="7d"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
+GOOGLE_CLIENT_ID="tu_google_client_id"
+GOOGLE_CLIENT_SECRET="tu_google_client_secret"
 ```
+
+Si usarás login con Google, crea un OAuth Client en Google Cloud y registra:
+
+- Authorized JavaScript origins: `http://localhost:3000`
+- Authorized redirect URIs: `http://localhost:3000/api/auth/google/callback`
 
 ### 4. Crear la base de datos y ejecutar el schema
 
@@ -151,6 +158,7 @@ profelink-mvp/
 ### Autenticación
 - Registro con rol ESTUDIANTE / PROFESOR
 - Login con JWT en cookie httpOnly (7 días)
+- Login/registro con Google OAuth
 - Middleware protege rutas por rol
 - Logout limpia la cookie
 
@@ -210,6 +218,30 @@ npm run start        # Servidor de producción
 npx prisma studio    # GUI para explorar la base de datos
 npx prisma generate  # Regenerar cliente Prisma tras cambios en schema.prisma
 ```
+
+---
+
+## Despliegue con Google OAuth
+
+En producción debes configurar estas variables en el servidor:
+
+```env
+DATABASE_URL="postgresql://..."
+JWT_SECRET="secreto_real_largo"
+JWT_EXPIRES_IN="7d"
+NEXT_PUBLIC_APP_URL="https://tu-dominio.com"
+GOOGLE_CLIENT_ID="tu_google_client_id"
+GOOGLE_CLIENT_SECRET="tu_google_client_secret"
+RESEND_API_KEY="re_xxxxxxxxxxxxxxxxxxxxxx"
+EMAIL_FROM="ProfeLink <tu-correo-verificado@tu-dominio.com>"
+```
+
+En Google Cloud, el mismo OAuth Client debe incluir:
+
+- Authorized JavaScript origins: `https://tu-dominio.com`
+- Authorized redirect URIs: `https://tu-dominio.com/api/auth/google/callback`
+
+Si el dominio final cambia, actualiza `NEXT_PUBLIC_APP_URL` y también el redirect URI en Google.
 
 ---
 
