@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen, TrendingUp, Wallet } from "lucide-react";
+import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen, TrendingUp, Wallet, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RolUsuario } from "@/types";
 
@@ -14,6 +14,7 @@ const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
     { href: "/estudiante",          label: "Inicio",           icon: LayoutDashboard },
     { href: "/estudiante/sesiones", label: "Mis Sesiones",     icon: Calendar },
     { href: "/profesores",          label: "Buscar Profesores", icon: Search },
+    { href: "/cambiar-password",    label: "Seguridad",        icon: Shield },
   ],
   PROFESOR: [
     { href: "/profesor",                label: "Inicio",         icon: LayoutDashboard },
@@ -21,12 +22,14 @@ const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
     { href: "/profesor/disponibilidad", label: "Disponibilidad", icon: Calendar },
     { href: "/profesor/ingresos",       label: "Ingresos",       icon: DollarSign },
     { href: "/profesor/perfil",         label: "Mi Perfil",      icon: UserCircle },
+    { href: "/cambiar-password",        label: "Seguridad",      icon: Shield },
   ],
   ADMIN: [
     { href: "/admin",            label: "Panel",      icon: LayoutDashboard },
     { href: "/admin/profesores", label: "Profesores", icon: Users },
     { href: "/admin/retiros",    label: "Retiros",    icon: Wallet },
     { href: "/admin/metricas",   label: "Métricas",   icon: TrendingUp },
+    { href: "/cambiar-password", label: "Seguridad",  icon: Shield },
   ],
 };
 
