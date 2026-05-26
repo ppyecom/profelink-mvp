@@ -34,7 +34,7 @@ export const perfilProfesorSchema = z.object({
   bio: z.string().max(1000).optional().or(z.literal("")),
   fotoUrl: z.union([
     z.string().url("URL inválida"),
-    z.string().startsWith("/uploads/", "Ruta inválida"),
+    z.string().regex(/^\/(api\/)?uploads\//, "Ruta inválida"),
     z.literal(""),
   ]).optional(),
   nivel: z.array(z.enum(["SECUNDARIA", "TECNICA", "UNIVERSITARIA"])).default([]),
