@@ -88,9 +88,31 @@ export async function POST(req: NextRequest) {
 
   const perfil = await prisma.perfilProfesor.findUnique({
     where: { id: profesorId, estado: "VERIFICADO" },
+    include: { disponibilidad: { where: { activo: true } } },
   });
   if (!perfil) {
     return NextResponse.json({ error: "Profesor no encontrado o no verificado" }, { status: 404 });
+  }
+
+  // Validar que la fecha solicitada caiga dentro de algún slot de disponibilidad
+  const inicio = new Date(fechaInicio);
+  const fin = new Date(fechaFin);
+  const diaSemana = inicio.getDay();
+  const horaInicioMin = inicio.getHours() * 60 + inicio.getMinutes();
+  const horaFinMin    = fin.getHours()    * 60 + fin.getMinutes();
+
+  const dentroDeSlot = perfil.disponibilidad.some(slot => {
+    if (slot.diaSemana !== diaSemana) return false;
+    const slotIni = slot.horaInicio.getUTCHours() * 60 + slot.horaInicio.getUTCMinutes();
+    const slotFin = slot.horaFin.getUTCHours()    * 60 + slot.horaFin.getUTCMinutes();
+    return horaInicioMin >= slotIni && horaFinMin <= slotFin;
+  });
+
+  if (!dentroDeSlot) {
+    return NextResponse.json(
+      { error: "El horario seleccionado no está dentro de la disponibilidad del profesor" },
+      { status: 400 }
+    );
   }
 
   try {
