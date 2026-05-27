@@ -171,9 +171,24 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
 
       {error && <p className="text-red-500 text-sm bg-red-50 rounded-xl px-3 py-2">{error}</p>}
 
+      {!selected && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 flex items-center gap-2 text-xs text-amber-700">
+          <Clock className="w-4 h-4 flex-shrink-0" />
+          <span>Selecciona un horario disponible arriba para continuar.</span>
+        </div>
+      )}
+
       <button onClick={handleReservar} disabled={!selected || loading}
-        className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white font-bold py-4 rounded-2xl transition-all shadow-elev-2 hover:-translate-y-0.5 text-sm">
-        {loading ? "Reservando..." : selected ? "Confirmar reserva →" : "Selecciona un horario"}
+        aria-disabled={!selected || loading}
+        className={cn(
+          "w-full font-bold py-4 rounded-2xl transition-all text-sm",
+          !selected
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+            : loading
+              ? "bg-indigo-400 text-white cursor-wait"
+              : "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-elev-2 hover:-translate-y-0.5 cursor-pointer"
+        )}>
+        {loading ? "Reservando..." : selected ? "Confirmar reserva →" : "Selecciona un horario primero"}
       </button>
     </div>
   );
