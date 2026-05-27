@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { registerSchema } from "@/lib/validations/auth";
+import PasswordStrength from "./PasswordStrength";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -105,10 +106,11 @@ export default function RegisterForm() {
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Mínimo 8 caracteres"
+          placeholder="8+ chars, mayús, minús, número y símbolo"
           autoComplete="new-password"
         />
         {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+        <PasswordStrength password={form.password} />
       </div>
 
       <div>

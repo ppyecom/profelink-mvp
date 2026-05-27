@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { passwordFuerteSchema } from "@/lib/validations/auth";
 
 const schema = z.object({
   token:    z.string().min(10),
-  password: z.string().min(8, "La contraseña debe tener mínimo 8 caracteres").max(100),
+  password: passwordFuerteSchema,
 });
 
 export async function POST(req: NextRequest) {
