@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Lock, Eye, EyeOff, CheckCircle, Shield } from "lucide-react";
 import TwoFactorSection from "@/components/auth/TwoFactorSection";
+import PasswordStrength from "@/components/auth/PasswordStrength";
 
 export default function CambiarPasswordPage() {
   const [form, setForm] = useState({ actual: "", nueva: "", confirmar: "" });
@@ -76,6 +77,7 @@ export default function CambiarPasswordPage() {
                 </button>
               )}
             </div>
+            {key === "nueva" && <PasswordStrength password={form.nueva} />}
           </div>
         ))}
 

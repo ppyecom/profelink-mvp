@@ -4,6 +4,7 @@ import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
+import PasswordStrength from "@/components/auth/PasswordStrength";
 
 export default function ResetPasswordPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
@@ -70,12 +71,13 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input type={show ? "text" : "password"} value={pass} onChange={e => setPass(e.target.value)} required
-                      placeholder="Mínimo 8 caracteres" minLength={8}
+                      placeholder="8+ chars, mayús, minús, número y símbolo" minLength={8}
                       className="w-full pl-10 pr-11 py-3 border-2 border-amber-100 bg-amber-50/30 rounded-2xl text-sm focus:outline-none focus:border-amber-500 focus:bg-white transition-all" />
                     <button type="button" onClick={() => setShow(!show)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                       {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  <PasswordStrength password={pass} />
                 </div>
 
                 <div>

@@ -3,10 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { passwordFuerteSchema } from "@/lib/validations/auth";
 
 const schema = z.object({
   passwordActual: z.string().min(1, "Contraseña actual requerida"),
-  passwordNueva:  z.string().min(8, "La nueva contraseña debe tener mínimo 8 caracteres").max(100),
+  passwordNueva:  passwordFuerteSchema,
 });
 
 export async function POST(req: NextRequest) {
