@@ -165,15 +165,6 @@ export default function LoginForm() {
         <Link href="/register" className="text-navy-600 hover:text-navy-700 font-semibold">Regístrate gratis</Link>
       </p>
 
-      {/* Demo credentials */}
-      <div className="bg-cream-200 rounded-2xl p-3 text-center border border-amber-200">
-        <p className="text-xs text-navy-600 font-medium mb-1">Cuentas de demo</p>
-        <div className="text-xs text-navy-700 space-y-0.5">
-          <p>📚 <strong>luis@profelink.pe</strong> (Estudiante)</p>
-          <p>👩‍🏫 <strong>maria@profelink.pe</strong> (Profesora)</p>
-          <p>🔑 Contraseña: <strong>password123</strong></p>
-        </div>
-      </div>
       </>
       )}
     </form>
