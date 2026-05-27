@@ -7,7 +7,7 @@ Plataforma edtech peruana que conecta estudiantes con profesores independientes 
 - **Framework**: Next.js 15 con App Router (TypeScript)
 - **Base de datos**: PostgreSQL (local)
 - **ORM**: Prisma
-- **Auth**: JWT en cookies httpOnly (implementación manual con `jose`)
+- **Auth**: JWT en cookies httpOnly
 - **Estilos**: Tailwind CSS + Lucide icons
 - **Validaciones**: Zod
 - **Fechas**: date-fns
