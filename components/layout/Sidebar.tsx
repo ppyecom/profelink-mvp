@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen, TrendingUp, Wallet, Shield, Award, Heart, Tag, Lightbulb } from "lucide-react";
+import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen, TrendingUp, Wallet, Shield, Award, Heart, Tag, Lightbulb, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RolUsuario } from "@/types";
 
@@ -13,6 +13,7 @@ const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
   ESTUDIANTE: [
     { href: "/estudiante",            label: "Inicio",         icon: LayoutDashboard },
     { href: "/estudiante/sesiones",   label: "Mis Sesiones",   icon: Calendar },
+    { href: "/inbox",                 label: "Mensajes",       icon: MessageCircle },
     { href: "/estudiante/favoritos",  label: "Favoritos",      icon: Heart },
     { href: "/estudiante/cupones",    label: "Mis Cupones",    icon: Tag },
     { href: "/estudiante/referidos",  label: "Referidos",      icon: Users },
@@ -23,6 +24,7 @@ const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
   PROFESOR: [
     { href: "/profesor",                label: "Inicio",         icon: LayoutDashboard },
     { href: "/profesor/sesiones",       label: "Sesiones",       icon: ClipboardList },
+    { href: "/inbox",                   label: "Mensajes",       icon: MessageCircle },
     { href: "/profesor/estudiantes",    label: "Estudiantes",    icon: Users },
     { href: "/profesor/oportunidades",  label: "Oportunidades",  icon: Lightbulb },
     { href: "/profesor/disponibilidad", label: "Disponibilidad", icon: Calendar },

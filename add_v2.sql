@@ -146,6 +146,25 @@ CREATE TABLE IF NOT EXISTS wishlist (
 CREATE INDEX IF NOT EXISTS idx_wishlist_estudiante ON wishlist(estudiante_id);
 CREATE INDEX IF NOT EXISTS idx_wishlist_materia ON wishlist(materia);
 
+-- Inbox de mensajes pre-reserva
+ALTER TABLE mensajes
+  ALTER COLUMN sesion_id DROP NOT NULL,
+  ADD COLUMN IF NOT EXISTS destinatario_id UUID;
+CREATE INDEX IF NOT EXISTS idx_mensajes_destinatario ON mensajes(destinatario_id, leido);
+
+-- Sesiones grupales
+ALTER TABLE sesiones
+  ADD COLUMN IF NOT EXISTS es_grupal BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS capacidad_max INTEGER NOT NULL DEFAULT 1;
+
+CREATE TABLE IF NOT EXISTS participantes_grupales (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sesion_id     UUID NOT NULL REFERENCES sesiones(id) ON DELETE CASCADE,
+  estudiante_id UUID NOT NULL,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (sesion_id, estudiante_id)
+);
+
 -- Promociones de tutor
 CREATE TABLE IF NOT EXISTS promociones (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),

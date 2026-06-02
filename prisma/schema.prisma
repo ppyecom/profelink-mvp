@@ -291,11 +291,15 @@ model Sesion {
   createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
+  esGrupal        Boolean         @default(false) @map("es_grupal")
+  capacidadMax    Int             @default(1) @map("capacidad_max")
+
   estudiante      Usuario        @relation("EstudianteSesiones", fields: [estudianteId], references: [id], onDelete: Cascade)
   profesor        PerfilProfesor @relation("ProfesorSesiones",   fields: [profesorId],   references: [id], onDelete: Cascade)
   resena          Resena?
   mensajes        Mensaje[]
   tareas          Tarea[]
+  participantes   ParticipanteGrupal[]
 
   @@map("sesiones")
 }
@@ -367,6 +371,18 @@ model Wishlist {
   @@map("wishlist")
 }
 
+model ParticipanteGrupal {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sesionId     String   @map("sesion_id") @db.Uuid
+  estudianteId String   @map("estudiante_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  sesion       Sesion   @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+
+  @@unique([sesionId, estudianteId])
+  @@map("participantes_grupales")
+}
+
 model Promocion {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   profesorId   String   @map("profesor_id") @db.Uuid
@@ -381,15 +397,17 @@ model Promocion {
 
 model Mensaje {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sesionId    String   @map("sesion_id") @db.Uuid
+  sesionId    String?  @map("sesion_id") @db.Uuid
   remitenteId String   @map("remitente_id") @db.Uuid
+  destinatarioId String? @map("destinatario_id") @db.Uuid
   contenido   String
   leido       Boolean  @default(false)
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
 
-  sesion      Sesion   @relation(fields: [sesionId],    references: [id], onDelete: Cascade)
+  sesion      Sesion?  @relation(fields: [sesionId],    references: [id], onDelete: Cascade)
   remitente   Usuario  @relation("MensajesEnviados",    fields: [remitenteId], references: [id], onDelete: Cascade)
 
+  @@index([destinatarioId, leido])
   @@map("mensajes")
 }
 
