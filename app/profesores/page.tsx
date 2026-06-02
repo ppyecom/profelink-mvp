@@ -132,28 +132,32 @@ export default async function ProfesoresPage({ searchParams }: PageProps) {
   const params = await searchParams;
   return (
     <div className="min-h-screen bg-cream-50">
-      {/* Header editorial */}
-      <div className="relative overflow-hidden border-b border-ink-200 bg-white">
-        <div className="absolute inset-0 grid-pattern opacity-40 pointer-events-none" />
-        <div className="max-w-6xl mx-auto px-5 py-12 md:py-16 relative">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-900 mb-6">
+      {/* Header bestia */}
+      <div className="relative overflow-hidden border-b-2 border-ink-900 bg-amber-300">
+        <div className="absolute inset-0 grid-pattern opacity-30 pointer-events-none" />
+
+        {/* Texto gigante decorativo */}
+        <p className="absolute -right-20 top-1/2 -translate-y-1/2 font-display font-black text-[15rem] md:text-[20rem] text-ink-900/[0.05] leading-none select-none pointer-events-none">
+          TUTORES
+        </p>
+
+        <div className="max-w-6xl mx-auto px-5 py-16 md:py-24 relative">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-ink-900 hover:text-amber-800 mb-6 font-mono" data-cursor="hover">
             ← Volver al inicio
           </Link>
 
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-            <div>
-              <p className="text-amber-700 text-sm font-semibold uppercase tracking-wider mb-2">Buscar tutores</p>
-              <h1 className="font-display font-black text-4xl md:text-6xl text-ink-900 tracking-tight text-balance">
-                Encuentra tu próximo<br /><span className="gradient-text">tutor verificado</span>.
-              </h1>
-            </div>
-          </div>
+          <h1 className="font-display font-black text-5xl md:text-7xl lg:text-8xl text-ink-900 tracking-tighter leading-[0.9] text-balance">
+            Encuentra a<br />
+            <span className="italic">tu próximo</span><br />
+            <span className="bg-ink-900 text-amber-300 px-3 inline-block -rotate-1">tutor</span>.
+          </h1>
 
           {/* Categorías rápidas */}
-          <div className="flex flex-wrap gap-2 mt-8">
-            {["Matemáticas","Física","Inglés","Programación","Química","Historia","Economía","Cálculo"].map(c => (
+          <div className="flex flex-wrap gap-2 mt-10">
+            {["Matemáticas","Física","Inglés","Programación","Química","Historia","Economía","Cálculo"].map((c, i) => (
               <Link key={c} href={`/profesores?materia=${encodeURIComponent(c)}`}
-                className="text-sm font-medium bg-cream-100 hover:bg-amber-100 border border-ink-200 hover:border-amber-300 text-ink-700 hover:text-amber-800 px-4 py-2 rounded-full transition-all">
+                data-cursor="hover"
+                className={`text-sm font-bold bg-white hover:bg-ink-900 hover:text-amber-300 border-2 border-ink-900 text-ink-900 px-4 py-2 rounded-full transition-all card-lift ${i % 2 === 0 ? "rotate-1" : "-rotate-1"} hover:rotate-0`}>
                 {c}
               </Link>
             ))}
