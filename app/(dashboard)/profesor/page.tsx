@@ -46,81 +46,93 @@ export default async function ProfesorDashboard() {
 
       <TipsCard />
 
-      {/* ── HEADER ─────────────────────────────────────────────────────── */}
-      <div className="bento-warm p-6 md:p-8 relative overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-72 h-72 bg-amber-200 rounded-full filter blur-3xl opacity-40" />
-        <div className="relative flex items-start justify-between flex-wrap gap-4">
+      {/* ── HEADER brutal ─────────────────────── */}
+      <div className="bg-ink-900 border-2 border-ink-900 p-6 md:p-10 relative overflow-hidden shadow-[6px_6px_0_0_rgba(217,119,6,1)]">
+        <p className="absolute -right-6 -top-2 font-display font-black text-[10rem] md:text-[14rem] leading-none text-amber-500/[0.08] select-none pointer-events-none">
+          TUTOR
+        </p>
+
+        <div className="relative flex items-end justify-between flex-wrap gap-4">
           <div>
-            <p className="text-amber-700 text-sm font-medium">Panel de tutor</p>
-            <h1 className="font-display font-black text-3xl md:text-4xl text-ink-900 mt-1 tracking-tight">{nombre} 👨‍🏫</h1>
-            <p className="text-ink-600 text-sm mt-1">{perfil.especialidades.map(e => e.materia).join(" · ")}</p>
+            <p className="font-mono text-xs uppercase tracking-widest text-amber-400 mb-2 font-bold">→ Panel de tutor</p>
+            <h1 className="font-display font-black text-4xl md:text-6xl text-amber-300 leading-none tracking-tighter">
+              {nombre}<span className="text-amber-300/30">.</span>
+            </h1>
+            <p className="text-cream-200 text-base mt-3 max-w-md">
+              {perfil.especialidades.length > 0
+                ? <>Enseñas <strong className="bg-amber-400 text-ink-900 px-1.5">{perfil.especialidades.map(e => e.materia).join(" · ")}</strong></>
+                : <span className="text-amber-300">Aún no tienes materias. <Link href="/profesor/perfil" className="underline">Configura tu perfil →</Link></span>
+              }
+            </p>
           </div>
-          <span className={`inline-flex items-center gap-1.5 ${estadoBadge.bg} ${estadoBadge.text} text-xs font-bold px-3 py-1.5 rounded-full`}>
+          <span className={`inline-flex items-center gap-1.5 ${estadoBadge.bg} ${estadoBadge.text} text-xs font-black px-3 py-1.5 border-2 border-ink-900 uppercase tracking-wide`}>
             <estadoBadge.icon className="w-3 h-3" />
             {estadoBadge.msg}
           </span>
         </div>
       </div>
 
-      {/* ── STATS ───────────────────────────────────────────────────────── */}
+      {/* ── STATS coloridas ─────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Sesiones hoy",    val: sesionesHoy.length,          icon: Calendar,    color: "bg-indigo-100 text-indigo-700" },
-          { label: "Esta semana",     val: sesionesSemana,              icon: TrendingUp,  color: "bg-violet-100 text-violet-700" },
-          { label: "Completadas",     val: sesionesCompletadas.length,  icon: CheckCircle, color: "bg-emerald-100 text-emerald-700" },
-          { label: "Ingresos netos",  val: formatSoles(ingresoTotal),   icon: DollarSign,  color: "bg-amber-100 text-amber-700" },
-        ].map(s => (
-          <div key={s.label} className="bento p-5 card-lift">
-            <div className={`w-10 h-10 rounded-2xl ${s.color} flex items-center justify-center mb-3`}>
-              <s.icon className="w-5 h-5" />
+          { label: "Sesiones hoy",    val: sesionesHoy.length,          icon: Calendar,    bg: "bg-amber-300",   ic: "bg-ink-900 text-amber-300" },
+          { label: "Esta semana",     val: sesionesSemana,              icon: TrendingUp,  bg: "bg-violet-300",  ic: "bg-ink-900 text-violet-300" },
+          { label: "Completadas",     val: sesionesCompletadas.length,  icon: CheckCircle, bg: "bg-emerald-300", ic: "bg-ink-900 text-emerald-300" },
+          { label: "Ingresos netos",  val: formatSoles(ingresoTotal),   icon: DollarSign,  bg: "bg-ink-900",     ic: "bg-amber-300 text-ink-900", txt: "text-amber-300" },
+        ].map((s, i) => (
+          <div key={s.label}
+            className={`${s.bg} ${s.txt ?? "text-ink-900"} border-2 border-ink-900 p-5 ${i % 2 === 0 ? "-rotate-1" : "rotate-1"} hover:rotate-0 transition-all shadow-[3px_3px_0_0_rgba(28,25,23,1)] hover:shadow-[5px_5px_0_0_rgba(28,25,23,1)] hover:-translate-x-0.5 hover:-translate-y-0.5`}>
+            <div className={`w-9 h-9 rounded-lg ${s.ic} flex items-center justify-center mb-3 border-2 border-ink-900`}>
+              <s.icon className="w-4 h-4" />
             </div>
-            <p className="font-display font-black text-2xl text-ink-900 tracking-tight truncate">{s.val}</p>
-            <p className="text-xs text-ink-500 mt-1 font-medium uppercase tracking-wider">{s.label}</p>
+            <p className="font-display font-black text-2xl leading-none tracking-tighter truncate">{s.val}</p>
+            <p className="text-[10px] mt-2 font-mono uppercase tracking-wider opacity-70">{s.label}</p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
-        {/* ── SESIONES HOY ───────────────────────────────────────────────── */}
-        <div className="bento elev-1 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-indigo-50">
+        {/* ── SESIONES HOY ───────────────────────── */}
+        <div className="bg-white border-2 border-ink-900 shadow-[5px_5px_0_0_rgba(28,25,23,1)] overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 bg-amber-300 border-b-2 border-ink-900">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-indigo-100 rounded-xl flex items-center justify-center">
-                <Calendar className="w-3.5 h-3.5 text-indigo-600" />
-              </div>
-              <h2 className="font-heading font-bold text-brand-text">Sesiones de hoy</h2>
+              <Calendar className="w-4 h-4 text-ink-900" />
+              <h2 className="font-display font-black uppercase tracking-wider text-sm text-ink-900">Sesiones de hoy</h2>
             </div>
-            <Link href="/profesor/sesiones" className="inline-flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:gap-2 transition-all">
+            <Link href="/profesor/sesiones" data-cursor="hover"
+              className="inline-flex items-center gap-1 text-xs font-black text-ink-900 hover:gap-2 transition-all">
               Todas <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           {sesionesHoy.length === 0 ? (
-            <div className="py-10 text-center">
-              <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <Sparkles className="w-6 h-6 text-indigo-300" />
+            <div className="py-12 text-center px-5">
+              <div className="inline-block bg-amber-300 border-2 border-ink-900 p-3 -rotate-3 mb-3">
+                <Sparkles className="w-8 h-8 text-ink-900" />
               </div>
-              <p className="text-sm font-semibold text-gray-400">Sin sesiones hoy</p>
-              <Link href="/profesor/disponibilidad" className="text-xs text-indigo-500 hover:underline mt-1 inline-block">
-                Configurar disponibilidad →
+              <p className="font-display font-black text-xl text-ink-900 mb-1">Día libre 😎</p>
+              <p className="text-xs text-ink-600 mb-3">Sin sesiones para hoy</p>
+              <Link href="/profesor/disponibilidad" data-cursor="hover"
+                className="text-xs text-amber-700 hover:underline font-bold">
+                Configurar más horarios →
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-indigo-50">
+            <div className="divide-y-2 divide-dashed divide-ink-200">
               {sesionesHoy.map(s => (
-                <div key={s.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-indigo-50/40 transition-colors">
-                  <div className="w-9 h-9 bg-gradient-to-br from-indigo-100 to-violet-100 rounded-xl flex items-center justify-center flex-shrink-0 font-heading font-bold text-sm text-indigo-600">
+                <div key={s.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-amber-50 transition-colors">
+                  <div className="w-10 h-10 bg-ink-900 text-amber-300 rounded-lg flex items-center justify-center flex-shrink-0 font-display font-black border-2 border-ink-900">
                     {s.estudiante.nombre.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-brand-text truncate">{s.estudiante.nombre}</p>
-                    <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
+                    <p className="font-display font-black text-sm text-ink-900 truncate">{s.estudiante.nombre}</p>
+                    <div className="flex items-center gap-1 text-xs text-ink-600 mt-0.5 font-mono">
                       <Clock className="w-3 h-3" />
                       {formatDateTime(s.fechaInicio)}
                     </div>
                   </div>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 ${ESTADO_SESION_COLORS[s.estado]}`}>
+                  <span className={`text-[10px] px-2 py-0.5 border-2 border-ink-900 font-black uppercase flex-shrink-0 ${ESTADO_SESION_COLORS[s.estado]}`}>
                     {ESTADO_SESION_LABELS[s.estado]}
                   </span>
                 </div>
@@ -129,16 +141,14 @@ export default async function ProfesorDashboard() {
           )}
         </div>
 
-        {/* ── ÚLTIMAS RESEÑAS ───────────────────────────────────────────── */}
-        <div className="bento elev-1 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-indigo-50">
+        {/* ── ÚLTIMAS RESEÑAS ─────────────────────── */}
+        <div className="bg-white border-2 border-ink-900 shadow-[5px_5px_0_0_rgba(28,25,23,1)] overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 bg-emerald-300 border-b-2 border-ink-900">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-amber-100 rounded-xl flex items-center justify-center">
-                <Star className="w-3.5 h-3.5 text-amber-600" />
-              </div>
-              <h2 className="font-heading font-bold text-brand-text">Últimas reseñas</h2>
+              <Star className="w-4 h-4 text-ink-900 fill-ink-900" />
+              <h2 className="font-display font-black uppercase tracking-wider text-sm text-ink-900">Últimas reseñas</h2>
               {Number(perfil.ratingPromedio) > 0 && (
-                <span className="bg-amber-50 text-amber-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-amber-100">
+                <span className="bg-ink-900 text-emerald-300 text-xs font-black px-2 py-0.5 border-2 border-ink-900">
                   ★ {Number(perfil.ratingPromedio).toFixed(1)}
                 </span>
               )}
@@ -146,21 +156,21 @@ export default async function ProfesorDashboard() {
           </div>
 
           {resenas.length === 0 ? (
-            <div className="py-10 text-center">
-              <p className="text-sm text-gray-400">Sin reseñas aún</p>
-              <p className="text-xs text-gray-300 mt-1">Completa sesiones para recibir reseñas</p>
+            <div className="py-12 text-center">
+              <p className="font-display font-black text-xl text-ink-900">Sin reseñas aún ⭐</p>
+              <p className="text-xs text-ink-600 mt-1">Completa sesiones para recibir reseñas</p>
             </div>
           ) : (
-            <div className="divide-y divide-indigo-50">
+            <div className="divide-y-2 divide-dashed divide-ink-200">
               {resenas.map(r => (
-                <div key={r.id} className="px-5 py-3.5 hover:bg-amber-50/30 transition-colors">
+                <div key={r.id} className="px-5 py-3.5 hover:bg-emerald-50 transition-colors">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-sm text-brand-text">{r.estudiante.nombre}</span>
-                    <div className="flex">
-                      {[1,2,3,4,5].map(n => <span key={n} className={`text-sm ${n <= r.calificacion ? "text-amber-400" : "text-gray-200"}`}>★</span>)}
+                    <span className="font-display font-black text-sm text-ink-900">{r.estudiante.nombre}</span>
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(n => <Star key={n} className={`w-3.5 h-3.5 ${n <= r.calificacion ? "fill-ink-900 text-ink-900" : "fill-ink-100 text-ink-200"}`} />)}
                     </div>
                   </div>
-                  {r.comentario && <p className="text-xs text-gray-500 line-clamp-2">{r.comentario}</p>}
+                  {r.comentario && <p className="text-xs text-ink-600 line-clamp-2 italic">&ldquo;{r.comentario}&rdquo;</p>}
                 </div>
               ))}
             </div>
