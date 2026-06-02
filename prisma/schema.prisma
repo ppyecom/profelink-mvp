@@ -414,6 +414,26 @@ model Promocion {
   @@map("promociones")
 }
 
+enum PlanSuscripcion {
+  GRATIS
+  ESTUDIANTE_PRO
+  PROFESOR_PLUS
+}
+
+model Suscripcion {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId   String          @unique @map("usuario_id") @db.Uuid
+  plan         PlanSuscripcion @default(GRATIS)
+  activa       Boolean         @default(true)
+  inicioEn     DateTime        @default(now()) @map("inicio_en") @db.Timestamptz()
+  expiraEn     DateTime?       @map("expira_en") @db.Timestamptz()
+  precioMensual Decimal        @default(0) @map("precio_mensual") @db.Decimal(8, 2)
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("suscripciones")
+}
+
 model Ejercicio {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   autorId     String   @map("autor_id") @db.Uuid
