@@ -193,3 +193,17 @@ CREATE TABLE IF NOT EXISTS plantillas_mensaje (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_plantillas_profesor ON plantillas_mensaje(profesor_id);
+
+-- Paquetes (bundles) de sesiones
+CREATE TABLE IF NOT EXISTS bundles (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profesor_id  UUID NOT NULL,
+  nombre       VARCHAR(120) NOT NULL,
+  num_sesiones SMALLINT NOT NULL CHECK (num_sesiones > 0),
+  duracion_min INTEGER NOT NULL DEFAULT 60,
+  precio_total DECIMAL(10,2) NOT NULL CHECK (precio_total > 0),
+  descripcion  TEXT,
+  activa       BOOLEAN NOT NULL DEFAULT true,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_bundles_profesor ON bundles(profesor_id, activa);
