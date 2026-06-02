@@ -100,6 +100,50 @@ export async function gcalEliminarEvento(usuarioId: string, eventId: string): Pr
   return res.ok || res.status === 410; // 410 = already deleted
 }
 
+/** Lee eventos ocupados (busy) del usuario en un rango con FreeBusy API.
+ *  Devuelve intervalos [start, end] o null si el usuario no tiene sync activado.
+ */
+export async function gcalGetBusy(
+  usuarioId: string,
+  desde: Date,
+  hasta: Date,
+): Promise<Array<{ start: Date; end: Date }> | null> {
+  const usuario = await prisma.usuario.findUnique({
+    where: { id: usuarioId },
+    select: { gcalRefreshToken: true, gcalSyncEnabled: true },
+  });
+  if (!usuario?.gcalSyncEnabled || !usuario.gcalRefreshToken) return null;
+
+  const accessToken = await getAccessToken(usuario.gcalRefreshToken);
+  if (!accessToken) return null;
+
+  const res = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      timeMin: desde.toISOString(),
+      timeMax: hasta.toISOString(),
+      timeZone: "America/Lima",
+      items: [{ id: "primary" }],
+    }),
+  });
+
+  if (!res.ok) {
+    console.error("[gcal busy] error", await res.text());
+    return null;
+  }
+
+  const data = await res.json();
+  const busy = data.calendars?.primary?.busy ?? [];
+  return busy.map((b: { start: string; end: string }) => ({
+    start: new Date(b.start),
+    end: new Date(b.end),
+  }));
+}
+
 /** Construye el objeto evento estándar de ProfeLink */
 export function buildEvento(opts: {
   titulo: string;

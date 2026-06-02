@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/lib/auth";
 import { crearSesionSchema } from "@/lib/validations/sesion";
 import { crearNotificacion, Notif } from "@/lib/notificaciones";
-import { gcalCrearEvento, buildEvento } from "@/lib/gcal";
+import { gcalCrearEvento, buildEvento, gcalGetBusy } from "@/lib/gcal";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -121,6 +121,17 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
+
+  // Validar contra Google Calendar del tutor (si lo tiene sincronizado)
+  try {
+    const busy = await gcalGetBusy(perfil.usuarioId, inicio, fin);
+    if (busy && busy.some(b => inicio < b.end && fin > b.start)) {
+      return NextResponse.json(
+        { error: "El tutor está ocupado en ese horario (según su Google Calendar). Elige otro slot." },
+        { status: 409 }
+      );
+    }
+  } catch (e) { console.error("[gcal busy check]", e); }
 
   // Calcular precio base según duración
   const precioBase = duracionMinutos === 30
