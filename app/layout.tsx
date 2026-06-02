@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import PWARegister from "@/components/pwa/PWARegister";
 import CookieBanner from "@/components/layout/CookieBanner";
+import SmoothScroll from "@/components/fx/SmoothScroll";
+import CustomCursor from "@/components/fx/CustomCursor";
 
 export const metadata: Metadata = {
   title: "ProfeLink — Asesorías académicas en Perú",
@@ -29,6 +31,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body className="antialiased">
+        <SmoothScroll />
+        <CustomCursor />
         <PWARegister />
         {children}
         <CookieBanner />
