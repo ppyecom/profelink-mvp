@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { crearNotificacion } from "@/lib/notificaciones";
+import { auditar } from "@/lib/auditoria";
 
 const accionSchema = z.object({
   accion: z.enum(["APROBAR", "RECHAZAR", "MARCAR_PAGADO"]),
@@ -62,6 +63,14 @@ export async function PATCH(
     titulo: titulos[nuevoEstado],
     mensaje: mensajes[nuevoEstado],
     url: "/profesor/ingresos",
+  });
+
+  await auditar({
+    usuarioId: session.sub,
+    accion: `RETIRO_${parsed.data.accion}`,
+    entidad: "SolicitudRetiro",
+    entidadId: id,
+    metadata: { monto: Number(retiro.monto), profesorId: retiro.profesor.usuarioId, nota: parsed.data.nota },
   });
 
   return NextResponse.json({ ok: true, retiro: { ...updated, monto: Number(updated.monto) } });
