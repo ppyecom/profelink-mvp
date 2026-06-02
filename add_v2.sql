@@ -99,3 +99,59 @@ CREATE TABLE IF NOT EXISTS tareas (
   completada_en TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS idx_tareas_sesion ON tareas(sesion_id);
+
+-- Notas privadas (tutor sobre estudiante)
+CREATE TABLE IF NOT EXISTS notas_privadas (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profesor_id   UUID NOT NULL,
+  estudiante_id UUID NOT NULL,
+  contenido     TEXT NOT NULL,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (profesor_id, estudiante_id)
+);
+
+-- Materiales por sesión
+CREATE TABLE IF NOT EXISTS materiales (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sesion_id   UUID NOT NULL REFERENCES sesiones(id) ON DELETE CASCADE,
+  titulo      VARCHAR(200) NOT NULL,
+  archivo_url TEXT NOT NULL,
+  subido_por  VARCHAR(20) NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_materiales_sesion ON materiales(sesion_id);
+
+-- Lista de espera
+CREATE TABLE IF NOT EXISTS lista_espera (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  estudiante_id UUID NOT NULL,
+  profesor_id   UUID NOT NULL,
+  dia_semana    SMALLINT NOT NULL,
+  hora          VARCHAR(5) NOT NULL,
+  notificado    BOOLEAN NOT NULL DEFAULT false,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (estudiante_id, profesor_id, dia_semana, hora)
+);
+
+-- Wishlist público
+CREATE TABLE IF NOT EXISTS wishlist (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  estudiante_id UUID NOT NULL,
+  materia       VARCHAR(120) NOT NULL,
+  descripcion   TEXT,
+  resuelto      BOOLEAN NOT NULL DEFAULT false,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_wishlist_estudiante ON wishlist(estudiante_id);
+CREATE INDEX IF NOT EXISTS idx_wishlist_materia ON wishlist(materia);
+
+-- Promociones de tutor
+CREATE TABLE IF NOT EXISTS promociones (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profesor_id UUID NOT NULL UNIQUE,
+  porcentaje  SMALLINT NOT NULL CHECK (porcentaje BETWEEN 5 AND 50),
+  activa      BOOLEAN NOT NULL DEFAULT true,
+  expira_en   TIMESTAMPTZ,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

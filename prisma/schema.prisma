@@ -317,6 +317,68 @@ model Tarea {
   @@map("tareas")
 }
 
+model NotaPrivada {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profesorId   String   @map("profesor_id") @db.Uuid
+  estudianteId String   @map("estudiante_id") @db.Uuid
+  contenido    String
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@unique([profesorId, estudianteId])
+  @@map("notas_privadas")
+}
+
+model Material {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sesionId   String   @map("sesion_id") @db.Uuid
+  titulo     String   @db.VarChar(200)
+  archivoUrl String   @map("archivo_url")
+  subidoPor  String   @map("subido_por") @db.VarChar(20) // 'PROFESOR' o 'ESTUDIANTE'
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([sesionId])
+  @@map("materiales")
+}
+
+model ListaEspera {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  estudianteId String   @map("estudiante_id") @db.Uuid
+  profesorId   String   @map("profesor_id") @db.Uuid
+  diaSemana    Int      @map("dia_semana") @db.SmallInt
+  hora         String   @db.VarChar(5)
+  notificado   Boolean  @default(false)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@unique([estudianteId, profesorId, diaSemana, hora])
+  @@map("lista_espera")
+}
+
+model Wishlist {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  estudianteId String   @map("estudiante_id") @db.Uuid
+  materia      String   @db.VarChar(120)
+  descripcion  String?
+  resuelto     Boolean  @default(false)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([estudianteId])
+  @@index([materia])
+  @@map("wishlist")
+}
+
+model Promocion {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profesorId   String   @map("profesor_id") @db.Uuid
+  porcentaje   Int      @db.SmallInt // 5-50%
+  activa       Boolean  @default(true)
+  expiraEn     DateTime? @map("expira_en") @db.Timestamptz()
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@unique([profesorId])
+  @@map("promociones")
+}
+
 model Mensaje {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   sesionId    String   @map("sesion_id") @db.Uuid
