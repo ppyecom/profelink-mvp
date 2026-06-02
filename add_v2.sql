@@ -221,6 +221,24 @@ CREATE TABLE IF NOT EXISTS logros (
 );
 CREATE INDEX IF NOT EXISTS idx_logros_usuario ON logros(usuario_id);
 
+-- Suscripciones (planes Pro / Plus)
+DO $$ BEGIN
+  CREATE TYPE "PlanSuscripcion" AS ENUM ('GRATIS','ESTUDIANTE_PRO','PROFESOR_PLUS');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS suscripciones (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  usuario_id     UUID NOT NULL UNIQUE,
+  plan           "PlanSuscripcion" NOT NULL DEFAULT 'GRATIS',
+  activa         BOOLEAN NOT NULL DEFAULT true,
+  inicio_en      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expira_en      TIMESTAMPTZ,
+  precio_mensual DECIMAL(8,2) NOT NULL DEFAULT 0,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Banco de ejercicios
 CREATE TABLE IF NOT EXISTS ejercicios (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
