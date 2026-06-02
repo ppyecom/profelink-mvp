@@ -9,6 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        /* ── Sistema v2 ── */
+        ink: {
+          50:  "#FAFAF9",
+          100: "#F5F4F0",
+          200: "#E7E5E0",
+          300: "#D6D3CC",
+          400: "#A8A29E",
+          500: "#78716C",
+          600: "#57534E",
+          700: "#44403C",
+          800: "#292524",
+          900: "#1C1917",
+          950: "#0C0A09",
+        },
+
         /* ── Paleta principal — cálida ─────────────────── */
 
         /* Ámbar/dorado — color primario (ojos del búho) */
