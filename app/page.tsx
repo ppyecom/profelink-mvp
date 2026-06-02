@@ -399,7 +399,7 @@ export default function HomePage() {
               </ScrollReveal>
 
               <ScrollReveal delay={0.2}>
-                <h2 className="font-display font-black text-6xl md:text-8xl lg:text-9xl leading-[0.85] tracking-tighter mb-8">
+                <h2 className="font-display font-black text-6xl md:text-8xl lg:text-9xl leading-[0.85] tracking-tighter mb-8 text-cream-50">
                   Empieza<br />
                   <span className="italic text-amber-400">hoy.</span>
                 </h2>
