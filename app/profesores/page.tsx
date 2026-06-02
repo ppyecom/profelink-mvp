@@ -84,39 +84,39 @@ async function ProfesoresGrid({ searchParams }: { searchParams: Awaited<PageProp
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500">
-          {total === 0 ? "Sin resultados" : `${total} profesor${total !== 1 ? "es" : ""} encontrado${total !== 1 ? "s" : ""}`}
+      <div className="flex items-center justify-between mb-6">
+        <p className="text-sm text-ink-500 font-medium">
+          {total === 0 ? "Sin resultados" : <><strong className="text-ink-900">{total}</strong> tutor{total !== 1 ? "es" : ""} {total === 1 ? "encontrado" : "encontrados"}</>}
         </p>
       </div>
 
       {profesores.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="w-16 h-16 bg-indigo-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">🔍</span>
+        <div className="bento p-16 text-center">
+          <div className="w-20 h-20 bg-cream-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-4xl">🔍</span>
           </div>
-          <p className="font-heading font-bold text-xl text-brand-text mb-2">Sin resultados</p>
-          <p className="text-gray-400 text-sm mb-4">No encontramos profesores con esos filtros</p>
-          <Link href="/profesores" className="inline-flex items-center gap-1.5 text-indigo-600 font-semibold text-sm hover:underline">
+          <p className="font-display font-bold text-2xl text-ink-900 mb-2">Sin resultados</p>
+          <p className="text-ink-500 mb-6">No encontramos tutores con esos filtros</p>
+          <Link href="/profesores" className="inline-flex items-center gap-1.5 bg-ink-900 hover:bg-ink-800 text-white font-semibold px-5 py-2.5 rounded-xl text-sm">
             Limpiar filtros →
           </Link>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
             {profesores.map((p) => <ProfesorCard key={p.id} profesor={p} />)}
           </div>
 
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               {page > 1 && (
-                <Link href={buildUrl(page - 1)} className="px-5 py-2.5 bg-white border border-indigo-100 rounded-2xl text-sm font-medium hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-elev-1">
+                <Link href={buildUrl(page - 1)} className="px-4 py-2 bg-white border border-ink-200 rounded-xl text-sm font-medium hover:border-ink-300 transition-colors">
                   ← Anterior
                 </Link>
               )}
-              <span className="text-sm text-gray-400 px-3">Página {page} de {totalPages}</span>
+              <span className="text-sm text-ink-500 px-3 font-mono">{page} / {totalPages}</span>
               {page < totalPages && (
-                <Link href={buildUrl(page + 1)} className="px-5 py-2.5 bg-white border border-indigo-100 rounded-2xl text-sm font-medium hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-elev-1">
+                <Link href={buildUrl(page + 1)} className="px-4 py-2 bg-white border border-ink-200 rounded-xl text-sm font-medium hover:border-ink-300 transition-colors">
                   Siguiente →
                 </Link>
               )}
@@ -131,23 +131,29 @@ async function ProfesoresGrid({ searchParams }: { searchParams: Awaited<PageProp
 export default async function ProfesoresPage({ searchParams }: PageProps) {
   const params = await searchParams;
   return (
-    <div className="min-h-screen bg-brand-bg">
-      {/* Header */}
-      <div className="mesh-gradient py-10 md:py-14 px-5">
-        <div className="max-w-6xl mx-auto">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-white/60 hover:text-white text-sm mb-4 transition-colors">
+    <div className="min-h-screen bg-cream-50">
+      {/* Header editorial */}
+      <div className="relative overflow-hidden border-b border-ink-200 bg-white">
+        <div className="absolute inset-0 grid-pattern opacity-40 pointer-events-none" />
+        <div className="max-w-6xl mx-auto px-5 py-12 md:py-16 relative">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-900 mb-6">
             ← Volver al inicio
           </Link>
-          <h1 className="font-heading font-extrabold text-3xl md:text-5xl text-white mb-2">
-            Profesores verificados
-          </h1>
-          <p className="text-white/60 text-base md:text-lg">Encuentra el mejor asesor para tus necesidades académicas</p>
+
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div>
+              <p className="text-amber-700 text-sm font-semibold uppercase tracking-wider mb-2">Buscar tutores</p>
+              <h1 className="font-display font-black text-4xl md:text-6xl text-ink-900 tracking-tight text-balance">
+                Encuentra tu próximo<br /><span className="gradient-text">tutor verificado</span>.
+              </h1>
+            </div>
+          </div>
 
           {/* Categorías rápidas */}
-          <div className="flex flex-wrap gap-2 mt-5">
-            {["Matemáticas","Física","Inglés","Programación","Química","Historia","Economía"].map(c => (
+          <div className="flex flex-wrap gap-2 mt-8">
+            {["Matemáticas","Física","Inglés","Programación","Química","Historia","Economía","Cálculo"].map(c => (
               <Link key={c} href={`/profesores?materia=${encodeURIComponent(c)}`}
-                className="text-xs font-semibold bg-white/15 hover:bg-white/25 border border-white/20 text-white px-3 py-1.5 rounded-full transition-all hover:-translate-y-0.5">
+                className="text-sm font-medium bg-cream-100 hover:bg-amber-100 border border-ink-200 hover:border-amber-300 text-ink-700 hover:text-amber-800 px-4 py-2 rounded-full transition-all">
                 {c}
               </Link>
             ))}
@@ -155,14 +161,14 @@ export default async function ProfesoresPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-5 py-10">
         <Suspense>
           <BuscadorFiltros />
         </Suspense>
 
         <Suspense fallback={
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[1,2,3,4,5,6].map(i => <div key={i} className="bg-white rounded-3xl h-72 shimmer" />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1,2,3,4,5,6].map(i => <div key={i} className="bg-white border border-ink-200 rounded-3xl h-72 shimmer" />)}
           </div>
         }>
           <ProfesoresGrid searchParams={params} />

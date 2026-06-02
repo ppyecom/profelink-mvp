@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Star, MapPin, Monitor, CheckCircle, Clock, Gift } from "lucide-react";
+import { Star, MapPin, Monitor, Gift, ArrowUpRight } from "lucide-react";
 import { formatSoles, NIVEL_LABELS } from "@/lib/utils";
 import NivelBadge from "./NivelBadge";
 import BotonFavorito from "./BotonFavorito";
@@ -19,103 +19,89 @@ export default function ProfesorCard({ profesor }: Props) {
   const rating = Number(profesor.ratingPromedio);
 
   return (
-    <Link href={`/profesores/${profesor.id}`} className="block relative">
+    <Link href={`/profesores/${profesor.id}`} className="group relative block">
+      {/* Favorito flotante */}
       <div className="absolute top-3 right-3 z-10">
         <BotonFavorito profesorId={profesor.id} size="sm" />
       </div>
-      <div className="group bg-white rounded-3xl border border-indigo-50 shadow-elev-1 hover:shadow-elev-4 hover:-translate-y-1.5 transition-all duration-300 overflow-hidden cursor-pointer">
 
-        {/* Top accent line */}
-        <div className="h-1 bg-gradient-to-r from-indigo-400 via-violet-400 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="bento p-5 h-full transition-all duration-300 group-hover:border-amber-300 group-hover:shadow-lg group-hover:-translate-y-1">
+        {/* Header con avatar + flag */}
+        <div className="flex items-start gap-3 mb-4">
+          <div className="relative flex-shrink-0">
+            <Image
+              src={profesor.fotoUrl ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(profesor.nombre)}&background=D97706&color=fff&size=96`}
+              alt={profesor.nombre}
+              width={56} height={56}
+              className="rounded-2xl object-cover w-14 h-14 ring-2 ring-white shadow-sm"
+            />
+          </div>
 
-        <div className="p-5">
-          {/* Header */}
-          <div className="flex items-start gap-3.5 mb-4">
-            <div className="relative flex-shrink-0">
-              <Image
-                src={profesor.fotoUrl ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(profesor.nombre)}&background=6366F1&color=fff&size=96`}
-                alt={profesor.nombre}
-                width={60} height={60}
-                className="rounded-2xl object-cover w-[60px] h-[60px] shadow-elev-1"
-              />
-              {profesor.estado === "VERIFICADO" && (
-                <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm">
-                  <CheckCircle className="w-2.5 h-2.5 text-white" />
+          <div className="flex-1 min-w-0 pr-8">
+            <h3 className="font-display font-bold text-ink-900 group-hover:text-amber-800 transition-colors leading-tight truncate">
+              {profesor.nombre}
+            </h3>
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              {profesor.nivelVerificacion && (
+                <NivelBadge nivel={profesor.nivelVerificacion} size="sm" />
+              )}
+              {profesor.aceptaPrimeraGratis && (
+                <span className="inline-flex items-center gap-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  <Gift className="w-2.5 h-2.5" /> Gratis
                 </span>
               )}
             </div>
-
-            <div className="flex-1 min-w-0">
-              <h3 className="font-heading font-bold text-brand-text group-hover:text-indigo-600 transition-colors leading-tight truncate">
-                {profesor.nombre}
-              </h3>
-              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                {profesor.nivelVerificacion && (
-                  <NivelBadge nivel={profesor.nivelVerificacion} size="sm" />
-                )}
-                {profesor.aceptaPrimeraGratis && (
-                  <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    <Gift className="w-2.5 h-2.5" /> 1ª gratis
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1 mt-1">
-                {[1,2,3,4,5].map(n => (
-                  <Star key={n} className={`w-3 h-3 ${n <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "fill-gray-100 text-gray-200"}`} />
-                ))}
-                <span className="text-xs text-gray-400 ml-0.5">
-                  {rating > 0 ? `${rating.toFixed(1)} (${profesor.totalResenas})` : "Nuevo"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Bio */}
-          {profesor.bio && (
-            <p className="text-gray-400 text-xs leading-relaxed line-clamp-2 mb-3">{profesor.bio}</p>
-          )}
-
-          {/* Especialidades */}
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {profesor.especialidades.slice(0, 3).map(mat => (
-              <span key={mat} className="bg-indigo-50 text-indigo-600 text-[11px] px-2.5 py-0.5 rounded-xl font-semibold border border-indigo-100">
-                {mat}
-              </span>
-            ))}
-            {profesor.especialidades.length > 3 && (
-              <span className="text-gray-300 text-[11px] self-center">+{profesor.especialidades.length - 3}</span>
-            )}
-          </div>
-
-          {/* Niveles */}
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {profesor.nivel.map(n => (
-              <span key={n} className="bg-brand-bg text-gray-500 text-[11px] px-2.5 py-0.5 rounded-xl border border-brand-border">
-                {NIVEL_LABELS[n]}
-              </span>
-            ))}
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between pt-3.5 border-t border-indigo-50">
-            <div className="flex items-center gap-2.5 text-gray-400 text-[11px]">
-              {profesor.modalidad === "VIRTUAL"
-                ? <span className="flex items-center gap-1"><Monitor className="w-3.5 h-3.5" /> Virtual</span>
-                : <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {(profesor as { ciudad?: string|null }).ciudad ?? "Presencial"}</span>
-              }
-              {(profesor as { anosExperiencia?: number }).anosExperiencia ? (
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {(profesor as { anosExperiencia?: number }).anosExperiencia} años
-                </span>
-              ) : null}
-            </div>
-            <div className="text-right">
-              <p className="font-heading font-extrabold text-xl text-indigo-600">{formatSoles(profesor.precioHora)}</p>
-              <p className="text-[10px] text-gray-300 -mt-0.5">por hora</p>
-            </div>
           </div>
         </div>
+
+        {/* Rating */}
+        <div className="flex items-center gap-1 mb-3">
+          {[1,2,3,4,5].map(n => (
+            <Star key={n} className={`w-3.5 h-3.5 ${n <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "fill-ink-100 text-ink-200"}`} />
+          ))}
+          <span className="text-xs font-semibold text-ink-700 ml-1">
+            {rating > 0 ? rating.toFixed(1) : "Nuevo"}
+          </span>
+          {rating > 0 && (
+            <span className="text-xs text-ink-400">({profesor.totalResenas})</span>
+          )}
+        </div>
+
+        {/* Bio */}
+        {profesor.bio && (
+          <p className="text-sm text-ink-600 leading-relaxed line-clamp-2 mb-3">{profesor.bio}</p>
+        )}
+
+        {/* Materias */}
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {profesor.especialidades.slice(0, 3).map(mat => (
+            <span key={mat} className="tag tag-amber text-[11px]">
+              {mat}
+            </span>
+          ))}
+          {profesor.especialidades.length > 3 && (
+            <span className="text-[10px] text-ink-400 self-center">+{profesor.especialidades.length - 3}</span>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-4 border-t border-ink-100">
+          <div className="flex items-center gap-2 text-xs text-ink-500">
+            {profesor.modalidad === "VIRTUAL"
+              ? <span className="flex items-center gap-1"><Monitor className="w-3.5 h-3.5" /> Virtual</span>
+              : <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {(profesor as { ciudad?: string|null }).ciudad ?? "Presencial"}</span>
+            }
+          </div>
+          <div className="text-right">
+            <p className="font-display font-black text-lg text-ink-900 tracking-tight">
+              S/{profesor.precioHora}
+              <span className="text-xs font-medium text-ink-400">/h</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Arrow hint */}
+        <ArrowUpRight className="absolute bottom-5 right-5 w-4 h-4 text-ink-300 group-hover:text-amber-600 opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-1 -translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0" />
       </div>
     </Link>
   );
