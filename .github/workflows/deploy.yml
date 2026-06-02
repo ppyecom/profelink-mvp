@@ -35,9 +35,17 @@ jobs:
             --exclude '.git' \
             ./ /home/profelink/profelink-mvp/
 
-      - name: Install dependencies
+      - name: Install dependencies (fallback a npm install si npm ci falla)
         working-directory: /home/profelink/profelink-mvp
-        run: npm ci
+        run: |
+          set -e
+          if ! npm ci; then
+            echo "npm ci falló, intentando npm install..."
+            rm -rf node_modules
+            npm install
+          fi
+          # Verificar que next se instaló
+          test -d node_modules/next || { echo "❌ next no se instaló"; exit 1; }
 
       - name: Generate Prisma client
         working-directory: /home/profelink/profelink-mvp
@@ -46,12 +54,15 @@ jobs:
       - name: Build Next.js
         working-directory: /home/profelink/profelink-mvp
         run: |
+          set -e
           rm -rf .next
           npm run build
+          test -d .next || { echo "❌ build falló"; exit 1; }
 
       - name: Restart PM2
         working-directory: /home/profelink/profelink-mvp
         run: |
+          set -e
           pm2 restart profelink --update-env
           pm2 save
 
