@@ -14,21 +14,26 @@ Este proyecto usa **GitHub Actions** para validar el código automáticamente.
 
 Si algo falla, GitHub muestra ✗ rojo y **bloquea el merge del PR**.
 
-## Deploy
+## `deploy.yml` — Despliegue automático
 
-El despliegue al servidor se hace **manualmente** porque el servidor Ubuntu
-está en red local (no expuesto a internet por SSH).
+**Cuándo corre:** en cada `push` a `main`.
 
-Desde el servidor:
+**Cómo funciona:** usa un **self-hosted runner** instalado en la propia VM
+Ubuntu. El runner se conecta a GitHub de salida (no necesita SSH ni puertos
+abiertos), recibe la orden de despliegue y ejecuta:
 
-```bash
-cd ~/profelink-mvp
-git pull
-npm ci
-npx prisma generate
-rm -rf .next && npm run build
-pm2 restart profelink
-```
+1. `rsync` del código nuevo al directorio de la app
+2. `npm ci` + `npx prisma generate`
+3. `npm run build`
+4. `pm2 restart profelink`
+5. Health check a `https://profelink.pyecommerce.com`
 
-> Si en el futuro se expone SSH (Cloudflare Tunnel, VPN o port forward),
-> se puede agregar un workflow `deploy.yml` para automatizar este paso.
+### Configurar el runner (una sola vez)
+
+1. GitHub → Settings → Actions → Runners → **New self-hosted runner**
+2. Ejecutar los comandos generados en la VM
+3. Instalar como servicio:
+   ```bash
+   sudo ./svc.sh install profelink
+   sudo ./svc.sh start
+   ```

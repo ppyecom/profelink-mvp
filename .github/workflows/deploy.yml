@@ -1,0 +1,66 @@
+# Continuous Deployment usando GitHub Actions Self-hosted Runner
+# El runner corre EN la propia VM Ubuntu, así no necesita SSH ni puertos abiertos.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy en VM local
+    runs-on: self-hosted   # ← clave: usa el runner instalado en la VM
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Mostrar working directory
+        run: pwd && ls -la
+
+      - name: Copiar código al directorio de la app
+        run: |
+          # El runner trabaja en /home/profelink/actions-runner/_work/...
+          # Sincronizamos los archivos con el directorio de la app
+          rsync -av --delete \
+            --exclude '.next' \
+            --exclude 'node_modules' \
+            --exclude '.env.local' \
+            --exclude 'public/uploads' \
+            --exclude '.git' \
+            ./ /home/profelink/profelink-mvp/
+
+      - name: Install dependencies
+        working-directory: /home/profelink/profelink-mvp
+        run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: /home/profelink/profelink-mvp
+        run: npx prisma generate
+
+      - name: Build Next.js
+        working-directory: /home/profelink/profelink-mvp
+        run: |
+          rm -rf .next
+          npm run build
+
+      - name: Restart PM2
+        working-directory: /home/profelink/profelink-mvp
+        run: |
+          pm2 restart profelink --update-env
+          pm2 save
+
+      - name: Health check
+        run: |
+          sleep 5
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://profelink.pyecommerce.com/)
+          if [ "$STATUS" != "200" ]; then
+            echo "❌ App no responde 200 (status: $STATUS)"
+            exit 1
+          fi
+          echo "✅ Deploy OK"
