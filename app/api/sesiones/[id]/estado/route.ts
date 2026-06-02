@@ -95,6 +95,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     );
   }
 
+  // Calcular reembolso si es cancelación
+  let politicaReembolso: { porcentaje: number; mensaje: string } | null = null;
+  if (estado === "CANCELADA") {
+    const horasParaSesion = (sesion.fechaInicio.getTime() - Date.now()) / 3600000;
+    if (esProfesor) {
+      politicaReembolso = { porcentaje: 100, mensaje: "Cancelación por el tutor: reembolso completo al estudiante" };
+    } else if (horasParaSesion >= 24) {
+      politicaReembolso = { porcentaje: 100, mensaje: "Cancelación con más de 24h: reembolso completo" };
+    } else if (horasParaSesion >= 2) {
+      politicaReembolso = { porcentaje: 50, mensaje: "Cancelación tardía (menos de 24h): reembolso del 50%" };
+    } else {
+      politicaReembolso = { porcentaje: 0, mensaje: "Cancelación con menos de 2h: sin reembolso" };
+    }
+  }
+
   const updated = await prisma.sesion.update({ where: { id }, data: { estado } });
 
   // Disparar notificación según el cambio
@@ -107,5 +122,5 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     );
   } catch (e) { console.error("[notif]", e); }
 
-  return NextResponse.json(updated);
+  return NextResponse.json({ ...updated, politicaReembolso });
 }
