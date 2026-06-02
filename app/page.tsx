@@ -100,14 +100,50 @@ export default function HomePage() {
             </MagneticButton>
           </ScrollReveal>
 
-          {/* Floating profe card */}
-          <div className="hidden lg:block absolute -right-4 top-32 animate-float">
-            <div className="rotate-6 bento p-3 w-56 shadow-xl">
-              <Image src={TOP_PROFES[0].foto} alt="" width={48} height={48} className="w-12 h-12 rounded-xl object-cover mb-2" />
-              <p className="font-display font-bold text-sm">Andrés H.</p>
-              <p className="text-xs text-ink-500">React · TypeScript</p>
-              <div className="flex items-center gap-1 mt-1">
-                {[1,2,3,4,5].map(n => <Star key={n} className="w-3 h-3 fill-amber-400 text-amber-400" />)}
+          {/* Cards flotantes - estilo polaroid brutal */}
+          <div className="hidden lg:block">
+            {/* Card 1: polaroid del tutor */}
+            <div className="absolute right-8 top-28 animate-float">
+              <div className="rotate-6 bg-white border-2 border-ink-900 p-3 w-56 shadow-[6px_6px_0_0_rgba(28,25,23,1)]">
+                <div className="relative">
+                  <Image src={TOP_PROFES[0].foto} alt="" width={224} height={200}
+                    className="w-full h-48 object-cover border-2 border-ink-900" />
+                  {/* Cinta amarilla */}
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-amber-300 border-2 border-ink-900 -rotate-3" />
+                </div>
+                <p className="font-display font-black text-base mt-3 text-ink-900">Andrés H.</p>
+                <p className="text-xs text-ink-600 font-mono">React · TypeScript</p>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t-2 border-dashed border-ink-200">
+                  <div className="flex gap-0.5">
+                    {[1,2,3,4,5].map(n => <Star key={n} className="w-3 h-3 fill-ink-900 text-ink-900" />)}
+                  </div>
+                  <span className="font-mono text-[10px] font-bold">S/110/h</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: notificación live */}
+            <div className="absolute right-44 top-[420px] animate-float" style={{ animationDelay: "1.5s" }}>
+              <div className="-rotate-3 bg-emerald-300 border-2 border-ink-900 p-3 pr-5 shadow-[6px_6px_0_0_rgba(28,25,23,1)] flex items-center gap-3 w-64">
+                <div className="relative flex-shrink-0">
+                  <Image src={TOP_PROFES[1].foto} alt="" width={40} height={40} className="w-10 h-10 rounded-full border-2 border-ink-900" />
+                  <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-ink-900 rounded-full" />
+                </div>
+                <div>
+                  <p className="font-display font-black text-xs text-ink-900">María reservó</p>
+                  <p className="text-[10px] font-mono text-ink-700">hace 2 min · Cálculo II</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Sticker decorativo */}
+            <div className="absolute right-32 top-[280px] animate-wiggle z-10">
+              <div className="bg-amber-400 border-2 border-ink-900 w-20 h-20 rounded-full flex items-center justify-center -rotate-12 shadow-lg">
+                <div className="text-center">
+                  <p className="font-display font-black text-[10px] text-ink-900 leading-tight">DESDE</p>
+                  <p className="font-display font-black text-xl text-ink-900 leading-tight">S/5</p>
+                  <p className="font-display font-black text-[8px] text-ink-900 leading-tight">/30MIN</p>
+                </div>
               </div>
             </div>
           </div>
