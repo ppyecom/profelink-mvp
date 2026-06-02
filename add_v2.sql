@@ -221,6 +221,21 @@ CREATE TABLE IF NOT EXISTS logros (
 );
 CREATE INDEX IF NOT EXISTS idx_logros_usuario ON logros(usuario_id);
 
+-- Audit log
+CREATE TABLE IF NOT EXISTS auditoria_logs (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  usuario_id  UUID,
+  accion      VARCHAR(80) NOT NULL,
+  entidad     VARCHAR(80) NOT NULL,
+  entidad_id  VARCHAR(80),
+  metadata    JSONB,
+  ip          VARCHAR(45),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_audit_usuario ON auditoria_logs(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_audit_accion ON auditoria_logs(accion);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON auditoria_logs(created_at);
+
 -- Suscripciones (planes Pro / Plus)
 DO $$ BEGIN
   CREATE TYPE "PlanSuscripcion" AS ENUM ('GRATIS','ESTUDIANTE_PRO','PROFESOR_PLUS');
