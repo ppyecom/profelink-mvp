@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
 
   const usuario = await prisma.usuario.findUnique({
     where: { id: session.sub },
-    select: { totpHabilitado: true },
+    select: { totpHabilitado: true, gcalSyncEnabled: true },
   });
 
   return NextResponse.json({
@@ -16,5 +16,6 @@ export async function GET(req: NextRequest) {
     rol: session.rol,
     sub: session.sub,
     totpHabilitado: usuario?.totpHabilitado ?? false,
+    gcalSyncEnabled: usuario?.gcalSyncEnabled ?? false,
   });
 }

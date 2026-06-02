@@ -97,6 +97,8 @@ model Usuario {
   bloqueadoHasta   DateTime?  @map("bloqueado_hasta") @db.Timestamptz()
   totpSecret       String?    @map("totp_secret")
   totpHabilitado   Boolean    @default(false) @map("totp_habilitado")
+  gcalRefreshToken String?    @map("gcal_refresh_token")
+  gcalSyncEnabled  Boolean    @default(false) @map("gcal_sync_enabled")
   createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt        DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
@@ -301,6 +303,8 @@ model Sesion {
 
   esGrupal        Boolean         @default(false) @map("es_grupal")
   capacidadMax    Int             @default(1) @map("capacidad_max")
+  gcalEventIdEstudiante String?   @map("gcal_event_id_estudiante")
+  gcalEventIdProfesor   String?   @map("gcal_event_id_profesor")
 
   estudiante      Usuario        @relation("EstudianteSesiones", fields: [estudianteId], references: [id], onDelete: Cascade)
   profesor        PerfilProfesor @relation("ProfesorSesiones",   fields: [profesorId],   references: [id], onDelete: Cascade)

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/lib/auth";
 import { actualizarEstadoSchema } from "@/lib/validations/sesion";
 import { crearNotificacion, Notif } from "@/lib/notificaciones";
+import { gcalEliminarEvento } from "@/lib/gcal";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -111,6 +112,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const updated = await prisma.sesion.update({ where: { id }, data: { estado } });
+
+  // Si se canceló, eliminar evento de Google Calendar de ambos
+  if (estado === "CANCELADA") {
+    const full = await prisma.sesion.findUnique({
+      where: { id },
+      include: { profesor: { select: { usuarioId: true } } },
+    });
+    if (full) {
+      try {
+        if (full.gcalEventIdEstudiante) await gcalEliminarEvento(full.estudianteId, full.gcalEventIdEstudiante);
+        if (full.gcalEventIdProfesor)   await gcalEliminarEvento(full.profesor.usuarioId, full.gcalEventIdProfesor);
+      } catch (e) { console.error("[gcal cancel]", e); }
+    }
+  }
 
   // Disparar notificación según el cambio
   try {
