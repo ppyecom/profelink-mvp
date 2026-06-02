@@ -15,6 +15,7 @@ const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
     { href: "/estudiante/sesiones",   label: "Mis Sesiones",   icon: Calendar },
     { href: "/estudiante/favoritos",  label: "Favoritos",      icon: Heart },
     { href: "/estudiante/cupones",    label: "Mis Cupones",    icon: Tag },
+    { href: "/estudiante/referidos",  label: "Referidos",      icon: Users },
     { href: "/profesores",            label: "Buscar Tutores", icon: Search },
     { href: "/cambiar-password",      label: "Seguridad",      icon: Shield },
   ],
