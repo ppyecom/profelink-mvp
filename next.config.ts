@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
           "img-src 'self' data: blob: https://*.googleusercontent.com https://ui-avatars.com https://i.pravatar.cc https://randomuser.me",
           "font-src 'self' data: https://fonts.gstatic.com",
           "connect-src 'self' https://accounts.google.com wss: ws:",
-          "frame-src https://accounts.google.com https://meet.jit.si",
+          "frame-src https://accounts.google.com https://meet.jit.si https://excalidraw.com",
           "form-action 'self' https://accounts.google.com",
           "base-uri 'self'",
           "object-src 'none'",

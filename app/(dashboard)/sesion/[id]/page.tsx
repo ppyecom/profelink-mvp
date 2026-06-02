@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ArrowLeft, Calendar, Clock, User, Video } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import VideoLlamada from "@/components/sesiones/VideoLlamada";
+import PizarraColaborativa from "@/components/sesiones/PizarraColaborativa";
 import ChatSesion from "@/components/chat/ChatSesion";
 
 interface PageProps { params: Promise<{ id: string }> }
@@ -85,6 +86,9 @@ export default async function SesionPage({ params }: PageProps) {
           )}
         </>
       )}
+
+      {/* Pizarra colaborativa */}
+      {(enVivo || puedeEntrar) && <PizarraColaborativa sesionId={sesion.id} />}
 
       {/* Chat de la sesión */}
       <div className="bento p-5 elev-1">
