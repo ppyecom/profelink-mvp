@@ -334,6 +334,7 @@ export default function HomePage() {
             <Link href="/login"      className="hover:text-indigo-600 transition-colors">Login</Link>
             <Link href="/terminos"   className="hover:text-indigo-600 transition-colors">Términos</Link>
             <Link href="/privacidad" className="hover:text-indigo-600 transition-colors">Privacidad</Link>
+            <Link href="/ayuda"      className="hover:text-indigo-600 transition-colors">Ayuda</Link>
           </div>
         </div>
       </footer>
