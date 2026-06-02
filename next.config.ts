@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
       { key: "X-Frame-Options",        value: "DENY" },
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "Referrer-Policy",        value: "strict-origin-when-cross-origin" },
-      { key: "Permissions-Policy",     value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
+      { key: "Permissions-Policy",     value: "camera=(self \"https://meet.jit.si\"), microphone=(self \"https://meet.jit.si\"), display-capture=(self \"https://meet.jit.si\"), geolocation=(), browsing-topics=()" },
       { key: "X-DNS-Prefetch-Control", value: "on" },
       {
         key: "Strict-Transport-Security",
@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
           "img-src 'self' data: blob: https://*.googleusercontent.com https://ui-avatars.com https://i.pravatar.cc https://randomuser.me",
           "font-src 'self' data: https://fonts.gstatic.com",
           "connect-src 'self' https://accounts.google.com wss: ws:",
-          "frame-src https://accounts.google.com",
+          "frame-src https://accounts.google.com https://meet.jit.si",
           "form-action 'self' https://accounts.google.com",
           "base-uri 'self'",
           "object-src 'none'",
