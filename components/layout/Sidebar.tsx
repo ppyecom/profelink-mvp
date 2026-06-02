@@ -19,6 +19,7 @@ const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
     { href: "/estudiante/referidos",  label: "Referidos",      icon: Users },
     { href: "/estudiante/wishlist",   label: "Wishlist",       icon: Lightbulb },
     { href: "/logros",                label: "Logros",         icon: Trophy },
+    { href: "/ejercicios",            label: "Ejercicios",     icon: BookOpen },
     { href: "/profesores",            label: "Buscar Tutores", icon: Search },
     { href: "/cambiar-password",      label: "Seguridad",      icon: Shield },
   ],
