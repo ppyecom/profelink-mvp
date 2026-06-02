@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/lib/auth";
 import { crearSesionSchema } from "@/lib/validations/sesion";
 import { crearNotificacion, Notif } from "@/lib/notificaciones";
+import { gcalCrearEvento, buildEvento } from "@/lib/gcal";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -172,6 +173,31 @@ export async function POST(req: NextRequest) {
         ...Notif.nuevaReserva(session.nombre, fechaStr),
       });
     } catch (e) { console.error("[notif]", e); }
+
+    // Sync con Google Calendar (estudiante + profesor) — no bloquea respuesta
+    try {
+      const evento = buildEvento({
+        titulo: `Sesión con ${session.nombre}`,
+        contraparteNombre: session.nombre,
+        fechaInicio: new Date(fechaInicio),
+        fechaFin: new Date(fechaFin),
+        sesionId: sesion.id,
+        modalidad,
+      });
+      const [gcalEst, gcalProf] = await Promise.all([
+        gcalCrearEvento(session.sub, { ...evento, summary: `ProfeLink — Sesión con tu tutor` }),
+        gcalCrearEvento(perfil.usuarioId, evento),
+      ]);
+      if (gcalEst || gcalProf) {
+        await prisma.sesion.update({
+          where: { id: sesion.id },
+          data: {
+            gcalEventIdEstudiante: gcalEst,
+            gcalEventIdProfesor: gcalProf,
+          },
+        });
+      }
+    } catch (e) { console.error("[gcal sesion create]", e); }
 
     return NextResponse.json(sesion, { status: 201 });
   } catch (error: unknown) {

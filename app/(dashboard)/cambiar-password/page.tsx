@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Lock, Eye, EyeOff, CheckCircle, Shield } from "lucide-react";
 import TwoFactorSection from "@/components/auth/TwoFactorSection";
 import PasswordStrength from "@/components/auth/PasswordStrength";
+import GoogleCalendarSection from "@/components/auth/GoogleCalendarSection";
 
 export default function CambiarPasswordPage() {
   const [form, setForm] = useState({ actual: "", nueva: "", confirmar: "" });
@@ -40,6 +41,8 @@ export default function CambiarPasswordPage() {
       </div>
 
       <TwoFactorSection />
+
+      <GoogleCalendarSection />
 
       <form onSubmit={handleSubmit} className="bento p-6 elev-1 space-y-5">
         {ok && (

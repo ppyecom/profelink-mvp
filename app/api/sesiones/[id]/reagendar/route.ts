@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { crearNotificacion } from "@/lib/notificaciones";
+import { gcalActualizarEvento, buildEvento } from "@/lib/gcal";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -73,6 +74,20 @@ export async function POST(
     where: { id },
     data: { fechaInicio: inicio, fechaFin: fin },
   });
+
+  // Sync calendar — actualiza eventos de ambos
+  try {
+    const evento = buildEvento({
+      titulo: "Sesión reagendada",
+      contraparteNombre: esEstudiante ? "Tu tutor" : "Tu estudiante",
+      fechaInicio: inicio,
+      fechaFin: fin,
+      sesionId: id,
+      modalidad: "VIRTUAL",
+    });
+    if (sesion.gcalEventIdEstudiante) await gcalActualizarEvento(sesion.estudianteId, sesion.gcalEventIdEstudiante, evento);
+    if (sesion.gcalEventIdProfesor)   await gcalActualizarEvento(sesion.profesor.usuarioId, sesion.gcalEventIdProfesor, evento);
+  } catch (e) { console.error("[gcal reagendar]", e); }
 
   // Notificar a la otra parte
   const fechaStr = format(inicio, "EEEE d MMM 'a las' HH:mm", { locale: es });
