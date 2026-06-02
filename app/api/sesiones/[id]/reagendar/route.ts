@@ -48,12 +48,15 @@ export async function POST(
     return NextResponse.json({ error: "Solo se puede reagendar con más de 24 horas de anticipación" }, { status: 400 });
   }
 
-  // Validar que la nueva fecha caiga en disponibilidad del profesor
+  // Validar disponibilidad usando timezone Lima (UTC-5) — el servidor puede estar en UTC
+  const LIMA_OFFSET_MS = -5 * 60 * 60 * 1000;
   const inicio = new Date(parsed.data.fechaInicio);
   const fin = new Date(parsed.data.fechaFin);
-  const diaSemana = inicio.getDay();
-  const horaIniMin = inicio.getHours() * 60 + inicio.getMinutes();
-  const horaFinMin = fin.getHours() * 60 + fin.getMinutes();
+  const inicioLima = new Date(inicio.getTime() + LIMA_OFFSET_MS);
+  const finLima    = new Date(fin.getTime()    + LIMA_OFFSET_MS);
+  const diaSemana = inicioLima.getUTCDay();
+  const horaIniMin = inicioLima.getUTCHours() * 60 + inicioLima.getUTCMinutes();
+  const horaFinMin = finLima.getUTCHours() * 60 + finLima.getUTCMinutes();
 
   const dentroDeSlot = sesion.profesor.disponibilidad.some(slot => {
     if (slot.diaSemana !== diaSemana) return false;

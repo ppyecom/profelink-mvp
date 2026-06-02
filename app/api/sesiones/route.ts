@@ -95,11 +95,17 @@ export async function POST(req: NextRequest) {
   }
 
   // Validar que la fecha solicitada caiga dentro de algún slot de disponibilidad
+  // El servidor puede estar en cualquier TZ; el negocio opera en Lima (UTC-5 sin DST).
+  // Shift de la UTC date al "wall clock" de Lima para comparar con los slots almacenados.
+  const LIMA_OFFSET_MS = -5 * 60 * 60 * 1000;
   const inicio = new Date(fechaInicio);
   const fin = new Date(fechaFin);
-  const diaSemana = inicio.getDay();
-  const horaInicioMin = inicio.getHours() * 60 + inicio.getMinutes();
-  const horaFinMin    = fin.getHours()    * 60 + fin.getMinutes();
+  const inicioLima = new Date(inicio.getTime() + LIMA_OFFSET_MS);
+  const finLima    = new Date(fin.getTime()    + LIMA_OFFSET_MS);
+
+  const diaSemana = inicioLima.getUTCDay();
+  const horaInicioMin = inicioLima.getUTCHours() * 60 + inicioLima.getUTCMinutes();
+  const horaFinMin    = finLima.getUTCHours()    * 60 + finLima.getUTCMinutes();
 
   const dentroDeSlot = perfil.disponibilidad.some(slot => {
     if (slot.diaSemana !== diaSemana) return false;
