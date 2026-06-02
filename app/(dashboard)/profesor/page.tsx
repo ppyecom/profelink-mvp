@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { formatDateTime, formatSoles, calcularIngresoNeto, ESTADO_SESION_COLORS, ESTADO_SESION_LABELS } from "@/lib/utils";
 import { AlertCircle, CheckCircle, Clock, Calendar, DollarSign, Star, TrendingUp, ArrowRight, Sparkles } from "lucide-react";
 import { startOfDay, endOfDay, startOfWeek, endOfWeek } from "date-fns";
+import TipsCard from "@/components/profesores/TipsCard";
 
 export const metadata = { title: "Panel Profesor — ProfeLink" };
 
@@ -42,6 +43,8 @@ export default async function ProfesorDashboard() {
 
   return (
     <div className="space-y-6">
+
+      <TipsCard />
 
       {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <div className="relative mesh-gradient rounded-3xl p-6 overflow-hidden shadow-elev-3">
