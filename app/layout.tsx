@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import PWARegister from "@/components/pwa/PWARegister";
+import CookieBanner from "@/components/layout/CookieBanner";
 
 export const metadata: Metadata = {
   title: "ProfeLink — Asesorías académicas en Perú",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <PWARegister />
         {children}
+        <CookieBanner />
       </body>
     </html>
   );
