@@ -12,7 +12,7 @@ export default async function EstudianteDashboard() {
   const session = await getSession();
   if (!session || session.rol !== "ESTUDIANTE") redirect("/login");
 
-  const [sesionesProximas, sesionesCompletadas, totalSesiones] = await Promise.all([
+  const [sesionesProximas, sesionesCompletadas, totalSesiones, sesionesCompletadasData, cuponesActivos, favoritosCount] = await Promise.all([
     prisma.sesion.findMany({
       where: { estudianteId: session.sub, estado: { in: ["PENDIENTE","CONFIRMADA"] }, fechaInicio: { gte: new Date() } },
       orderBy: { fechaInicio: "asc" }, take: 3,
@@ -20,7 +20,23 @@ export default async function EstudianteDashboard() {
     }),
     prisma.sesion.count({ where: { estudianteId: session.sub, estado: "COMPLETADA" } }),
     prisma.sesion.count({ where: { estudianteId: session.sub } }),
+    prisma.sesion.findMany({
+      where: { estudianteId: session.sub, estado: "COMPLETADA" },
+      select: { duracionMinutos: true, profesor: { include: { especialidades: { select: { materia: true } } } } },
+    }),
+    prisma.cupon.count({ where: { usuarioId: session.sub, estado: "ACTIVO" } }),
+    prisma.favorito.count({ where: { estudianteId: session.sub } }),
   ]);
+
+  // Estadísticas personales
+  const minutosTotal = sesionesCompletadasData.reduce((a, s) => a + (s.duracionMinutos ?? 60), 0);
+  const horasEstudiadas = (minutosTotal / 60).toFixed(1);
+
+  const conteoMateria = new Map<string, number>();
+  sesionesCompletadasData.forEach(s => s.profesor.especialidades.forEach(e => {
+    conteoMateria.set(e.materia, (conteoMateria.get(e.materia) ?? 0) + 1);
+  }));
+  const topMateria = Array.from(conteoMateria.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
 
   const nombre = session.nombre.split(" ")[0];
   const hora   = new Date().getHours();
@@ -46,18 +62,21 @@ export default async function EstudianteDashboard() {
       </div>
 
       {/* ── STATS ──────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 sm:grid-cols-3 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
         {[
-          { label: "Próximas",   val: sesionesProximas.length, icon: Calendar,  color: "from-indigo-500 to-violet-500" },
-          { label: "Completadas",val: sesionesCompletadas,     icon: Star,       color: "from-emerald-500 to-teal-500"  },
-          { label: "Total",      val: totalSesiones,            icon: BookOpen,   color: "from-amber-500 to-orange-500"  },
+          { label: "Próximas",     val: sesionesProximas.length,      icon: Calendar,  color: "from-indigo-500 to-violet-500" },
+          { label: "Completadas",  val: sesionesCompletadas,          icon: Star,      color: "from-emerald-500 to-teal-500"  },
+          { label: "Horas estudiadas", val: `${horasEstudiadas}h`,    icon: Clock,     color: "from-blue-500 to-cyan-500"     },
+          { label: "Top materia",  val: topMateria,                   icon: BookOpen,  color: "from-amber-500 to-orange-500"  },
+          { label: "Favoritos",    val: favoritosCount,               icon: Sparkles,  color: "from-rose-500 to-pink-500"     },
+          { label: "Cupones",      val: cuponesActivos,               icon: ArrowRight, color: "from-violet-500 to-fuchsia-500"},
         ].map(s => (
-          <div key={s.label} className="bento p-5 elev-1 hover:elev-3 transition-all hover:-translate-y-0.5">
-            <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${s.color} flex items-center justify-center mb-3 shadow-elev-1`}>
-              <s.icon className="w-5 h-5 text-white" />
+          <div key={s.label} className="bento p-4 elev-1 hover:elev-3 transition-all hover:-translate-y-0.5">
+            <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center mb-2 shadow-elev-1`}>
+              <s.icon className="w-4 h-4 text-white" />
             </div>
-            <p className="font-heading font-extrabold text-3xl text-brand-text">{s.val}</p>
-            <p className="text-xs text-gray-400 mt-0.5 font-medium">{s.label}</p>
+            <p className="font-heading font-extrabold text-xl text-brand-text truncate">{s.val}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wide">{s.label}</p>
           </div>
         ))}
       </div>
