@@ -47,6 +47,7 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
   const router = useRouter();
   const [selected, setSelected] = useState<{ slotId: string; hora: string } | null>(null);
   const [duracion, setDuracion] = useState<30 | 60>(60);
+  const [repetir, setRepetir]   = useState<number>(1); // semanas a repetir
   const [notas, setNotas]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
@@ -106,28 +107,45 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
     setError(""); setLoading(true);
 
     const slot  = disponibilidad.find(s => s.id === selected.slotId)!;
-    const fecha = proximaFecha(slot.diaSemana);
+    const fechaBase = proximaFecha(slot.diaSemana);
     const hNum  = parseInt(selected.hora.split(":")[0], 10);
-    const fechaInicio = setMinutes(setHours(fecha, hNum), 0);
-    const fechaFin    = duracion === 30 ? addMinutes(fechaInicio, 30) : addHours(fechaInicio, 1);
 
-    const res = await fetch("/api/sesiones", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        profesorId,
-        fechaInicio: fechaInicio.toISOString(),
-        fechaFin: fechaFin.toISOString(),
-        modalidad,
-        duracionMinutos: duracion,
-        cuponCodigo: cuponCodigo || undefined,
-        notas: notas || undefined,
-      }),
-    });
+    let creadas = 0;
+    let errores: string[] = [];
 
-    const data = await res.json();
-    if (!res.ok) { setError(data.error ?? "Error al reservar"); }
-    else { setSuccess(true); setTimeout(() => router.push("/estudiante/sesiones"), 2000); }
+    for (let i = 0; i < repetir; i++) {
+      const fecha = addDays(fechaBase, i * 7);
+      const fechaInicio = setMinutes(setHours(fecha, hNum), 0);
+      const fechaFin    = duracion === 30 ? addMinutes(fechaInicio, 30) : addHours(fechaInicio, 1);
+
+      const res = await fetch("/api/sesiones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profesorId,
+          fechaInicio: fechaInicio.toISOString(),
+          fechaFin: fechaFin.toISOString(),
+          modalidad,
+          duracionMinutos: duracion,
+          // Cupón solo en la primera (no se duplica)
+          cuponCodigo: i === 0 && cuponCodigo ? cuponCodigo : undefined,
+          notas: notas || undefined,
+        }),
+      });
+      if (res.ok) creadas++;
+      else {
+        const data = await res.json();
+        errores.push(`Semana ${i+1}: ${data.error ?? "error"}`);
+      }
+    }
+
+    if (creadas === 0) {
+      setError(errores[0] ?? "Error al reservar");
+    } else {
+      if (errores.length) setError(`Se reservaron ${creadas} de ${repetir} sesiones. ${errores.join(" · ")}`);
+      setSuccess(true);
+      setTimeout(() => router.push("/estudiante/sesiones"), 2200);
+    }
     setLoading(false);
   };
 
@@ -176,6 +194,29 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
             1 hora · {formatSoles(precioHora)}
           </button>
         </div>
+      </div>
+
+      {/* Recurrencia */}
+      <div>
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Repetir esta sesión</p>
+        <div className="grid grid-cols-4 gap-1.5">
+          {[1, 4, 8, 12].map(n => (
+            <button key={n} type="button" onClick={() => setRepetir(n)}
+              className={cn(
+                "py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all",
+                repetir === n
+                  ? "bg-violet-600 border-violet-600 text-white"
+                  : "bg-white border-violet-100 text-violet-700 hover:border-violet-300"
+              )}>
+              {n === 1 ? "Solo una" : `${n} semanas`}
+            </button>
+          ))}
+        </div>
+        {repetir > 1 && (
+          <p className="text-xs text-violet-600 mt-1.5">
+            Se reservarán {repetir} sesiones (una por semana, mismo día y hora)
+          </p>
+        )}
       </div>
 
       <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Selecciona tu horario</p>
@@ -294,19 +335,21 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
       {/* Resumen del precio */}
       <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 space-y-1">
         <div className="flex justify-between text-xs text-gray-600">
-          <span>Precio sesión ({duracion} min)</span>
-          <span>{formatSoles(precioBase)}</span>
+          <span>Precio sesión ({duracion} min) × {repetir}</span>
+          <span>{formatSoles(precioBase * repetir)}</span>
         </div>
         {descuento > 0 && (
           <div className="flex justify-between text-xs text-emerald-700">
-            <span>Cupón {cuponCodigo}</span>
+            <span>Cupón {cuponCodigo} (solo 1ª sesión)</span>
             <span>-{formatSoles(descuento)}</span>
           </div>
         )}
         <div className="flex justify-between font-bold text-sm pt-1 border-t border-indigo-200">
           <span className="text-brand-text">Total a pagar</span>
-          <span className={precioFinal === 0 ? "text-emerald-600" : "text-indigo-700"}>
-            {precioFinal === 0 ? "¡GRATIS! 🎁" : formatSoles(precioFinal)}
+          <span className={precioBase * repetir - descuento === 0 ? "text-emerald-600" : "text-indigo-700"}>
+            {(precioBase * repetir - descuento) === 0
+              ? "¡GRATIS! 🎁"
+              : formatSoles(precioBase * repetir - descuento)}
           </span>
         </div>
       </div>
