@@ -69,7 +69,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { bio, fotoUrl, nivel, precioHora, modalidad, especialidades } = parsed.data;
+  const { bio, fotoUrl, videoPresentacion, nivel, precioHora, precio30min, aceptaPrimeraGratis, modalidad, especialidades } = parsed.data;
 
   const perfil = await prisma.perfilProfesor.findUnique({ where: { usuarioId: session.sub } });
   if (!perfil) {
@@ -79,7 +79,16 @@ export async function PUT(req: NextRequest) {
   await prisma.$transaction([
     prisma.perfilProfesor.update({
       where: { usuarioId: session.sub },
-      data: { bio, fotoUrl: fotoUrl || null, nivel, precioHora, modalidad },
+      data: {
+        bio,
+        fotoUrl: fotoUrl || null,
+        videoPresentacion: videoPresentacion || null,
+        nivel,
+        precioHora,
+        precio30min: precio30min ?? null,
+        aceptaPrimeraGratis,
+        modalidad,
+      },
     }),
     prisma.especialidad.deleteMany({ where: { profesorId: perfil.id } }),
     prisma.especialidad.createMany({

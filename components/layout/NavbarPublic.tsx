@@ -62,7 +62,7 @@ export default function NavbarPublic() {
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-5">
           <Link href="/profesores" className="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors">
-            Profesores
+            Tutores
           </Link>
 
           {loadingUser ? (
@@ -153,7 +153,7 @@ export default function NavbarPublic() {
 
           <Link href="/profesores" onClick={() => setMobileOpen(false)}
             className="flex items-center px-4 py-3 rounded-2xl text-gray-700 font-medium hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
-            Profesores
+            Tutores
           </Link>
 
           {user ? (

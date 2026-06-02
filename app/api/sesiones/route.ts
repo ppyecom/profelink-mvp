@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { profesorId, fechaInicio, fechaFin, modalidad, notas } = parsed.data;
+  const { profesorId, fechaInicio, fechaFin, modalidad, notas, duracionMinutos, cuponCodigo } = parsed.data;
 
   const perfil = await prisma.perfilProfesor.findUnique({
     where: { id: profesorId, estado: "VERIFICADO" },
@@ -115,6 +115,26 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Calcular precio base según duración
+  const precioBase = duracionMinutos === 30
+    ? (perfil.precio30min ? Number(perfil.precio30min) : Number(perfil.precioHora) / 2)
+    : Number(perfil.precioHora);
+
+  // Validar y aplicar cupón si lo hay
+  let descuento = 0;
+  let cuponAplicado: string | null = null;
+  if (cuponCodigo) {
+    const { validarCupon, calcularDescuento } = await import("@/lib/cupones");
+    const validacion = await validarCupon(cuponCodigo, session.sub);
+    if (!validacion.ok) {
+      return NextResponse.json({ error: validacion.error }, { status: 400 });
+    }
+    descuento = calcularDescuento(validacion.cupon!, precioBase);
+    cuponAplicado = cuponCodigo;
+  }
+
+  const precioFinal = Math.max(0, precioBase - descuento);
+
   try {
     const sesion = await prisma.sesion.create({
       data: {
@@ -124,10 +144,19 @@ export async function POST(req: NextRequest) {
         fechaFin: new Date(fechaFin),
         modalidad,
         estado: "PENDIENTE",
-        precioAcordado: perfil.precioHora,
+        duracionMinutos,
+        precioAcordado: precioFinal,
+        descuentoCupon: descuento,
+        cuponCodigo: cuponAplicado,
         notas,
       },
     });
+
+    // Marcar cupón como usado
+    if (cuponAplicado) {
+      const { marcarCuponUsado } = await import("@/lib/cupones");
+      await marcarCuponUsado(cuponAplicado, sesion.id);
+    }
 
     // Notificar al profesor sobre la nueva reserva
     try {

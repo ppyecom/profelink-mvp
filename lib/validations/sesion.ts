@@ -5,6 +5,8 @@ export const crearSesionSchema = z.object({
   fechaInicio: z.string().datetime("Fecha de inicio inválida"),
   fechaFin: z.string().datetime("Fecha de fin inválida"),
   modalidad: z.enum(["VIRTUAL", "PRESENCIAL"]),
+  duracionMinutos: z.number().int().refine(d => d === 30 || d === 60, "Duración inválida").default(60),
+  cuponCodigo: z.string().max(40).optional(),
   notas: z.string().max(500).optional(),
 }).refine(
   (data) => new Date(data.fechaFin) > new Date(data.fechaInicio),
@@ -37,8 +39,14 @@ export const perfilProfesorSchema = z.object({
     z.string().regex(/^\/(api\/)?uploads\//, "Ruta inválida"),
     z.literal(""),
   ]).optional(),
+  videoPresentacion: z.union([
+    z.string().url("URL inválida"),
+    z.literal(""),
+  ]).optional(),
   nivel: z.array(z.enum(["SECUNDARIA", "TECNICA", "UNIVERSITARIA"])).default([]),
   precioHora: z.number().min(0, "El precio no puede ser negativo").default(50),
+  precio30min: z.number().min(0).max(500).optional().nullable(),
+  aceptaPrimeraGratis: z.boolean().default(false),
   modalidad: z.enum(["VIRTUAL", "PRESENCIAL"]).default("VIRTUAL"),
   especialidades: z.array(z.string().min(1).max(100)).default([]),
 });

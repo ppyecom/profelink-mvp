@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { CheckCircle, Save, Plus, X, Upload, Camera, Loader2 } from "lucide-react";
+import CredencialesSection from "@/components/profesores/CredencialesSection";
 
 const NIVELES = ["SECUNDARIA", "TECNICA", "UNIVERSITARIA"] as const;
 const NIVEL_LABELS: Record<string, string> = { SECUNDARIA: "Secundaria", TECNICA: "Técnica", UNIVERSITARIA: "Universitaria" };
@@ -18,9 +19,12 @@ export default function ProfesorPerfilPage() {
     fotoUrl: "",
     nivel: [] as string[],
     precioHora: 0,
+    precio30min: null as number | null,
+    aceptaPrimeraGratis: false,
     modalidad: "VIRTUAL" as "VIRTUAL" | "PRESENCIAL",
     especialidades: [] as string[],
   });
+  const [nivelVerificacion, setNivelVerificacion] = useState<string>("BASICO");
   const [nuevaEsp, setNuevaEsp] = useState("");
   const [subiendo, setSubiendo] = useState(false);
   const [errorFoto, setErrorFoto] = useState("");
@@ -54,9 +58,12 @@ export default function ProfesorPerfilPage() {
           fotoUrl: data.fotoUrl ?? "",
           nivel: data.nivel ?? [],
           precioHora: data.precioHora ?? 0,
+          precio30min: data.precio30min ?? null,
+          aceptaPrimeraGratis: data.aceptaPrimeraGratis ?? false,
           modalidad: data.modalidad ?? "VIRTUAL",
           especialidades: data.especialidades ?? [],
         });
+        setNivelVerificacion(data.nivelVerificacion ?? "BASICO");
       })
       .finally(() => setLoading(false));
   }, []);
@@ -103,6 +110,10 @@ export default function ProfesorPerfilPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
         <p className="text-gray-500 text-sm mt-1">Esta información es visible para los estudiantes</p>
+      </div>
+
+      <div className="max-w-2xl mb-5">
+        <CredencialesSection nivelVerificacion={nivelVerificacion} />
       </div>
 
       <form onSubmit={guardar} className="space-y-5 max-w-2xl">
@@ -210,6 +221,41 @@ export default function ProfesorPerfilPage() {
           <div className="mt-3 p-3 bg-blue-50 rounded-xl text-xs text-blue-700">
             Con S/ {form.precioHora}/hr recibirás <strong>S/ {(form.precioHora * 0.78).toFixed(2)}</strong> por sesión (después de la comisión del 22%).
           </div>
+
+          {/* Precio 30 min */}
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <label className="block text-xs text-gray-500 mb-1.5">Precio sesión 30 min (opcional)</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min={5}
+                max={250}
+                step="0.5"
+                value={form.precio30min ?? ""}
+                onChange={e => setForm(f => ({ ...f, precio30min: e.target.value ? Number(e.target.value) : null }))}
+                placeholder={`Auto: S/ ${(form.precioHora / 2).toFixed(2)}`}
+                className="w-40 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+              <p className="text-xs text-gray-400">Si lo dejas vacío usamos la mitad de tu tarifa por hora</p>
+            </div>
+          </div>
+
+          {/* Primera sesión gratis */}
+          <label className="mt-4 flex items-start gap-2.5 cursor-pointer p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+            <input
+              type="checkbox"
+              checked={form.aceptaPrimeraGratis}
+              onChange={e => setForm(f => ({ ...f, aceptaPrimeraGratis: e.target.checked }))}
+              className="mt-0.5 w-4 h-4 rounded border-2 border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            <div className="text-xs text-emerald-800">
+              <p className="font-semibold">Aceptar sesiones gratis de bienvenida</p>
+              <p className="text-emerald-600 mt-0.5">
+                Estudiantes nuevos podrán reservarte su primera sesión sin pagar. ProfeLink te paga S/ 15 por esa hora.
+                <strong> Mayor visibilidad en el buscador.</strong>
+              </p>
+            </div>
+          </label>
         </div>
 
         {/* Niveles */}

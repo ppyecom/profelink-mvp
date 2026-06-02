@@ -6,6 +6,7 @@ import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { enviarEmailVerificacion, enviarEmailBienvenida } from "@/lib/email";
+import { crearCuponBienvenida } from "@/lib/cupones";
 
 export async function POST(req: NextRequest) {
   // Rate limit: 5 registros por IP cada 15 minutos
@@ -64,6 +65,11 @@ export async function POST(req: NextRequest) {
       // Enviar emails (verificación + bienvenida)
       await enviarEmailVerificacion(usuario.email, usuario.nombre, verifToken);
       await enviarEmailBienvenida(usuario.email, usuario.nombre, usuario.rol);
+
+      // Crear cupón de primera sesión gratis (solo estudiantes)
+      if (usuario.rol === "ESTUDIANTE") {
+        await crearCuponBienvenida(usuario.id).catch(() => {});
+      }
     } catch (e) {
       console.error("[register-email]", e);
       // No fallar el registro si falla el email

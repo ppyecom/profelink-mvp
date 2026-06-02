@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { signToken, setAuthCookie } from "@/lib/auth";
 import { enviarEmailBienvenida } from "@/lib/email";
+import { crearCuponBienvenida } from "@/lib/cupones";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const MAX_INTENTOS = 5;
@@ -127,6 +128,11 @@ export async function GET(req: Request) {
 
       // Email bienvenida (no bloqueante)
       enviarEmailBienvenida(usuario.email, usuario.nombre, usuario.rol).catch(() => {});
+
+      // Cupón primera sesión gratis para estudiantes nuevos
+      if (usuario.rol === "ESTUDIANTE") {
+        crearCuponBienvenida(usuario.id).catch(() => {});
+      }
     } else {
       if (!usuario.activo) {
         return redirectWithError("oauth_cuenta_inactiva");

@@ -44,6 +44,41 @@ enum EstadoRetiro {
   PAGADO
 }
 
+enum NivelVerificacion {
+  BASICO       // identidad (DNI)
+  EXPERTO      // conocimiento (certificados/proyectos)
+  DOCENTE      // título universitario + experiencia
+}
+
+enum TipoCredencial {
+  IDENTIDAD       // DNI + selfie
+  TITULO          // título universitario / técnico
+  CERTIFICADO     // curso online (Coursera, edX, Platzi)
+  RECORD          // intranet universitaria (mostrar nota)
+  PROYECTO        // GitHub, portfolio
+  EXPERIENCIA     // LinkedIn / carta laboral
+  EXAMEN_INTERNO  // pasó el examen de ProfeLink
+}
+
+enum EstadoCredencial {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+enum TipoCupon {
+  PRIMERA_GRATIS    // 1 sesión gratis para nuevos estudiantes
+  REFERIDO          // por referir amigo
+  DESCUENTO_FIJO    // S/X menos en próxima sesión
+  PORCENTAJE        // % de descuento
+}
+
+enum EstadoCupon {
+  ACTIVO
+  USADO
+  EXPIRADO
+}
+
 model Usuario {
   id               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nombre           String     @db.VarChar(120)
@@ -66,6 +101,7 @@ model Usuario {
   notificaciones         Notificacion[]
   tokensPasswordReset    TokenPasswordReset[]
   tokensEmailVerif       TokenEmailVerificacion[]
+  cupones                Cupon[]
 
   @@map("usuarios")
 }
@@ -112,21 +148,25 @@ model TokenEmailVerificacion {
 }
 
 model PerfilProfesor {
-  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  usuarioId       String           @unique @map("usuario_id") @db.Uuid
-  fotoUrl         String?          @map("foto_url")
-  bio             String?
-  nivel           NivelAcademico[]
-  precioHora      Decimal          @map("precio_hora") @db.Decimal(8, 2)
-  modalidad       ModalidadSesion  @default(VIRTUAL)
-  estado          EstadoProfesor   @default(PENDIENTE)
-  ciudad          String?          @db.VarChar(80)
-  anosExperiencia Int              @default(0) @map("anos_experiencia")
-  institucion     String?          @db.VarChar(120)
-  ratingPromedio  Decimal          @default(0) @map("rating_promedio") @db.Decimal(3, 2)
-  totalResenas    Int              @default(0) @map("total_resenas")
-  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId          String            @unique @map("usuario_id") @db.Uuid
+  fotoUrl            String?           @map("foto_url")
+  videoPresentacion  String?           @map("video_presentacion")
+  bio                String?
+  nivel              NivelAcademico[]
+  precioHora         Decimal           @map("precio_hora") @db.Decimal(8, 2)
+  precio30min        Decimal?          @map("precio_30min") @db.Decimal(8, 2)
+  aceptaPrimeraGratis Boolean          @default(false) @map("acepta_primera_gratis")
+  modalidad          ModalidadSesion   @default(VIRTUAL)
+  estado             EstadoProfesor    @default(PENDIENTE)
+  nivelVerificacion  NivelVerificacion @default(BASICO) @map("nivel_verificacion")
+  ciudad             String?           @db.VarChar(80)
+  anosExperiencia    Int               @default(0) @map("anos_experiencia")
+  institucion        String?           @db.VarChar(120)
+  ratingPromedio     Decimal           @default(0) @map("rating_promedio") @db.Decimal(3, 2)
+  totalResenas       Int               @default(0) @map("total_resenas")
+  createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
   usuario         Usuario          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   especialidades  Especialidad[]
@@ -134,8 +174,46 @@ model PerfilProfesor {
   sesiones        Sesion[]         @relation("ProfesorSesiones")
   resenas         Resena[]         @relation("ProfesorResenas")
   retiros         SolicitudRetiro[]
+  credenciales    Credencial[]
 
   @@map("perfiles_profesor")
+}
+
+model Credencial {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profesorId      String           @map("profesor_id") @db.Uuid
+  tipo            TipoCredencial
+  titulo          String           @db.VarChar(200)
+  descripcion     String?
+  archivoUrl      String?          @map("archivo_url")
+  enlaceExterno   String?          @map("enlace_externo") @db.VarChar(500)
+  estado          EstadoCredencial @default(PENDIENTE)
+  notaAdmin       String?          @map("nota_admin")
+  revisadoEn      DateTime?        @map("revisado_en") @db.Timestamptz()
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+
+  profesor        PerfilProfesor   @relation(fields: [profesorId], references: [id], onDelete: Cascade)
+
+  @@index([profesorId, estado])
+  @@map("credenciales")
+}
+
+model Cupon {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId     String       @map("usuario_id") @db.Uuid
+  codigo        String       @unique @db.VarChar(40)
+  tipo          TipoCupon
+  valor         Decimal      @default(0) @db.Decimal(8, 2)
+  estado        EstadoCupon  @default(ACTIVO)
+  expiraEn      DateTime?    @map("expira_en") @db.Timestamptz()
+  usadoEnSesion String?      @map("usado_en_sesion") @db.Uuid
+  usadoEn       DateTime?    @map("usado_en") @db.Timestamptz()
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz()
+
+  usuario       Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, estado])
+  @@map("cupones")
 }
 
 model SolicitudRetiro {
@@ -190,7 +268,10 @@ model Sesion {
   fechaFin        DateTime        @map("fecha_fin") @db.Timestamptz()
   modalidad       ModalidadSesion
   estado          EstadoSesion    @default(PENDIENTE)
+  duracionMinutos Int             @default(60) @map("duracion_minutos")
   precioAcordado  Decimal         @map("precio_acordado") @db.Decimal(8, 2)
+  descuentoCupon  Decimal         @default(0) @map("descuento_cupon") @db.Decimal(8, 2)
+  cuponCodigo     String?         @map("cupon_codigo") @db.VarChar(40)
   notas           String?
   createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
