@@ -323,7 +323,7 @@ export default function HomePage() {
             <img src="/logo-owl.png" alt="ProfeLink" className="w-8 h-8 object-contain" />
             <span className="font-heading font-bold text-lg text-navy-700">ProfeLink</span>
           </div>
-          <p className="text-sm text-gray-400 text-center">© 2025 ProfeLink · Asesorías académicas en Perú</p>
+          <p className="text-sm text-gray-400 text-center">© 2026 ProfeLink · Asesorías académicas en Perú 🦉</p>
           <div className="flex flex-wrap gap-5 text-sm text-gray-400 justify-center">
             <Link href="/profesores" className="hover:text-indigo-600 transition-colors">Profesores</Link>
             <Link href="/register"   className="hover:text-indigo-600 transition-colors">Registro</Link>
