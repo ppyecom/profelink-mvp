@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   "/verify-email",
   "/terminos",
   "/privacidad",
+  "/ayuda",
   "/profesores",
   "/api/auth",
   "/api/cron",
