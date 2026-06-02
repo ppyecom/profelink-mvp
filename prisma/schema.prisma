@@ -295,8 +295,26 @@ model Sesion {
   profesor        PerfilProfesor @relation("ProfesorSesiones",   fields: [profesorId],   references: [id], onDelete: Cascade)
   resena          Resena?
   mensajes        Mensaje[]
+  tareas          Tarea[]
 
   @@map("sesiones")
+}
+
+model Tarea {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sesionId    String   @map("sesion_id") @db.Uuid
+  titulo      String   @db.VarChar(200)
+  descripcion String?
+  archivoUrl  String?  @map("archivo_url")
+  completada  Boolean  @default(false)
+  respuesta   String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  completadaEn DateTime? @map("completada_en") @db.Timestamptz()
+
+  sesion      Sesion   @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+
+  @@index([sesionId])
+  @@map("tareas")
 }
 
 model Mensaje {

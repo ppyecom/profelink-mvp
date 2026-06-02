@@ -85,3 +85,17 @@ CREATE TABLE IF NOT EXISTS favoritos (
   UNIQUE (estudiante_id, profesor_id)
 );
 CREATE INDEX IF NOT EXISTS idx_favoritos_estudiante ON favoritos(estudiante_id);
+
+-- Tabla tareas
+CREATE TABLE IF NOT EXISTS tareas (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sesion_id     UUID NOT NULL REFERENCES sesiones(id) ON DELETE CASCADE,
+  titulo        VARCHAR(200) NOT NULL,
+  descripcion   TEXT,
+  archivo_url   TEXT,
+  completada    BOOLEAN NOT NULL DEFAULT false,
+  respuesta     TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completada_en TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_tareas_sesion ON tareas(sesion_id);

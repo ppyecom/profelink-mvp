@@ -22,6 +22,7 @@ const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
   PROFESOR: [
     { href: "/profesor",                label: "Inicio",         icon: LayoutDashboard },
     { href: "/profesor/sesiones",       label: "Sesiones",       icon: ClipboardList },
+    { href: "/profesor/estudiantes",    label: "Estudiantes",    icon: Users },
     { href: "/profesor/disponibilidad", label: "Disponibilidad", icon: Calendar },
     { href: "/profesor/ingresos",       label: "Ingresos",       icon: DollarSign },
     { href: "/profesor/perfil",         label: "Mi Perfil",      icon: UserCircle },
