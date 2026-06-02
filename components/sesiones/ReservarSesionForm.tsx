@@ -29,16 +29,24 @@ function proximaFecha(diaSemana: number): Date {
   return addDays(hoy, diff);
 }
 
-// Expande un slot de múltiples horas en sesiones de 1 hora
-function expandirSlot(slot: Slot): { hora: string; label: string }[] {
+// Expande un slot en sub-bloques según la duración elegida (30 o 60 min)
+function expandirSlot(slot: Slot, duracionMin: number): { hora: string; label: string }[] {
   const sesiones: { hora: string; label: string }[] = [];
-  let h = parseInt(slot.horaInicio.split(":")[0], 10);
-  const fin = parseInt(slot.horaFin.split(":")[0], 10);
-  while (h < fin) {
-    const inicio = `${String(h).padStart(2, "0")}:00`;
-    const fini   = `${String(h + 1).padStart(2, "0")}:00`;
-    sesiones.push({ hora: inicio, label: `${inicio} – ${fini}` });
-    h++;
+  const [hI, mI] = slot.horaInicio.split(":").map(s => parseInt(s, 10));
+  const [hF, mF] = slot.horaFin.split(":").map(s => parseInt(s, 10));
+  const inicioMin = hI * 60 + (mI || 0);
+  const finMin    = hF * 60 + (mF || 0);
+
+  for (let m = inicioMin; m + duracionMin <= finMin; m += duracionMin) {
+    const startH = Math.floor(m / 60);
+    const startM = m % 60;
+    const endTotal = m + duracionMin;
+    const endH = Math.floor(endTotal / 60);
+    const endM = endTotal % 60;
+    const fmt = (h: number, mm: number) => `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+    const inicio = fmt(startH, startM);
+    const fin    = fmt(endH, endM);
+    sesiones.push({ hora: inicio, label: `${inicio} – ${fin}` });
   }
   return sesiones;
 }
@@ -129,14 +137,14 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
 
     const slot  = disponibilidad.find(s => s.id === selected.slotId)!;
     const fechaBase = proximaFecha(slot.diaSemana);
-    const hNum  = parseInt(selected.hora.split(":")[0], 10);
+    const [hNum, mNum] = selected.hora.split(":").map(s => parseInt(s, 10));
 
     let creadas = 0;
     let errores: string[] = [];
 
     for (let i = 0; i < repetir; i++) {
       const fecha = addDays(fechaBase, i * 7);
-      const fechaInicio = setMinutes(setHours(fecha, hNum), 0);
+      const fechaInicio = setMinutes(setHours(fecha, hNum), mNum || 0);
       const fechaFin    = duracion === 30 ? addMinutes(fechaInicio, 30) : addHours(fechaInicio, 1);
 
       const res = await fetch("/api/sesiones", {
@@ -190,6 +198,11 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
     return acc;
   }, {} as Record<number, Slot[]>);
 
+  // Ordenar entries por fecha real (no por número de día), para que la próxima fecha aparezca primero
+  const diasOrdenados = Object.entries(porDia)
+    .map(([diaStr, slots]) => ({ dia: Number(diaStr), fecha: proximaFecha(Number(diaStr)), slots }))
+    .sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
+
   return (
     <div className="space-y-4">
       {/* Selector de duración */}
@@ -242,10 +255,8 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
 
       <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Selecciona tu horario</p>
 
-      <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-        {Object.entries(porDia).map(([diaStr, slots]) => {
-          const dia    = Number(diaStr);
-          const fecha  = proximaFecha(dia);
+      <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+        {diasOrdenados.map(({ dia, fecha, slots }) => {
           const fechaLabel = format(fecha, "d MMM", { locale: es });
 
           return (
@@ -261,11 +272,11 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
               {/* Slots de hora */}
               <div className="flex flex-wrap gap-2">
                 {slots.flatMap(slot =>
-                  expandirSlot(slot).map(({ hora, label }) => {
+                  expandirSlot(slot, duracion).map(({ hora, label }) => {
                     const isSelected = selected?.slotId === slot.id && selected?.hora === hora;
-                    // Calcular fecha-hora real del slot para verificar contra busy
                     const slotFecha = proximaFecha(slot.diaSemana);
-                    const slotInicio = setMinutes(setHours(slotFecha, parseInt(hora.split(":")[0], 10)), 0);
+                    const [slH, slM] = hora.split(":").map(s => parseInt(s, 10));
+                    const slotInicio = setMinutes(setHours(slotFecha, slH), slM || 0);
                     const slotFin = duracion === 30 ? addMinutes(slotInicio, 30) : addHours(slotInicio, 1);
                     const ocupado = slotOcupadoEnGCal(slotInicio, slotFin);
 
@@ -298,6 +309,12 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
       {selected && (() => {
         const slot  = disponibilidad.find(s => s.id === selected.slotId)!;
         const fecha = proximaFecha(slot.diaSemana);
+        // Calcular hora fin del slot seleccionado
+        const [sH, sM] = selected.hora.split(":").map(s => parseInt(s, 10));
+        const inicio = setMinutes(setHours(fecha, sH), sM || 0);
+        const finCalc = duracion === 30 ? addMinutes(inicio, 30) : addHours(inicio, 1);
+        const finLabel = `${String(finCalc.getHours()).padStart(2, "0")}:${String(finCalc.getMinutes()).padStart(2, "0")}`;
+
         return (
           <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 flex items-center gap-3">
             <Calendar className="w-4 h-4 text-indigo-500 flex-shrink-0" />
@@ -306,7 +323,7 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
                 {format(fecha, "EEEE d 'de' MMMM", { locale: es })}
               </p>
               <p className="text-xs text-indigo-500">
-                {selected.hora} – {`${String(parseInt(selected.hora)+1).padStart(2,"0")}:00`} · 1 hora
+                {selected.hora} – {finLabel} · {duracion === 30 ? "30 min" : "1 hora"}
               </p>
             </div>
           </div>
