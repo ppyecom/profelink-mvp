@@ -46,36 +46,36 @@ export default async function ProfesorDashboard() {
 
       <TipsCard />
 
-      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
-      <div className="relative mesh-gradient rounded-3xl p-6 overflow-hidden shadow-elev-3">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/20 rounded-full filter blur-3xl animate-blob pointer-events-none" />
-        <div className="relative z-10 flex items-start justify-between flex-wrap gap-4">
+      {/* ── HEADER ─────────────────────────────────────────────────────── */}
+      <div className="bento-warm p-6 md:p-8 relative overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-72 h-72 bg-amber-200 rounded-full filter blur-3xl opacity-40" />
+        <div className="relative flex items-start justify-between flex-wrap gap-4">
           <div>
-            <p className="text-indigo-200 text-sm font-medium">Panel de profesor</p>
-            <h1 className="font-heading font-extrabold text-3xl text-white mt-0.5">{nombre} 👨‍🏫</h1>
-            <p className="text-white/60 text-sm mt-1">{perfil.especialidades.map(e => e.materia).join(" · ")}</p>
+            <p className="text-amber-700 text-sm font-medium">Panel de tutor</p>
+            <h1 className="font-display font-black text-3xl md:text-4xl text-ink-900 mt-1 tracking-tight">{nombre} 👨‍🏫</h1>
+            <p className="text-ink-600 text-sm mt-1">{perfil.especialidades.map(e => e.materia).join(" · ")}</p>
           </div>
-          <span className={`inline-flex items-center gap-1.5 ${estadoBadge.bg} ${estadoBadge.text} text-xs font-bold px-4 py-2 rounded-2xl`}>
-            <estadoBadge.icon className="w-3.5 h-3.5" />
+          <span className={`inline-flex items-center gap-1.5 ${estadoBadge.bg} ${estadoBadge.text} text-xs font-bold px-3 py-1.5 rounded-full`}>
+            <estadoBadge.icon className="w-3 h-3" />
             {estadoBadge.msg}
           </span>
         </div>
       </div>
 
-      {/* ── STATS ──────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* ── STATS ───────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Sesiones hoy",    val: sesionesHoy.length,          icon: Calendar,    color: "from-indigo-500 to-violet-500" },
-          { label: "Esta semana",     val: sesionesSemana,              icon: TrendingUp,  color: "from-violet-500 to-fuchsia-500" },
-          { label: "Completadas",     val: sesionesCompletadas.length,  icon: CheckCircle, color: "from-emerald-500 to-teal-500" },
-          { label: "Ingresos netos",  val: formatSoles(ingresoTotal),   icon: DollarSign,  color: "from-amber-500 to-orange-500" },
+          { label: "Sesiones hoy",    val: sesionesHoy.length,          icon: Calendar,    color: "bg-indigo-100 text-indigo-700" },
+          { label: "Esta semana",     val: sesionesSemana,              icon: TrendingUp,  color: "bg-violet-100 text-violet-700" },
+          { label: "Completadas",     val: sesionesCompletadas.length,  icon: CheckCircle, color: "bg-emerald-100 text-emerald-700" },
+          { label: "Ingresos netos",  val: formatSoles(ingresoTotal),   icon: DollarSign,  color: "bg-amber-100 text-amber-700" },
         ].map(s => (
-          <div key={s.label} className="bento p-5 elev-1 hover:elev-3 transition-all hover:-translate-y-0.5">
-            <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${s.color} flex items-center justify-center mb-3 shadow-elev-1`}>
-              <s.icon className="w-5 h-5 text-white" />
+          <div key={s.label} className="bento p-5 card-lift">
+            <div className={`w-10 h-10 rounded-2xl ${s.color} flex items-center justify-center mb-3`}>
+              <s.icon className="w-5 h-5" />
             </div>
-            <p className="font-heading font-extrabold text-2xl text-brand-text truncate">{s.val}</p>
-            <p className="text-xs text-gray-400 mt-0.5 font-medium">{s.label}</p>
+            <p className="font-display font-black text-2xl text-ink-900 tracking-tight truncate">{s.val}</p>
+            <p className="text-xs text-ink-500 mt-1 font-medium uppercase tracking-wider">{s.label}</p>
           </div>
         ))}
       </div>
