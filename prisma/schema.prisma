@@ -414,6 +414,23 @@ model Promocion {
   @@map("promociones")
 }
 
+model Ejercicio {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  autorId     String   @map("autor_id") @db.Uuid
+  materia     String   @db.VarChar(80)
+  nivel       String   @db.VarChar(20)
+  titulo      String   @db.VarChar(200)
+  enunciado   String
+  solucion    String?
+  archivoUrl  String?  @map("archivo_url")
+  dificultad  Int      @default(1) @db.SmallInt // 1-5
+  vistas      Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([materia, nivel])
+  @@map("ejercicios")
+}
+
 model Logro {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   usuarioId   String   @map("usuario_id") @db.Uuid

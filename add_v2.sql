@@ -220,3 +220,19 @@ CREATE TABLE IF NOT EXISTS logros (
   UNIQUE (usuario_id, tipo)
 );
 CREATE INDEX IF NOT EXISTS idx_logros_usuario ON logros(usuario_id);
+
+-- Banco de ejercicios
+CREATE TABLE IF NOT EXISTS ejercicios (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  autor_id    UUID NOT NULL,
+  materia     VARCHAR(80) NOT NULL,
+  nivel       VARCHAR(20) NOT NULL,
+  titulo      VARCHAR(200) NOT NULL,
+  enunciado   TEXT NOT NULL,
+  solucion    TEXT,
+  archivo_url TEXT,
+  dificultad  SMALLINT NOT NULL DEFAULT 1 CHECK (dificultad BETWEEN 1 AND 5),
+  vistas      INTEGER NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_ejercicios_materia_nivel ON ejercicios(materia, nivel);
