@@ -174,3 +174,22 @@ CREATE TABLE IF NOT EXISTS promociones (
   expira_en   TIMESTAMPTZ,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Estado configurable del tutor + plantillas
+DO $$ BEGIN
+  CREATE TYPE "EstadoDisponibilidad" AS ENUM ('DISPONIBLE','EN_CLASE','NO_DISPONIBLE');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+ALTER TABLE perfiles_profesor
+  ADD COLUMN IF NOT EXISTS estado_disponibilidad "EstadoDisponibilidad" NOT NULL DEFAULT 'DISPONIBLE',
+  ADD COLUMN IF NOT EXISTS mensaje_auto_respuesta TEXT;
+
+CREATE TABLE IF NOT EXISTS plantillas_mensaje (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profesor_id UUID NOT NULL,
+  titulo      VARCHAR(80) NOT NULL,
+  contenido   TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_plantillas_profesor ON plantillas_mensaje(profesor_id);

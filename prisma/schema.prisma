@@ -37,6 +37,12 @@ enum NivelAcademico {
   UNIVERSITARIA
 }
 
+enum EstadoDisponibilidad {
+  DISPONIBLE
+  EN_CLASE
+  NO_DISPONIBLE
+}
+
 enum EstadoRetiro {
   PENDIENTE
   APROBADO
@@ -179,6 +185,8 @@ model PerfilProfesor {
   institucion        String?           @db.VarChar(120)
   ratingPromedio     Decimal           @default(0) @map("rating_promedio") @db.Decimal(3, 2)
   totalResenas       Int               @default(0) @map("total_resenas")
+  estadoDisponibilidad EstadoDisponibilidad @default(DISPONIBLE) @map("estado_disponibilidad")
+  mensajeAutoRespuesta String?         @map("mensaje_auto_respuesta")
   createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt          DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
@@ -381,6 +389,17 @@ model ParticipanteGrupal {
 
   @@unique([sesionId, estudianteId])
   @@map("participantes_grupales")
+}
+
+model PlantillaMensaje {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profesorId  String   @map("profesor_id") @db.Uuid
+  titulo      String   @db.VarChar(80)
+  contenido   String
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([profesorId])
+  @@map("plantillas_mensaje")
 }
 
 model Promocion {
