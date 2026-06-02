@@ -414,6 +414,20 @@ model Promocion {
   @@map("promociones")
 }
 
+model Logro {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId   String   @map("usuario_id") @db.Uuid
+  tipo        String   @db.VarChar(40)
+  titulo      String   @db.VarChar(120)
+  descripcion String
+  iconoEmoji  String   @default("🏆") @map("icono_emoji") @db.VarChar(10)
+  desbloqueado DateTime @default(now()) @map("desbloqueado") @db.Timestamptz()
+
+  @@unique([usuarioId, tipo])
+  @@index([usuarioId])
+  @@map("logros")
+}
+
 model Bundle {
   id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   profesorId    String   @map("profesor_id") @db.Uuid

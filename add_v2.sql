@@ -207,3 +207,16 @@ CREATE TABLE IF NOT EXISTS bundles (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_bundles_profesor ON bundles(profesor_id, activa);
+
+-- Logros (gamificación)
+CREATE TABLE IF NOT EXISTS logros (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  usuario_id   UUID NOT NULL,
+  tipo         VARCHAR(40) NOT NULL,
+  titulo       VARCHAR(120) NOT NULL,
+  descripcion  TEXT NOT NULL,
+  icono_emoji  VARCHAR(10) NOT NULL DEFAULT '🏆',
+  desbloqueado TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (usuario_id, tipo)
+);
+CREATE INDEX IF NOT EXISTS idx_logros_usuario ON logros(usuario_id);

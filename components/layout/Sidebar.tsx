@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen, TrendingUp, Wallet, Shield, Award, Heart, Tag, Lightbulb, MessageCircle } from "lucide-react";
+import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen, TrendingUp, Wallet, Shield, Award, Heart, Tag, Lightbulb, MessageCircle, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RolUsuario } from "@/types";
 
@@ -18,6 +18,7 @@ const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
     { href: "/estudiante/cupones",    label: "Mis Cupones",    icon: Tag },
     { href: "/estudiante/referidos",  label: "Referidos",      icon: Users },
     { href: "/estudiante/wishlist",   label: "Wishlist",       icon: Lightbulb },
+    { href: "/logros",                label: "Logros",         icon: Trophy },
     { href: "/profesores",            label: "Buscar Tutores", icon: Search },
     { href: "/cambiar-password",      label: "Seguridad",      icon: Shield },
   ],
