@@ -124,9 +124,9 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     letter-spacing: -0.025em;
-    color: var(--ink-900);
     line-height: 1.1;
     font-weight: 700;
+    /* color: hereda del padre, no se fuerza */
   }
   h1 { letter-spacing: -0.04em; }
 
