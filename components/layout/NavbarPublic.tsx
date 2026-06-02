@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, Menu, X, ChevronDown, LayoutDashboard, LogOut, User, Shield } from "lucide-react";
+import { Menu, X, ChevronDown, LayoutDashboard, LogOut, Shield } from "lucide-react";
 import NotificacionesDropdown from "./NotificacionesDropdown";
 
 interface UserSession { nombre: string; rol: string }
@@ -16,28 +16,28 @@ const ROL_DEST: Record<string, string> = {
 
 const ROL_LABEL: Record<string, string> = {
   ESTUDIANTE: "Estudiante",
-  PROFESOR:   "Profesor",
+  PROFESOR:   "Tutor",
   ADMIN:      "Admin",
-};
-
-const ROL_COLOR: Record<string, string> = {
-  ESTUDIANTE: "from-indigo-500 to-violet-500",
-  PROFESOR:   "from-violet-500 to-fuchsia-500",
-  ADMIN:      "from-rose-500 to-pink-500",
 };
 
 export default function NavbarPublic() {
   const router = useRouter();
-  const [mobileOpen, setMobileOpen]     = useState(false);
-  const [userOpen, setUserOpen]         = useState(false);
-  const [user, setUser]                 = useState<UserSession | null>(null);
-  const [loadingUser, setLoadingUser]   = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [userOpen, setUserOpen]     = useState(false);
+  const [user, setUser]             = useState<UserSession | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [scrolled, setScrolled]     = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then(r => r.json())
       .then(data => { setUser(data); setLoadingUser(false); })
       .catch(() => setLoadingUser(false));
+
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const handleLogout = async () => {
@@ -51,86 +51,92 @@ export default function NavbarPublic() {
   const initials = user?.nombre.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase() ?? "";
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 glass border-b border-white/40 shadow-elev-1">
-      <div className="max-w-6xl mx-auto px-5 py-3.5 flex items-center justify-between">
+    <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+      scrolled
+        ? "bg-white/80 backdrop-blur-lg border-b border-ink-200 shadow-sm"
+        : "bg-transparent border-b border-transparent"
+    }`}>
+      <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
-          <img src="/logo-owl.png" alt="ProfeLink" className="w-10 h-10 object-contain" />
-          <span className="font-heading font-bold text-xl text-navy-700">ProfeLink</span>
+        <Link href="/" className="flex items-center gap-2.5 group" onClick={() => setMobileOpen(false)}>
+          <img src="/logo-owl.png" alt="ProfeLink" className="w-9 h-9 object-contain group-hover:scale-105 transition-transform" />
+          <span className="font-display font-bold text-xl text-ink-900 tracking-tight">ProfeLink</span>
         </Link>
 
-        {/* Desktop */}
-        <div className="hidden md:flex items-center gap-5">
-          <Link href="/profesores" className="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors">
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-1">
+          <Link href="/profesores" className="text-sm font-medium text-ink-700 hover:text-ink-900 px-3 py-2 rounded-lg hover:bg-ink-100 transition-colors">
             Tutores
           </Link>
+          <Link href="/ayuda" className="text-sm font-medium text-ink-700 hover:text-ink-900 px-3 py-2 rounded-lg hover:bg-ink-100 transition-colors">
+            Ayuda
+          </Link>
 
-          {loadingUser ? (
-            <div className="w-24 h-8 bg-gray-100 rounded-xl animate-pulse" />
-          ) : user ? (
-            /* Usuario logueado */
-            <>
-            <NotificacionesDropdown />
-            <div className="relative">
-              <button onClick={() => setUserOpen(!userOpen)}
-                className="flex items-center gap-2.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 px-3 py-2 rounded-2xl transition-all group">
-                <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${ROL_COLOR[user.rol] ?? "from-indigo-500 to-violet-500"} flex items-center justify-center text-white text-xs font-bold font-heading`}>
-                  {initials}
-                </div>
-                <div className="text-left">
-                  <p className="text-xs font-bold text-brand-text leading-none">{user.nombre.split(" ")[0]}</p>
-                  <p className="text-[10px] text-indigo-500 font-medium">{ROL_LABEL[user.rol]}</p>
-                </div>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${userOpen ? "rotate-180" : ""}`} />
-              </button>
-
-              {/* Dropdown */}
-              {userOpen && (
-                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-elev-4 border border-indigo-50 overflow-hidden z-50">
-                  <div className="px-4 py-3 bg-indigo-50 border-b border-indigo-100">
-                    <p className="font-heading font-bold text-sm text-brand-text">{user.nombre}</p>
-                    <p className="text-xs text-indigo-500">{ROL_LABEL[user.rol]}</p>
-                  </div>
-                  <Link href={ROL_DEST[user.rol] ?? "/"} onClick={() => setUserOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-amber-50 transition-colors text-sm text-gray-700 font-medium">
-                    <LayoutDashboard className="w-4 h-4 text-amber-600" /> Mi panel
-                  </Link>
-                  <Link href="/cambiar-password" onClick={() => setUserOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-amber-50 transition-colors text-sm text-gray-700 font-medium">
-                    <Shield className="w-4 h-4 text-amber-600" /> Cambiar contraseña
-                  </Link>
-                  <button onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-sm text-red-500 font-medium border-t border-gray-50">
-                    <LogOut className="w-4 h-4" /> Cerrar sesión
+          <div className="ml-3 flex items-center gap-2">
+            {loadingUser ? (
+              <div className="w-24 h-9 bg-ink-100 rounded-xl animate-pulse" />
+            ) : user ? (
+              <>
+                <NotificacionesDropdown />
+                <div className="relative">
+                  <button onClick={() => setUserOpen(!userOpen)}
+                    className="flex items-center gap-2 bg-white hover:bg-cream-50 border border-ink-200 hover:border-ink-300 px-3 py-2 rounded-xl transition-all">
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xs font-bold">
+                      {initials}
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-semibold text-ink-900 leading-none">{user.nombre.split(" ")[0]}</p>
+                      <p className="text-[10px] text-ink-500 leading-none mt-0.5">{ROL_LABEL[user.rol]}</p>
+                    </div>
+                    <ChevronDown className={`w-3.5 h-3.5 text-ink-400 transition-transform ${userOpen ? "rotate-180" : ""}`} />
                   </button>
+
+                  {userOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-ink-200 overflow-hidden z-50 animate-scale-in origin-top-right">
+                      <div className="px-4 py-3 bg-cream-50 border-b border-ink-100">
+                        <p className="font-display font-bold text-sm text-ink-900">{user.nombre}</p>
+                        <p className="text-xs text-ink-500 mt-0.5">{ROL_LABEL[user.rol]}</p>
+                      </div>
+                      <Link href={ROL_DEST[user.rol] ?? "/"} onClick={() => setUserOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-cream-50 transition-colors text-sm text-ink-700 font-medium">
+                        <LayoutDashboard className="w-4 h-4 text-amber-600" /> Mi panel
+                      </Link>
+                      <Link href="/cambiar-password" onClick={() => setUserOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-cream-50 transition-colors text-sm text-ink-700 font-medium">
+                        <Shield className="w-4 h-4 text-amber-600" /> Seguridad
+                      </Link>
+                      <button onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-rose-50 transition-colors text-sm text-rose-600 font-medium border-t border-ink-100">
+                        <LogOut className="w-4 h-4" /> Cerrar sesión
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            </>
-          ) : (
-            /* No logueado */
-            <>
-              <Link href="/login" className="text-sm font-medium text-gray-500 hover:text-indigo-600 transition-colors">
-                Iniciar sesión
-              </Link>
-              <Link href="/register"
-                className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all shadow-elev-2 hover:-translate-y-0.5">
-                Crear cuenta
-              </Link>
-            </>
-          )}
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm font-medium text-ink-700 hover:text-ink-900 px-3 py-2 rounded-lg hover:bg-ink-100 transition-colors">
+                  Iniciar sesión
+                </Link>
+                <Link href="/register"
+                  className="bg-ink-900 hover:bg-ink-800 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all shadow-md hover:shadow-lg">
+                  Crear cuenta
+                </Link>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Mobile right */}
         <div className="flex md:hidden items-center gap-2">
           {!loadingUser && user && (
             <Link href={ROL_DEST[user.rol] ?? "/"}
-              className={`w-8 h-8 rounded-xl bg-gradient-to-br ${ROL_COLOR[user.rol] ?? "from-indigo-500 to-violet-500"} flex items-center justify-center text-white text-xs font-bold font-heading shadow-elev-1`}>
+              className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xs font-bold">
               {initials}
             </Link>
           )}
           <button onClick={() => setMobileOpen(!mobileOpen)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors">
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-ink-100 hover:bg-ink-200 text-ink-700 transition-colors">
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
@@ -138,51 +144,42 @@ export default function NavbarPublic() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-white/30 bg-white/97 backdrop-blur-xl px-5 py-4 space-y-2">
-          {user && (
-            <div className="flex items-center gap-3 bg-indigo-50 rounded-2xl px-4 py-3 mb-3">
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${ROL_COLOR[user.rol] ?? "from-indigo-500 to-violet-500"} flex items-center justify-center text-white font-bold font-heading`}>
-                {initials}
-              </div>
-              <div>
-                <p className="font-heading font-bold text-sm text-brand-text">{user.nombre}</p>
-                <p className="text-xs text-indigo-500">{ROL_LABEL[user.rol]}</p>
-              </div>
-            </div>
-          )}
-
+        <div className="md:hidden border-t border-ink-200 bg-white/95 backdrop-blur-xl px-5 py-4 space-y-1 animate-fade-in">
           <Link href="/profesores" onClick={() => setMobileOpen(false)}
-            className="flex items-center px-4 py-3 rounded-2xl text-gray-700 font-medium hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+            className="block px-3 py-2.5 rounded-xl text-ink-700 font-medium hover:bg-cream-50 transition-colors">
             Tutores
+          </Link>
+          <Link href="/ayuda" onClick={() => setMobileOpen(false)}
+            className="block px-3 py-2.5 rounded-xl text-ink-700 font-medium hover:bg-cream-50 transition-colors">
+            Ayuda
           </Link>
 
           {user ? (
             <>
               <Link href={ROL_DEST[user.rol] ?? "/"} onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 px-4 py-3 rounded-2xl text-gray-700 font-medium hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-ink-700 font-medium hover:bg-cream-50 transition-colors">
                 <LayoutDashboard className="w-4 h-4" /> Mi panel
               </Link>
               <button onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-4 py-3 rounded-2xl text-red-500 font-medium hover:bg-red-50 transition-colors">
+                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-rose-600 font-medium hover:bg-rose-50 transition-colors">
                 <LogOut className="w-4 h-4" /> Cerrar sesión
               </button>
             </>
           ) : (
-            <>
+            <div className="pt-2 space-y-2">
               <Link href="/login" onClick={() => setMobileOpen(false)}
-                className="flex items-center px-4 py-3 rounded-2xl text-gray-700 font-medium hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                className="block px-3 py-2.5 rounded-xl text-ink-700 font-medium hover:bg-cream-50 transition-colors">
                 Iniciar sesión
               </Link>
               <Link href="/register" onClick={() => setMobileOpen(false)}
-                className="flex items-center justify-center px-4 py-3 rounded-2xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors">
+                className="block w-full text-center px-3 py-3 rounded-xl bg-ink-900 hover:bg-ink-800 text-white font-semibold transition-colors">
                 Crear cuenta
               </Link>
-            </>
+            </div>
           )}
         </div>
       )}
 
-      {/* Cerrar dropdown al hacer clic fuera */}
       {userOpen && <div className="fixed inset-0 z-40" onClick={() => setUserOpen(false)} />}
     </nav>
   );
