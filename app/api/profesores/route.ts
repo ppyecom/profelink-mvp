@@ -10,6 +10,8 @@ export async function GET(req: NextRequest) {
   const nivel = searchParams.get("nivel") ?? undefined;
   const precioMax = searchParams.get("precioMax") ? Number(searchParams.get("precioMax")) : undefined;
   const modalidad = searchParams.get("modalidad") ?? undefined;
+  const nivelVerif = searchParams.get("nivelVerificacion") ?? undefined;
+  const primeraGratis = searchParams.get("primeraGratis") === "1";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
   const limit = Math.min(20, Math.max(1, Number(searchParams.get("limit") ?? "12")));
   const skip = (page - 1) * limit;
@@ -19,6 +21,8 @@ export async function GET(req: NextRequest) {
     ...(precioMax && { precioHora: { lte: precioMax } }),
     ...(modalidad && { modalidad }),
     ...(nivel && { nivel: { has: nivel } }),
+    ...(nivelVerif && { nivelVerificacion: nivelVerif }),
+    ...(primeraGratis && { aceptaPrimeraGratis: true }),
     ...(materia && {
       especialidades: { some: { materia: { contains: materia, mode: "insensitive" } } },
     }),
@@ -46,6 +50,9 @@ export async function GET(req: NextRequest) {
     bio: p.bio,
     nivel: p.nivel,
     precioHora: Number(p.precioHora),
+    precio30min: p.precio30min ? Number(p.precio30min) : null,
+    aceptaPrimeraGratis: p.aceptaPrimeraGratis,
+    nivelVerificacion: p.nivelVerificacion,
     modalidad: p.modalidad,
     estado: p.estado,
     ratingPromedio: Number(p.ratingPromedio),

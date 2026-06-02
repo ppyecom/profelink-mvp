@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen, TrendingUp, Wallet, Shield, Award } from "lucide-react";
+import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen, TrendingUp, Wallet, Shield, Award, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RolUsuario } from "@/types";
 
@@ -11,10 +11,11 @@ interface NavItem { href: string; label: string; icon: React.ElementType }
 
 const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
   ESTUDIANTE: [
-    { href: "/estudiante",          label: "Inicio",         icon: LayoutDashboard },
-    { href: "/estudiante/sesiones", label: "Mis Sesiones",   icon: Calendar },
-    { href: "/profesores",          label: "Buscar Tutores", icon: Search },
-    { href: "/cambiar-password",    label: "Seguridad",      icon: Shield },
+    { href: "/estudiante",            label: "Inicio",         icon: LayoutDashboard },
+    { href: "/estudiante/sesiones",   label: "Mis Sesiones",   icon: Calendar },
+    { href: "/estudiante/favoritos",  label: "Favoritos",      icon: Heart },
+    { href: "/profesores",            label: "Buscar Tutores", icon: Search },
+    { href: "/cambiar-password",      label: "Seguridad",      icon: Shield },
   ],
   PROFESOR: [
     { href: "/profesor",                label: "Inicio",         icon: LayoutDashboard },

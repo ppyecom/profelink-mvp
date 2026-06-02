@@ -8,6 +8,8 @@ import { formatSoles, NIVEL_LABELS, formatTime } from "@/lib/utils";
 import ResenaCard from "@/components/profesores/ResenaCard";
 import ReservarSesionForm from "@/components/sesiones/ReservarSesionForm";
 import DisponibilidadGrid from "@/components/disponibilidad/DisponibilidadGrid";
+import NivelBadge from "@/components/profesores/NivelBadge";
+import BotonFavorito from "@/components/profesores/BotonFavorito";
 import type { NivelAcademico, ModalidadSesion } from "@/types";
 
 interface PageProps { params: Promise<{ id: string }> }
@@ -124,9 +126,10 @@ export default async function ProfesorDetallePage({ params }: PageProps) {
                 {perfil.usuario.nombre}
               </h1>
               <div className="flex flex-wrap items-center gap-3 mb-3">
-                {perfil.estado === "VERIFICADO" && (
-                  <span className="inline-flex items-center gap-1.5 bg-white/15 border border-white/25 text-white text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm">
-                    <Sparkles className="w-3 h-3 text-amber-300" /> Docente Verificado
+                <NivelBadge nivel={perfil.nivelVerificacion} size="lg" />
+                {perfil.aceptaPrimeraGratis && (
+                  <span className="inline-flex items-center gap-1.5 bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                    🎁 Primera sesión gratis
                   </span>
                 )}
                 <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/80 text-xs px-3 py-1.5 rounded-full">
@@ -151,10 +154,13 @@ export default async function ProfesorDetallePage({ params }: PageProps) {
               </div>
             </div>
 
-            {/* Price pill — visible on desktop */}
-            <div className="hidden md:block glass rounded-3xl px-6 py-4 text-center border-white/30 shadow-elev-3">
-              <p className="font-heading font-extrabold text-4xl text-white">{formatSoles(precio)}</p>
-              <p className="text-white/60 text-sm mt-0.5">por sesión · 1 hora</p>
+            {/* Favorito + Price pill */}
+            <div className="flex flex-col items-end gap-3">
+              {session?.rol === "ESTUDIANTE" && <BotonFavorito profesorId={perfil.id} />}
+              <div className="hidden md:block glass rounded-3xl px-6 py-4 text-center border-white/30 shadow-elev-3">
+                <p className="font-heading font-extrabold text-4xl text-white">{formatSoles(precio)}</p>
+                <p className="text-white/60 text-sm mt-0.5">por sesión · 1 hora</p>
+              </div>
             </div>
           </div>
         </div>
@@ -326,6 +332,9 @@ export default async function ProfesorDetallePage({ params }: PageProps) {
                       profesorId={perfil.id}
                       disponibilidad={slots}
                       modalidad={perfil.modalidad as ModalidadSesion}
+                      precioHora={Number(perfil.precioHora)}
+                      precio30min={perfil.precio30min ? Number(perfil.precio30min) : null}
+                      aceptaPrimeraGratis={perfil.aceptaPrimeraGratis}
                     />
                   ) : !session ? (
                     <div className="space-y-3">

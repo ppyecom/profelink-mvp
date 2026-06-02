@@ -12,6 +12,8 @@ export interface UsuarioPublico {
   createdAt: string;
 }
 
+export type NivelVerificacion = "BASICO" | "EXPERTO" | "DOCENTE";
+
 export interface ProfesorResumen {
   id: string;
   usuarioId: string;
@@ -20,6 +22,9 @@ export interface ProfesorResumen {
   bio: string | null;
   nivel: NivelAcademico[];
   precioHora: number;
+  precio30min?: number | null;
+  aceptaPrimeraGratis?: boolean;
+  nivelVerificacion?: NivelVerificacion;
   modalidad: ModalidadSesion;
   estado: EstadoProfesor;
   ratingPromedio: number;

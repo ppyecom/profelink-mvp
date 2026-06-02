@@ -1,18 +1,28 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Star, MapPin, Monitor, CheckCircle, Clock } from "lucide-react";
+import { Star, MapPin, Monitor, CheckCircle, Clock, Gift } from "lucide-react";
 import { formatSoles, NIVEL_LABELS } from "@/lib/utils";
+import NivelBadge from "./NivelBadge";
+import BotonFavorito from "./BotonFavorito";
 import type { ProfesorResumen } from "@/types";
 
 interface Props {
-  profesor: ProfesorResumen & { ciudad?: string | null; anosExperiencia?: number };
+  profesor: ProfesorResumen & {
+    ciudad?: string | null;
+    anosExperiencia?: number;
+    nivelVerificacion?: string;
+    aceptaPrimeraGratis?: boolean;
+  };
 }
 
 export default function ProfesorCard({ profesor }: Props) {
   const rating = Number(profesor.ratingPromedio);
 
   return (
-    <Link href={`/profesores/${profesor.id}`}>
+    <Link href={`/profesores/${profesor.id}`} className="block relative">
+      <div className="absolute top-3 right-3 z-10">
+        <BotonFavorito profesorId={profesor.id} size="sm" />
+      </div>
       <div className="group bg-white rounded-3xl border border-indigo-50 shadow-elev-1 hover:shadow-elev-4 hover:-translate-y-1.5 transition-all duration-300 overflow-hidden cursor-pointer">
 
         {/* Top accent line */}
@@ -39,11 +49,16 @@ export default function ProfesorCard({ profesor }: Props) {
               <h3 className="font-heading font-bold text-brand-text group-hover:text-indigo-600 transition-colors leading-tight truncate">
                 {profesor.nombre}
               </h3>
-              {profesor.estado === "VERIFICADO" && (
-                <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold mt-0.5">
-                  <CheckCircle className="w-3 h-3" /> Verificado
-                </span>
-              )}
+              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                {profesor.nivelVerificacion && (
+                  <NivelBadge nivel={profesor.nivelVerificacion} size="sm" />
+                )}
+                {profesor.aceptaPrimeraGratis && (
+                  <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    <Gift className="w-2.5 h-2.5" /> 1ª gratis
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-1 mt-1">
                 {[1,2,3,4,5].map(n => (
                   <Star key={n} className={`w-3 h-3 ${n <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "fill-gray-100 text-gray-200"}`} />

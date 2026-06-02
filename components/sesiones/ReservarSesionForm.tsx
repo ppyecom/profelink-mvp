@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { addDays, addHours, format, setHours, setMinutes } from "date-fns";
+import { addDays, addHours, addMinutes, format, setHours, setMinutes } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle, Clock, Calendar } from "lucide-react";
+import { CheckCircle, Clock, Calendar, Tag, Loader2, Gift, X } from "lucide-react";
 import { cn, formatSoles } from "@/lib/utils";
 import type { ModalidadSesion } from "@/types";
 
@@ -14,7 +14,12 @@ interface Props {
   profesorId: string;
   disponibilidad: Slot[];
   modalidad: ModalidadSesion;
+  precioHora: number;
+  precio30min?: number | null;
+  aceptaPrimeraGratis?: boolean;
 }
+
+interface CuponDisponible { id: string; codigo: string; tipo: string; valor: number }
 
 const DIAS_SHORT: Record<number, string> = { 0:"Dom", 1:"Lun", 2:"Mar", 3:"Mié", 4:"Jue", 5:"Vie", 6:"Sáb" };
 
@@ -38,13 +43,54 @@ function expandirSlot(slot: Slot): { hora: string; label: string }[] {
   return sesiones;
 }
 
-export default function ReservarSesionForm({ profesorId, disponibilidad, modalidad }: Props) {
+export default function ReservarSesionForm({ profesorId, disponibilidad, modalidad, precioHora, precio30min, aceptaPrimeraGratis }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<{ slotId: string; hora: string } | null>(null);
+  const [duracion, setDuracion] = useState<30 | 60>(60);
   const [notas, setNotas]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
   const [success, setSuccess]   = useState(false);
+
+  // Cupones
+  const [cuponesDisponibles, setCuponesDisponibles] = useState<CuponDisponible[]>([]);
+  const [cuponCodigo, setCuponCodigo] = useState("");
+  const [cuponInput, setCuponInput] = useState("");
+  const [validandoCupon, setValidandoCupon] = useState(false);
+  const [descuento, setDescuento] = useState(0);
+  const [errorCupon, setErrorCupon] = useState("");
+
+  const precioBase = duracion === 30 ? (precio30min ?? precioHora / 2) : precioHora;
+  const precioFinal = Math.max(0, precioBase - descuento);
+
+  // Cargar cupones disponibles del estudiante
+  useEffect(() => {
+    fetch("/api/cupones")
+      .then(r => r.ok ? r.json() : { cupones: [] })
+      .then(d => setCuponesDisponibles((d.cupones ?? []).filter((c: { estado: string }) => c.estado === "ACTIVO")))
+      .catch(() => {});
+  }, []);
+
+  const aplicarCupon = async (codigo: string) => {
+    setErrorCupon(""); setValidandoCupon(true);
+    const res = await fetch("/api/cupones/validar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ codigo, precio: precioBase }),
+    });
+    const data = await res.json();
+    setValidandoCupon(false);
+    if (!res.ok || !data.ok) { setErrorCupon(data.error ?? "Cupón inválido"); return; }
+    setDescuento(data.descuento);
+    setCuponCodigo(codigo);
+    setCuponInput("");
+  };
+
+  const quitarCupon = () => {
+    setCuponCodigo("");
+    setDescuento(0);
+    setErrorCupon("");
+  };
 
   if (disponibilidad.length === 0) {
     return (
@@ -63,12 +109,20 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
     const fecha = proximaFecha(slot.diaSemana);
     const hNum  = parseInt(selected.hora.split(":")[0], 10);
     const fechaInicio = setMinutes(setHours(fecha, hNum), 0);
-    const fechaFin    = addHours(fechaInicio, 1);
+    const fechaFin    = duracion === 30 ? addMinutes(fechaInicio, 30) : addHours(fechaInicio, 1);
 
     const res = await fetch("/api/sesiones", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profesorId, fechaInicio: fechaInicio.toISOString(), fechaFin: fechaFin.toISOString(), modalidad, notas: notas || undefined }),
+      body: JSON.stringify({
+        profesorId,
+        fechaInicio: fechaInicio.toISOString(),
+        fechaFin: fechaFin.toISOString(),
+        modalidad,
+        duracionMinutos: duracion,
+        cuponCodigo: cuponCodigo || undefined,
+        notas: notas || undefined,
+      }),
     });
 
     const data = await res.json();
@@ -99,6 +153,31 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
 
   return (
     <div className="space-y-4">
+      {/* Selector de duración */}
+      <div>
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Duración</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={() => setDuracion(30)}
+            className={cn(
+              "py-2.5 px-3 rounded-xl text-sm font-semibold border-2 transition-all",
+              duracion === 30
+                ? "bg-indigo-600 border-indigo-600 text-white"
+                : "bg-white border-indigo-100 text-indigo-700 hover:border-indigo-300"
+            )}>
+            30 min · {formatSoles(precio30min ?? precioHora / 2)}
+          </button>
+          <button type="button" onClick={() => setDuracion(60)}
+            className={cn(
+              "py-2.5 px-3 rounded-xl text-sm font-semibold border-2 transition-all",
+              duracion === 60
+                ? "bg-indigo-600 border-indigo-600 text-white"
+                : "bg-white border-indigo-100 text-indigo-700 hover:border-indigo-300"
+            )}>
+            1 hora · {formatSoles(precioHora)}
+          </button>
+        </div>
+      </div>
+
       <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Selecciona tu horario</p>
 
       <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
@@ -160,6 +239,77 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
           </div>
         );
       })()}
+
+      {/* Cupón */}
+      <div>
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+          <Tag className="w-3 h-3" /> Cupón de descuento
+        </p>
+
+        {cuponesDisponibles.length > 0 && !cuponCodigo && (
+          <div className="mb-2 space-y-1">
+            {cuponesDisponibles.map(c => (
+              <button key={c.id} type="button" onClick={() => aplicarCupon(c.codigo)}
+                disabled={validandoCupon}
+                className="w-full text-left bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-3 py-2 text-xs flex items-center gap-2 transition-colors">
+                <Gift className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-bold text-emerald-700">{c.codigo}</p>
+                  <p className="text-emerald-600 text-[10px]">
+                    {c.tipo === "PRIMERA_GRATIS" ? "Tu primera sesión gratis" : c.tipo}
+                  </p>
+                </div>
+                <span className="text-emerald-600 text-xs font-semibold">Aplicar →</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {cuponCodigo ? (
+          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+            <Gift className="w-4 h-4 text-emerald-600" />
+            <span className="text-xs font-bold text-emerald-700 flex-1">{cuponCodigo}</span>
+            <span className="text-xs text-emerald-600">-{formatSoles(descuento)}</span>
+            <button type="button" onClick={quitarCupon} className="text-emerald-600 hover:text-red-500">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <input type="text"
+              value={cuponInput}
+              onChange={e => setCuponInput(e.target.value.toUpperCase())}
+              placeholder="WELCOME-XXXX"
+              className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+            <button type="button" onClick={() => cuponInput && aplicarCupon(cuponInput)}
+              disabled={validandoCupon || !cuponInput}
+              className="bg-gray-100 hover:bg-gray-200 disabled:opacity-50 text-gray-700 text-xs font-semibold px-3 rounded-xl">
+              {validandoCupon ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Aplicar"}
+            </button>
+          </div>
+        )}
+        {errorCupon && <p className="text-red-500 text-xs mt-1">{errorCupon}</p>}
+      </div>
+
+      {/* Resumen del precio */}
+      <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 space-y-1">
+        <div className="flex justify-between text-xs text-gray-600">
+          <span>Precio sesión ({duracion} min)</span>
+          <span>{formatSoles(precioBase)}</span>
+        </div>
+        {descuento > 0 && (
+          <div className="flex justify-between text-xs text-emerald-700">
+            <span>Cupón {cuponCodigo}</span>
+            <span>-{formatSoles(descuento)}</span>
+          </div>
+        )}
+        <div className="flex justify-between font-bold text-sm pt-1 border-t border-indigo-200">
+          <span className="text-brand-text">Total a pagar</span>
+          <span className={precioFinal === 0 ? "text-emerald-600" : "text-indigo-700"}>
+            {precioFinal === 0 ? "¡GRATIS! 🎁" : formatSoles(precioFinal)}
+          </span>
+        </div>
+      </div>
 
       {/* Notas */}
       <div>

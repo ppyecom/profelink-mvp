@@ -75,3 +75,13 @@ CREATE TABLE IF NOT EXISTS cupones (
 
 CREATE INDEX IF NOT EXISTS idx_cupones_usuario_estado
   ON cupones(usuario_id, estado);
+
+-- Tabla favoritos
+CREATE TABLE IF NOT EXISTS favoritos (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  estudiante_id UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  profesor_id   UUID NOT NULL REFERENCES perfiles_profesor(id) ON DELETE CASCADE,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (estudiante_id, profesor_id)
+);
+CREATE INDEX IF NOT EXISTS idx_favoritos_estudiante ON favoritos(estudiante_id);

@@ -73,14 +73,18 @@ export default function HomePage() {
                 Asesorías personalizadas en matemáticas, ciencias, idiomas y más.
               </p>
 
+              <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-300/30 text-emerald-100 text-xs font-semibold px-3 py-2 rounded-full mb-4 animate-fade-up stagger-2">
+                🎁 Tu primera sesión es gratis al registrarte
+              </div>
+
               <div className="flex flex-col sm:flex-row gap-3 mb-10 animate-fade-up stagger-3">
                 <Link href="/profesores"
                   className="inline-flex items-center justify-center gap-2 bg-white text-indigo-700 font-bold px-7 py-4 rounded-2xl hover:bg-indigo-50 transition-all shadow-elev-4 hover:-translate-y-0.5 text-base">
-                  Buscar profesores <ArrowRight className="w-4 h-4" />
+                  Buscar tutores <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/register"
                   className="inline-flex items-center justify-center gap-2 border-2 border-white/30 text-white font-semibold px-7 py-4 rounded-2xl hover:bg-white/10 transition-all text-base">
-                  Soy profesor →
+                  Soy tutor →
                 </Link>
               </div>
 

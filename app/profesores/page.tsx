@@ -13,12 +13,14 @@ interface PageProps {
     nivel?: string;
     precioMax?: string;
     modalidad?: string;
+    nivelVerificacion?: string;
+    primeraGratis?: string;
     page?: string;
   }>;
 }
 
 async function ProfesoresGrid({ searchParams }: { searchParams: Awaited<PageProps["searchParams"]> }) {
-  const { materia, nivel, precioMax, modalidad, page: pageStr } = searchParams;
+  const { materia, nivel, precioMax, modalidad, nivelVerificacion, primeraGratis, page: pageStr } = searchParams;
   const page = Math.max(1, Number(pageStr ?? "1"));
   const limit = 12;
   const skip = (page - 1) * limit;
@@ -28,6 +30,8 @@ async function ProfesoresGrid({ searchParams }: { searchParams: Awaited<PageProp
     ...(precioMax && { precioHora: { lte: Number(precioMax) } }),
     ...(modalidad && { modalidad: modalidad as ModalidadSesion }),
     ...(nivel && { nivel: { has: nivel as NivelAcademico } }),
+    ...(nivelVerificacion && { nivelVerificacion }),
+    ...(primeraGratis === "1" && { aceptaPrimeraGratis: true }),
     ...(materia && {
       especialidades: { some: { materia: { contains: materia, mode: "insensitive" } } },
     }),
@@ -55,6 +59,8 @@ async function ProfesoresGrid({ searchParams }: { searchParams: Awaited<PageProp
     bio: p.bio,
     nivel: p.nivel as NivelAcademico[],
     precioHora: Number(p.precioHora),
+    aceptaPrimeraGratis: p.aceptaPrimeraGratis,
+    nivelVerificacion: p.nivelVerificacion,
     modalidad: p.modalidad as ModalidadSesion,
     estado: p.estado as "VERIFICADO",
     ratingPromedio: Number(p.ratingPromedio),

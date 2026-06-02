@@ -102,8 +102,22 @@ model Usuario {
   tokensPasswordReset    TokenPasswordReset[]
   tokensEmailVerif       TokenEmailVerificacion[]
   cupones                Cupon[]
+  favoritos              Favorito[]
 
   @@map("usuarios")
+}
+
+model Favorito {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  estudianteId String   @map("estudiante_id") @db.Uuid
+  profesorId   String   @map("profesor_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  estudiante   Usuario        @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  profesor     PerfilProfesor @relation(fields: [profesorId], references: [id], onDelete: Cascade)
+
+  @@unique([estudianteId, profesorId])
+  @@map("favoritos")
 }
 
 model Notificacion {
@@ -175,6 +189,7 @@ model PerfilProfesor {
   resenas         Resena[]         @relation("ProfesorResenas")
   retiros         SolicitudRetiro[]
   credenciales    Credencial[]
+  favoritedBy     Favorito[]
 
   @@map("perfiles_profesor")
 }
