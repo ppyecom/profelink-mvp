@@ -124,28 +124,69 @@ export default function HomePage() {
         <div className="absolute inset-0 dot-grid text-amber-500" />
 
         <div className="max-w-7xl mx-auto relative">
-          <ScrollReveal>
-            <p className="text-amber-400 text-sm font-bold uppercase tracking-[0.3em] mb-4">Por los números</p>
-          </ScrollReveal>
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-16">
+            <div>
+              <ScrollReveal>
+                <p className="text-amber-400 text-sm font-bold uppercase tracking-[0.3em] mb-6">⚡ Tracción real</p>
+              </ScrollReveal>
 
-          <ScrollReveal delay={0.2}>
-            <h2 className="font-display font-black text-5xl md:text-7xl lg:text-8xl leading-[0.9] tracking-tighter mb-16 max-w-4xl text-balance">
-              No somos los más grandes. <span className="text-amber-400 italic">Todavía.</span>
-            </h2>
-          </ScrollReveal>
+              <ScrollReveal delay={0.15}>
+                <h2 className="font-display font-black text-5xl md:text-7xl lg:text-8xl leading-[0.85] tracking-tighter max-w-4xl text-balance">
+                  No somos los<br />
+                  más grandes.<br />
+                  <span className="text-amber-400 italic">Todavía.</span>
+                </h2>
+              </ScrollReveal>
+            </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
+            {/* Quote del fundador */}
+            <ScrollReveal delay={0.3}>
+              <div className="bg-amber-400 text-ink-900 p-6 max-w-sm border-2 border-amber-300 -rotate-2 shadow-2xl">
+                <p className="font-display font-bold text-lg leading-snug">
+                  &ldquo;Empezamos en Lima con 10 tutores. Hoy somos cientos. <span className="underline decoration-4 underline-offset-4">Mañana, miles.</span>&rdquo;
+                </p>
+                <p className="text-xs font-mono mt-3">— Equipo ProfeLink</p>
+              </div>
+            </ScrollReveal>
+          </div>
+
+          {/* Grid de números con borders amber */}
+          <div className="grid grid-cols-2 md:grid-cols-4 border-t-2 border-amber-500/30 mt-10">
             {NUMEROS.map((n, i) => (
-              <ScrollReveal key={n.label} delay={i * 0.1}>
-                <div>
-                  <p className="font-display font-black text-7xl md:text-8xl lg:text-9xl text-cream-50 leading-none tracking-tighter">
+              <ScrollReveal key={n.label} delay={i * 0.08}>
+                <div className={`p-6 md:p-8 ${i % 2 === 0 ? "border-r-2" : ""} ${i < 2 ? "border-b-2 md:border-b-0" : ""} ${i === 1 ? "md:border-r-2" : ""} ${i === 2 ? "md:border-r-2" : ""} border-amber-500/30`}>
+                  <p className="font-display font-black text-6xl md:text-7xl lg:text-8xl text-cream-50 leading-none tracking-tighter">
                     <CountUp end={n.val} suffix={n.suffix} />
                   </p>
-                  <p className="text-amber-300 text-xs md:text-sm uppercase tracking-widest mt-3 font-bold">{n.label}</p>
+                  <p className="text-amber-300 text-xs md:text-sm uppercase tracking-widest mt-4 font-bold">{n.label}</p>
+                  <p className="text-cream-50/50 text-xs mt-2 font-mono">
+                    {i === 0 && "Y creciendo cada semana"}
+                    {i === 1 && "Desde octubre 2025"}
+                    {i === 2 && "De 5 estrellas posibles"}
+                    {i === 3 && "Repiten al menos 1 vez"}
+                  </p>
                 </div>
               </ScrollReveal>
             ))}
           </div>
+
+          {/* Sub stats con dots */}
+          <ScrollReveal delay={0.6}>
+            <div className="mt-16 flex flex-wrap items-center gap-x-8 gap-y-3 text-cream-200/70 text-sm">
+              <span className="flex items-center gap-2 font-mono">
+                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                <span><strong className="text-cream-50">3 universidades</strong> top usan ProfeLink</span>
+              </span>
+              <span className="flex items-center gap-2 font-mono">
+                <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                <span><strong className="text-cream-50">22 materias</strong> activas</span>
+              </span>
+              <span className="flex items-center gap-2 font-mono">
+                <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                <span><strong className="text-cream-50">100% verificados</strong> manualmente</span>
+              </span>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -230,23 +271,71 @@ export default function HomePage() {
             </h2>
           </ScrollReveal>
 
-          <div className="space-y-16 md:space-y-32">
+          <div className="space-y-20 md:space-y-32">
             {[
-              { num: "01", titulo: "Buscas", desc: "Filtra por materia, nivel, precio, modalidad. Compara hasta 3 lado a lado.", icon: "🔍" },
-              { num: "02", titulo: "Reservas", desc: "Eliges horario, aplicas tu cupón GRATIS, confirmas. 90 segundos.", icon: "📅" },
-              { num: "03", titulo: "Aprendes", desc: "Videollamada + pizarra integradas. Sin Zoom, sin instalar nada.", icon: "🚀" },
+              {
+                num: "01",
+                titulo: "Buscas",
+                desc: "Filtras por materia, nivel, precio.",
+                bullets: ["Compara 3 tutores lado a lado", "Filtros por modalidad: virtual o presencial", "Ve reseñas reales de estudiantes"],
+                icon: "🔍",
+                color: "bg-ink-900 text-amber-300",
+                accent: "bg-amber-300 text-ink-900"
+              },
+              {
+                num: "02",
+                titulo: "Reservas",
+                desc: "Eliges horario y confirmas.",
+                bullets: ["Aplicas tu cupón de PRIMERA GRATIS", "Sesiones de 30 min o 1 hora", "Pago seguro con Yape, Plin o tarjeta"],
+                icon: "📅",
+                color: "bg-amber-300 text-ink-900",
+                accent: "bg-ink-900 text-amber-300"
+              },
+              {
+                num: "03",
+                titulo: "Aprendes",
+                desc: "Conectas y mejoras tus notas.",
+                bullets: ["Videollamada integrada (sin Zoom)", "Pizarra colaborativa en vivo", "Tareas y materiales descargables"],
+                icon: "🚀",
+                color: "bg-emerald-500 text-ink-900",
+                accent: "bg-ink-900 text-emerald-300"
+              },
             ].map((s, i) => (
               <ScrollReveal key={s.num} delay={i * 0.1}>
-                <div className={`flex flex-col md:flex-row gap-6 md:gap-12 items-start ${i % 2 === 1 ? "md:flex-row-reverse" : ""}`}>
-                  <div className="flex-shrink-0">
-                    <p className="font-display font-black text-[10rem] md:text-[16rem] leading-none text-ink-900/20 tracking-tighter">
+                <div className={`flex flex-col md:flex-row gap-8 md:gap-12 items-start ${i % 2 === 1 ? "md:flex-row-reverse" : ""}`}>
+                  {/* Número gigante */}
+                  <div className="flex-shrink-0 relative">
+                    <p className="font-display font-black text-[10rem] md:text-[16rem] leading-none text-ink-900/15 tracking-tighter">
                       {s.num}
                     </p>
                   </div>
-                  <div className="flex-1 md:py-12">
-                    <div className="text-6xl mb-4">{s.icon}</div>
-                    <h3 className="font-display font-black text-5xl md:text-7xl text-ink-900 mb-4 tracking-tighter">{s.titulo}.</h3>
-                    <p className="text-xl md:text-2xl text-ink-900 max-w-md leading-snug">{s.desc}</p>
+
+                  {/* Card brutal */}
+                  <div className={`flex-1 ${s.color} border-2 border-ink-900 p-6 md:p-10 shadow-[8px_8px_0_0_rgba(28,25,23,1)] ${i % 2 === 0 ? "-rotate-1" : "rotate-1"} relative max-w-2xl`}>
+                    {/* Sticker icon */}
+                    <div className={`absolute -top-6 ${i % 2 === 0 ? "-right-6" : "-left-6"} w-16 h-16 ${s.accent} border-2 border-ink-900 rounded-full flex items-center justify-center text-3xl shadow-md ${i % 2 === 0 ? "rotate-12" : "-rotate-12"}`}>
+                      {s.icon}
+                    </div>
+
+                    <p className="font-mono text-xs uppercase tracking-widest mb-3 opacity-70">PASO {s.num}</p>
+                    <h3 className="font-display font-black text-5xl md:text-7xl mb-4 tracking-tighter leading-none">
+                      {s.titulo}.
+                    </h3>
+                    <p className="text-xl md:text-2xl mb-6 font-display font-medium leading-snug">
+                      {s.desc}
+                    </p>
+
+                    {/* Bullets con check */}
+                    <ul className="space-y-2 border-t-2 border-current/20 pt-4">
+                      {s.bullets.map((b, idx) => (
+                        <li key={idx} className="flex items-start gap-3 text-base md:text-lg font-medium">
+                          <span className={`flex-shrink-0 w-6 h-6 ${s.accent} border-2 border-ink-900 rounded-full flex items-center justify-center text-sm font-black mt-0.5`}>
+                            ✓
+                          </span>
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               </ScrollReveal>
@@ -292,48 +381,80 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════ CTA FINAL BRUTAL ═══════════════ */}
-      <section className="py-32 md:py-48 px-5 bg-ink-900 text-cream-50 relative overflow-hidden">
-        <div className="absolute inset-0 mesh-gradient opacity-60" />
+      {/* ═══════════════ CTA FINAL ═══════════════ */}
+      <section className="py-24 md:py-36 px-5 bg-ink-900 text-cream-50 relative overflow-hidden">
+        <div className="absolute inset-0 mesh-gradient opacity-50" />
+        {/* Sin texto PROFE gigante para no tapar */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/20 rounded-full filter blur-3xl animate-blob" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-500/15 rounded-full filter blur-3xl animate-blob" style={{ animationDelay: "3s" }} />
 
-        {/* Texto gigante de fondo */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none">
-          <p className="font-display font-black text-[30vw] text-amber-500 leading-none">PROFE</p>
-        </div>
+        <div className="max-w-5xl mx-auto relative">
+          {/* Grid asimétrico */}
+          <div className="grid md:grid-cols-12 gap-8 items-center">
+            <div className="md:col-span-7">
+              <ScrollReveal>
+                <p className="font-mono text-amber-400 text-sm font-bold uppercase tracking-widest mb-6">
+                  → TU PRÓXIMO PASO
+                </p>
+              </ScrollReveal>
 
-        <div className="max-w-6xl mx-auto relative text-center">
-          <ScrollReveal>
-            <p className="font-mono text-amber-400 text-sm font-bold uppercase tracking-widest mb-6">→ Tu próximo paso</p>
-          </ScrollReveal>
+              <ScrollReveal delay={0.2}>
+                <h2 className="font-display font-black text-6xl md:text-8xl lg:text-9xl leading-[0.85] tracking-tighter mb-8">
+                  Empieza<br />
+                  <span className="italic text-amber-400">hoy.</span>
+                </h2>
+              </ScrollReveal>
 
-          <ScrollReveal delay={0.2}>
-            <h2 className="font-display font-black text-6xl md:text-9xl lg:text-[12rem] leading-[0.85] tracking-tighter mb-12">
-              <span className="block">Empieza</span>
-              <span className="block italic text-amber-400">hoy.</span>
-            </h2>
-          </ScrollReveal>
+              <ScrollReveal delay={0.4}>
+                <p className="text-xl md:text-2xl text-cream-200 mb-10 max-w-xl">
+                  Sin tarjeta. Sin descargas.<br />
+                  <span className="text-amber-300 font-bold">Tu primera sesión es gratis.</span>
+                </p>
+              </ScrollReveal>
 
-          <ScrollReveal delay={0.4}>
-            <p className="text-2xl md:text-3xl text-cream-200 mb-12 max-w-2xl mx-auto">
-              Sin tarjeta. Sin descargas. Solo regístrate y aprende.
-            </p>
-          </ScrollReveal>
-
-          <ScrollReveal delay={0.6}>
-            <div className="flex flex-wrap gap-4 justify-center items-center">
-              <MagneticButton href="/register"
-                className="bg-amber-400 hover:bg-amber-300 text-ink-900 text-lg md:text-xl font-black px-10 py-6 rounded-full inline-flex items-center gap-3">
-                <span className="flex items-center gap-3">
-                  Crear cuenta gratis
-                  <Zap className="w-6 h-6 fill-ink-900" />
-                </span>
-              </MagneticButton>
+              <ScrollReveal delay={0.6}>
+                <div className="flex flex-wrap gap-3 items-center">
+                  <MagneticButton href="/register"
+                    className="bg-amber-400 hover:bg-amber-300 text-ink-900 text-base md:text-lg font-black px-8 py-5 rounded-full inline-flex items-center gap-2 shadow-2xl">
+                    <span className="flex items-center gap-2">
+                      Crear cuenta gratis
+                      <Zap className="w-5 h-5 fill-ink-900" />
+                    </span>
+                  </MagneticButton>
+                  <Link href="/profesores"
+                    className="text-cream-200 hover:text-amber-300 font-bold underline underline-offset-4 decoration-2"
+                    data-cursor="hover">
+                    o ver tutores →
+                  </Link>
+                </div>
+              </ScrollReveal>
             </div>
-          </ScrollReveal>
+
+            {/* Card lateral con stats rápidos */}
+            <div className="md:col-span-5">
+              <ScrollReveal delay={0.3}>
+                <div className="bg-amber-400 text-ink-900 p-6 border-2 border-amber-300 rotate-2 shadow-2xl space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-5 h-5" />
+                    <p className="font-display font-black uppercase tracking-wider text-sm">Lo que obtienes</p>
+                  </div>
+                  {[
+                    "🎁 Cupón de 1ª sesión GRATIS",
+                    "🦉 Acceso a 500+ tutores verificados",
+                    "📹 Videollamada + pizarra integradas",
+                    "🏆 Sistema de logros y referidos",
+                    "💸 Cancela con reembolso 100%",
+                  ].map(b => (
+                    <p key={b} className="font-mono text-sm border-b border-ink-900/10 pb-2 last:border-0">{b}</p>
+                  ))}
+                </div>
+              </ScrollReveal>
+            </div>
+          </div>
 
           <ScrollReveal delay={0.8}>
-            <p className="text-amber-200/60 text-sm mt-12 font-mono">
-              Hecho con 🦉 en Lima, Perú
+            <p className="text-amber-200/60 text-sm mt-16 font-mono text-center">
+              Hecho con 🦉 en Lima, Perú · ProfeLink v2.0
             </p>
           </ScrollReveal>
         </div>
