@@ -14,7 +14,7 @@ interface Props {
  * Botón "magnético": se acerca al cursor cuando está cerca.
  */
 export default function MagneticButton({ children, className = "", href, strength = 0.3, onClick }: Props) {
-  const ref = useRef<HTMLButtonElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ x: 0, y: 0 });
 
   const handleMove = (e: React.MouseEvent) => {
@@ -28,22 +28,31 @@ export default function MagneticButton({ children, className = "", href, strengt
   };
   const handleLeave = () => setPos({ x: 0, y: 0 });
 
-  const Tag: React.ElementType = href ? "a" : "button";
+  const inner = (
+    <span className="inline-block transition-transform duration-300 ease-out"
+      style={{ transform: `translate3d(${pos.x * 0.5}px, ${pos.y * 0.5}px, 0)` }}>
+      {children}
+    </span>
+  );
 
   return (
-    <Tag
-      ref={ref as React.RefObject<HTMLAnchorElement | HTMLButtonElement>}
-      href={href}
-      onClick={onClick}
+    <div
+      ref={ref}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
       data-cursor="hover"
-      className={`inline-block transition-transform duration-300 ease-out ${className}`}
+      className="inline-block transition-transform duration-300 ease-out"
       style={{ transform: `translate3d(${pos.x}px, ${pos.y}px, 0)` }}
     >
-      <span className="inline-block transition-transform duration-300 ease-out" style={{ transform: `translate3d(${pos.x * 0.5}px, ${pos.y * 0.5}px, 0)` }}>
-        {children}
-      </span>
-    </Tag>
+      {href ? (
+        <a href={href} className={className}>
+          {inner}
+        </a>
+      ) : (
+        <button onClick={onClick} className={className}>
+          {inner}
+        </button>
+      )}
+    </div>
   );
 }
