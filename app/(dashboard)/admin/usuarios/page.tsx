@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Users, Trash2, Search, RefreshCw } from "lucide-react";
+import { Users, Trash2, Search, RefreshCw, Gift } from "lucide-react";
 
 interface Usuario {
   id: string;
@@ -33,6 +33,14 @@ export default function AdminUsuariosPage() {
   }, [q, rol, incluirEliminados]);
 
   useEffect(() => { cargar(); }, [cargar]);
+
+  const backfillCupones = async () => {
+    if (!confirm("Crear cupón PRIMERA_GRATIS para todos los estudiantes que aún no tienen uno. ¿Continuar?")) return;
+    const res = await fetch("/api/admin/cupones/backfill", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error ?? "Error"); return; }
+    alert(`Revisados: ${data.revisados}\nCupones creados: ${data.creados}${data.errores?.length ? `\nErrores:\n${data.errores.join("\n")}` : ""}`);
+  };
 
   const eliminar = async (u: Usuario) => {
     if (!confirm(`¿Eliminar la cuenta de ${u.nombre} (${u.email})?\n\nEsta acción es irreversible.`)) return;
@@ -74,6 +82,9 @@ export default function AdminUsuariosPage() {
         </label>
         <button onClick={cargar} className="bg-ink-900 text-cream-50 px-4 py-2 border-2 border-ink-900 font-bold uppercase text-sm flex items-center gap-2">
           <RefreshCw className="w-4 h-4" /> Refrescar
+        </button>
+        <button onClick={backfillCupones} className="bg-emerald-500 text-cream-50 px-4 py-2 border-2 border-ink-900 font-bold uppercase text-sm flex items-center gap-2 shadow-[3px_3px_0_#0a0a0a]">
+          <Gift className="w-4 h-4" /> Backfill cupones
         </button>
       </div>
 
