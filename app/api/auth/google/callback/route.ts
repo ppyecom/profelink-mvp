@@ -126,13 +126,20 @@ export async function GET(req: Request) {
         });
       }
 
-      // Email bienvenida (no bloqueante)
-      enviarEmailBienvenida(usuario.email, usuario.nombre, usuario.rol).catch(() => {});
-
-      // Cupón primera sesión gratis para estudiantes nuevos
+      // Cupón primera sesión gratis para estudiantes nuevos (AWAIT — no fire-and-forget)
       if (usuario.rol === "ESTUDIANTE") {
-        crearCuponBienvenida(usuario.id).catch(() => {});
+        try {
+          await crearCuponBienvenida(usuario.id);
+          console.log("[google-callback] cupon bienvenida creado para", usuario.email);
+        } catch (e) {
+          console.error("[google-callback] error creando cupon bienvenida", e);
+        }
       }
+
+      // Email bienvenida (no bloqueante, después del cupón)
+      enviarEmailBienvenida(usuario.email, usuario.nombre, usuario.rol).catch(
+        (e) => console.error("[google-callback] email bienvenida", e),
+      );
     } else {
       if (!usuario.activo) {
         return redirectWithError("oauth_cuenta_inactiva");

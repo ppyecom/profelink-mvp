@@ -70,7 +70,9 @@ export function EliminarCuentaSection() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-ink-900 mb-1">Tu contraseña</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-ink-900 mb-1">
+              Tu contraseña <span className="text-ink-500 normal-case font-normal">(déjalo vacío si entraste con Google)</span>
+            </label>
             <input
               type="password"
               value={password}
@@ -109,7 +111,7 @@ export function EliminarCuentaSection() {
             </button>
             <button
               onClick={handleEliminar}
-              disabled={loading || !password || confirmacion !== "ELIMINAR MI CUENTA"}
+              disabled={loading || confirmacion !== "ELIMINAR MI CUENTA"}
               className="bg-rose-600 hover:bg-rose-700 text-cream-50 font-bold uppercase text-sm tracking-wider px-4 py-2 border-2 border-ink-900 shadow-[3px_3px_0_#0a0a0a] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Eliminando..." : "Sí, eliminar para siempre"}
