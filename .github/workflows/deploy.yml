@@ -44,8 +44,10 @@ jobs:
             rm -rf node_modules
             npm install
           fi
-          # Verificar que next se instaló
+          # Verificar que next se instaló Y que su package.json es válido
           test -d node_modules/next || { echo "❌ next no se instaló"; exit 1; }
+          node -e "JSON.parse(require('fs').readFileSync('node_modules/next/package.json','utf8'))" \
+            || { echo "❌ next/package.json corrupto"; exit 1; }
 
       - name: Generate Prisma client
         working-directory: /home/profelink/profelink-mvp
