@@ -5,6 +5,7 @@ import { Lock, Eye, EyeOff, CheckCircle, Shield } from "lucide-react";
 import TwoFactorSection from "@/components/auth/TwoFactorSection";
 import PasswordStrength from "@/components/auth/PasswordStrength";
 import GoogleCalendarSection from "@/components/auth/GoogleCalendarSection";
+import { EliminarCuentaSection } from "@/components/auth/EliminarCuentaSection";
 
 export default function CambiarPasswordPage() {
   const [form, setForm] = useState({ actual: "", nueva: "", confirmar: "" });
@@ -93,6 +94,8 @@ export default function CambiarPasswordPage() {
           {loading ? "Actualizando..." : "Actualizar contraseña"}
         </button>
       </form>
+
+      <EliminarCuentaSection />
     </div>
   );
 }
