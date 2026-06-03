@@ -52,7 +52,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Crear token de verificación de email
+    // Crear cupón de primera sesión gratis (solo estudiantes) — INDEPENDIENTE del email
+    if (usuario.rol === "ESTUDIANTE") {
+      try {
+        await crearCuponBienvenida(usuario.id);
+      } catch (e) {
+        console.error("[register-cupon]", e);
+      }
+    }
+
+    // Crear token de verificación de email + enviar emails
     try {
       const verifToken = crypto.randomBytes(32).toString("hex");
       await prisma.tokenEmailVerificacion.create({
@@ -62,14 +71,8 @@ export async function POST(req: NextRequest) {
           expiraEn: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 horas
         },
       });
-      // Enviar emails (verificación + bienvenida)
       await enviarEmailVerificacion(usuario.email, usuario.nombre, verifToken);
       await enviarEmailBienvenida(usuario.email, usuario.nombre, usuario.rol);
-
-      // Crear cupón de primera sesión gratis (solo estudiantes)
-      if (usuario.rol === "ESTUDIANTE") {
-        await crearCuponBienvenida(usuario.id).catch(() => {});
-      }
     } catch (e) {
       console.error("[register-email]", e);
       // No fallar el registro si falla el email
