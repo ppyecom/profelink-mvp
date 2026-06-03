@@ -7,7 +7,10 @@ import { auditar } from "@/lib/auditoria";
 import { clearAuthCookie } from "@/lib/auth";
 
 const schema = z.object({
-  password: z.string().min(1, "Contraseña requerida"),
+  // Opcional: usuarios que se registraron con Google no conocen su password
+  // (es un hash aleatorio interno). Si la envían se verifica; si no, basta
+  // con estar logueado y escribir la confirmación literal.
+  password: z.string().optional(),
   confirmacion: z.literal("ELIMINAR MI CUENTA"),
 });
 
@@ -28,15 +31,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
 
-  // Verificar contraseña
+  // Verificar contraseña SI el usuario la envió
   const usuario = await prisma.usuario.findUnique({
     where: { id: session.sub },
     select: { passwordHash: true },
   });
   if (!usuario) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
 
-  const ok = await bcrypt.compare(parsed.data.password, usuario.passwordHash);
-  if (!ok) return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 400 });
+  if (parsed.data.password && parsed.data.password.length > 0) {
+    const ok = await bcrypt.compare(parsed.data.password, usuario.passwordHash);
+    if (!ok) return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 400 });
+  }
 
   // Bloquear si tiene sesiones futuras como estudiante o profesor
   const ahora = new Date();
