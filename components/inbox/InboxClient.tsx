@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { MessageCircle, Send, Loader2, ArrowLeft } from "lucide-react";
 
 interface Conversacion {
@@ -22,26 +22,62 @@ export default function InboxClient() {
   const [enviando, setEnviando] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const cargarConvs = async () => {
-    setLoading(true);
-    const res = await fetch("/api/inbox");
-    const data = await res.json();
-    setConvs(data.items ?? []);
-    setLoading(false);
-  };
+  const cargarConvs = useCallback(async (mostrarLoading = true) => {
+    if (mostrarLoading) setLoading(true);
+    try {
+      const res = await fetch("/api/inbox", { cache: "no-store" });
+      const data = await res.json();
+      setConvs(data.items ?? []);
+    } catch { /* noop */ }
+    if (mostrarLoading) setLoading(false);
+  }, []);
 
-  const cargarMensajes = async (id: string) => {
-    const res = await fetch(`/api/inbox/${id}`);
-    const data = await res.json();
-    setMensajes(data.mensajes ?? []);
-    setTimeout(() => scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight), 50);
-  };
+  const cargarMensajes = useCallback(async (id: string, scrollAlFinal = true) => {
+    try {
+      const res = await fetch(`/api/inbox/${id}`, { cache: "no-store" });
+      const data = await res.json();
+      const nuevos = data.mensajes ?? [];
+      setMensajes(prev => {
+        // si no cambió la cantidad ni el último ID, evitamos re-render para no perder el scroll
+        if (prev.length === nuevos.length && prev[prev.length - 1]?.id === nuevos[nuevos.length - 1]?.id) {
+          return prev;
+        }
+        return nuevos;
+      });
+      if (scrollAlFinal) {
+        setTimeout(() => scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight), 50);
+      }
+    } catch { /* noop */ }
+  }, []);
 
-  useEffect(() => { cargarConvs(); }, []);
+  // Carga inicial
+  useEffect(() => { cargarConvs(); }, [cargarConvs]);
 
+  // Cuando seleccionas una conversación, carga sus mensajes
   useEffect(() => {
     if (seleccionado) cargarMensajes(seleccionado.contraparteId);
-  }, [seleccionado]);
+  }, [seleccionado, cargarMensajes]);
+
+  // ── Polling automático cada 5s para mensajes nuevos ──
+  useEffect(() => {
+    const id = setInterval(() => {
+      // Refrescamos la lista de conversaciones (badges, último mensaje, etc.)
+      cargarConvs(false);
+      // Y si hay conversación abierta, refrescamos esos mensajes sin saltar el scroll
+      if (seleccionado) cargarMensajes(seleccionado.contraparteId, false);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [seleccionado, cargarConvs, cargarMensajes]);
+
+  // Re-fetch cuando vuelves al tab tras estar fuera
+  useEffect(() => {
+    const onFocus = () => {
+      cargarConvs(false);
+      if (seleccionado) cargarMensajes(seleccionado.contraparteId, false);
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [seleccionado, cargarConvs, cargarMensajes]);
 
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
