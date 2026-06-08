@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen, TrendingUp, Wallet, Shield, Award, Heart, Tag, Lightbulb, MessageCircle, Trophy, Crown, Activity } from "lucide-react";
+import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen, TrendingUp, Wallet, Shield, Award, Heart, Tag, Lightbulb, MessageCircle, Trophy, Crown, Activity, UserCog, Rocket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RolUsuario } from "@/types";
 
@@ -38,11 +38,13 @@ const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
   ],
   ADMIN: [
     { href: "/admin",              label: "Panel",        icon: LayoutDashboard },
+    { href: "/admin/usuarios",     label: "Usuarios",     icon: UserCog },
     { href: "/admin/profesores",   label: "Tutores",      icon: Users },
     { href: "/admin/credenciales", label: "Credenciales", icon: Award },
     { href: "/admin/retiros",      label: "Retiros",      icon: Wallet },
     { href: "/admin/metricas",     label: "Métricas",     icon: TrendingUp },
     { href: "/admin/auditoria",    label: "Auditoría",    icon: Activity },
+    { href: "/admin/sesion-test",  label: "Pruebas",      icon: Rocket },
     { href: "/cambiar-password",   label: "Seguridad",    icon: Shield },
   ],
 };
