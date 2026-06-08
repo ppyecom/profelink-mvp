@@ -39,7 +39,7 @@ export default function GoogleCalendarSection() {
   }
 
   return (
-    <div className={`border-2 border-ink-900 p-5 ${conectado ? "bg-emerald-200" : "bg-cream-100"} shadow-[4px_4px_0_0_rgba(28,25,23,1)] -rotate-1`}>
+    <div className={`border-2 border-ink-900 p-5 ${conectado ? "bg-emerald-200" : "bg-cream-100"} shadow-[4px_4px_0_0_rgba(28,25,23,1)]`}>
       <div className="flex items-start gap-3 mb-3">
         <div className={`w-11 h-11 ${conectado ? "bg-ink-900 text-emerald-300" : "bg-ink-900 text-cream-100"} border-2 border-ink-900 rounded-lg flex items-center justify-center flex-shrink-0`}>
           <Calendar className="w-5 h-5" />

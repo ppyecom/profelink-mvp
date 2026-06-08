@@ -10,16 +10,16 @@ import ScrollReveal, { SplitText } from "@/components/fx/ScrollReveal";
 const MATERIAS_MARQUEE = ["Matemáticas", "Cálculo", "Física", "Programación", "Inglés", "Economía", "Química", "Historia", "Estadística", "Álgebra"];
 
 const TOP_PROFES = [
-  { nombre: "Andrés Herrera", materia: "JavaScript · React", rating: 5.0, foto: "https://randomuser.me/api/portraits/men/18.jpg",   rotation: "-rotate-3" },
-  { nombre: "María García",   materia: "Cálculo · Álgebra",   rating: 4.9, foto: "https://randomuser.me/api/portraits/women/44.jpg", rotation: "rotate-2" },
-  { nombre: "Diego Ramírez",  materia: "Física · Mecánica",   rating: 4.9, foto: "https://randomuser.me/api/portraits/men/75.jpg",   rotation: "-rotate-2" },
-  { nombre: "Valentina Cruz", materia: "Inglés · Francés",    rating: 4.8, foto: "https://randomuser.me/api/portraits/women/90.jpg", rotation: "rotate-3" },
+  { nombre: "Andrés Herrera", materia: "JavaScript · React", rating: 5.0, foto: "https://randomuser.me/api/portraits/men/18.jpg",   rotation: "" },
+  { nombre: "María García",   materia: "Cálculo · Álgebra",   rating: 4.9, foto: "https://randomuser.me/api/portraits/women/44.jpg", rotation: "" },
+  { nombre: "Diego Ramírez",  materia: "Física · Mecánica",   rating: 4.9, foto: "https://randomuser.me/api/portraits/men/75.jpg",   rotation: "" },
+  { nombre: "Valentina Cruz", materia: "Inglés · Francés",    rating: 4.8, foto: "https://randomuser.me/api/portraits/women/90.jpg", rotation: "" },
 ];
 
 const TESTIMONIOS = [
-  { texto: "Encontré a mi profesora en 5 minutos. Aprobé el examen con 17.", nombre: "Luis P.",  carrera: "PUCP",  rotate: "-rotate-1", color: "bg-cream-100" },
-  { texto: "Desde que me uní tengo 4 alumnos fijos. La plataforma cambia todo.", nombre: "María G.", carrera: "Tutora", rotate: "rotate-1",  color: "bg-amber-100" },
-  { texto: "La pizarra y la videollamada integradas son tremendas.", nombre: "Sofía R.", carrera: "UPC", rotate: "-rotate-2", color: "bg-emerald-50" },
+  { texto: "Encontré a mi profesora en 5 minutos. Aprobé el examen con 17.", nombre: "Luis P.",  carrera: "PUCP",  rotate: "", color: "bg-cream-100" },
+  { texto: "Desde que me uní tengo 4 alumnos fijos. La plataforma cambia todo.", nombre: "María G.", carrera: "Tutora", rotate: "",  color: "bg-amber-100" },
+  { texto: "La pizarra y la videollamada integradas son tremendas.", nombre: "Sofía R.", carrera: "UPC", rotate: "", color: "bg-emerald-50" },
 ];
 
 const NUMEROS = [
@@ -81,7 +81,7 @@ export default function HomePage() {
             <p className="text-xl md:text-2xl text-ink-700 leading-snug">
               Tutores reales. Verificados de a uno.
               <br className="hidden md:block" />
-              <span className="font-medium">Tu primera sesión: <strong className="bg-amber-300 px-2 py-0.5 -rotate-1 inline-block">gratis</strong>.</span>
+              <span className="font-medium">Tu primera sesión: <strong className="bg-amber-300 px-2 py-0.5 inline-block">gratis</strong>.</span>
             </p>
           </ScrollReveal>
 
@@ -104,12 +104,12 @@ export default function HomePage() {
           <div className="hidden lg:block">
             {/* Card 1: polaroid del tutor */}
             <div className="absolute right-8 top-28 animate-float">
-              <div className="rotate-6 bg-white border-2 border-ink-900 p-3 w-56 shadow-[6px_6px_0_0_rgba(28,25,23,1)]">
+              <div className="bg-white border-2 border-ink-900 p-3 w-56 shadow-[6px_6px_0_0_rgba(28,25,23,1)]">
                 <div className="relative">
                   <Image src={TOP_PROFES[0].foto} alt="" width={224} height={200}
                     className="w-full h-48 object-cover border-2 border-ink-900" />
                   {/* Cinta amarilla */}
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-amber-300 border-2 border-ink-900 -rotate-3" />
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-amber-300 border-2 border-ink-900" />
                 </div>
                 <p className="font-display font-black text-base mt-3 text-ink-900">Andrés H.</p>
                 <p className="text-xs text-ink-600 font-mono">React · TypeScript</p>
@@ -124,7 +124,7 @@ export default function HomePage() {
 
             {/* Card 2: notificación live */}
             <div className="absolute right-44 top-[420px] animate-float" style={{ animationDelay: "1.5s" }}>
-              <div className="-rotate-3 bg-emerald-300 border-2 border-ink-900 p-3 pr-5 shadow-[6px_6px_0_0_rgba(28,25,23,1)] flex items-center gap-3 w-64">
+              <div className="bg-emerald-300 border-2 border-ink-900 p-3 pr-5 shadow-[6px_6px_0_0_rgba(28,25,23,1)] flex items-center gap-3 w-64">
                 <div className="relative flex-shrink-0">
                   <Image src={TOP_PROFES[1].foto} alt="" width={40} height={40} className="w-10 h-10 rounded-full border-2 border-ink-900" />
                   <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-ink-900 rounded-full" />
@@ -138,7 +138,7 @@ export default function HomePage() {
 
             {/* Sticker decorativo */}
             <div className="absolute right-32 top-[280px] animate-wiggle z-10">
-              <div className="bg-amber-400 border-2 border-ink-900 w-20 h-20 rounded-full flex items-center justify-center -rotate-12 shadow-lg">
+              <div className="bg-amber-400 border-2 border-ink-900 w-20 h-20 rounded-full flex items-center justify-center shadow-lg">
                 <div className="text-center">
                   <p className="font-display font-black text-[10px] text-ink-900 leading-tight">DESDE</p>
                   <p className="font-display font-black text-xl text-ink-900 leading-tight">S/5</p>
@@ -177,7 +177,7 @@ export default function HomePage() {
 
             {/* Quote del fundador */}
             <ScrollReveal delay={0.3}>
-              <div className="bg-amber-400 text-ink-900 p-6 max-w-sm border-2 border-amber-300 -rotate-2 shadow-2xl">
+              <div className="bg-amber-400 text-ink-900 p-6 max-w-sm border-2 border-amber-300 shadow-2xl">
                 <p className="font-display font-bold text-lg leading-snug">
                   &ldquo;Empezamos en Lima con 10 tutores. Hoy somos cientos. <span className="underline decoration-4 underline-offset-4">Mañana, miles.</span>&rdquo;
                 </p>
@@ -264,7 +264,7 @@ export default function HomePage() {
                     <Image src={p.foto} alt={p.nombre} width={232} height={232}
                       className="w-full h-56 object-cover" />
                     {/* "Stamp" verificado */}
-                    <div className="absolute -top-3 -right-3 w-16 h-16 rounded-full bg-amber-400 border-2 border-ink-900 flex items-center justify-center -rotate-12 animate-wiggle">
+                    <div className="absolute -top-3 -right-3 w-16 h-16 rounded-full bg-amber-400 border-2 border-ink-900 flex items-center justify-center animate-wiggle">
                       <div className="text-center">
                         <p className="text-[7px] font-display font-black text-ink-900 leading-tight">VERIFI<br />CADO</p>
                       </div>
@@ -281,7 +281,7 @@ export default function HomePage() {
             ))}
 
             {/* Decoración: post-it */}
-            <div className="hidden md:block absolute top-4 right-8 rotate-6 bg-yellow-300 p-4 shadow-lg w-44 border-2 border-ink-900 z-10">
+            <div className="hidden md:block absolute top-4 right-8 bg-yellow-300 p-4 shadow-lg w-44 border-2 border-ink-900 z-10">
               <p className="font-mono text-sm text-ink-900 leading-tight">
                 &ldquo;Los mejores tutores del Perú están acá&rdquo;
               </p>
@@ -302,7 +302,7 @@ export default function HomePage() {
           <ScrollReveal delay={0.2}>
             <h2 className="font-display font-black text-6xl md:text-9xl text-ink-900 leading-[0.85] tracking-tighter mb-20 text-balance">
               Reservar es<br />
-              <span className="bg-ink-900 text-amber-400 px-4 inline-block -rotate-1 mt-2">ridículamente</span><br />
+              <span className="bg-ink-900 text-amber-400 px-4 inline-block mt-2">ridículamente</span><br />
               <span className="italic">fácil.</span>
             </h2>
           </ScrollReveal>
@@ -347,9 +347,9 @@ export default function HomePage() {
                   </div>
 
                   {/* Card brutal */}
-                  <div className={`flex-1 ${s.color} border-2 border-ink-900 p-6 md:p-10 shadow-[8px_8px_0_0_rgba(28,25,23,1)] ${i % 2 === 0 ? "-rotate-1" : "rotate-1"} relative max-w-2xl`}>
+                  <div className={`flex-1 ${s.color} border-2 border-ink-900 p-6 md:p-10 shadow-[8px_8px_0_0_rgba(28,25,23,1)]  relative max-w-2xl`}>
                     {/* Sticker icon */}
-                    <div className={`absolute -top-6 ${i % 2 === 0 ? "-right-6" : "-left-6"} w-16 h-16 ${s.accent} border-2 border-ink-900 rounded-full flex items-center justify-center text-3xl shadow-md ${i % 2 === 0 ? "rotate-12" : "-rotate-12"}`}>
+                    <div className={`absolute -top-6 ${i % 2 === 0 ? "-right-6" : "-left-6"} w-16 h-16 ${s.accent} border-2 border-ink-900 rounded-full flex items-center justify-center text-3xl shadow-md `}>
                       {s.icon}
                     </div>
 
@@ -469,7 +469,7 @@ export default function HomePage() {
             {/* Card lateral con stats rápidos */}
             <div className="md:col-span-5">
               <ScrollReveal delay={0.3}>
-                <div className="bg-amber-400 text-ink-900 p-6 border-2 border-amber-300 rotate-2 shadow-2xl space-y-4">
+                <div className="bg-amber-400 text-ink-900 p-6 border-2 border-amber-300 shadow-2xl space-y-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Sparkles className="w-5 h-5" />
                     <p className="font-display font-black uppercase tracking-wider text-sm">Lo que obtienes</p>

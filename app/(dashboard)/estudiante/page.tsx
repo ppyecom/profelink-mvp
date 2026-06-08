@@ -93,7 +93,7 @@ export default async function EstudianteDashboard() {
           const c = COLORES_STATS[i];
           return (
             <div key={s.label}
-              className={`${c.bg} ${c.txt} border-2 border-ink-900 p-4 ${i % 2 === 0 ? "-rotate-1" : "rotate-1"} hover:rotate-0 transition-transform shadow-[3px_3px_0_0_rgba(28,25,23,1)] hover:shadow-[5px_5px_0_0_rgba(28,25,23,1)] hover:-translate-x-0.5 hover:-translate-y-0.5`}>
+              className={`${c.bg} ${c.txt} border-2 border-ink-900 p-4  transition-transform shadow-[3px_3px_0_0_rgba(28,25,23,1)] hover:shadow-[5px_5px_0_0_rgba(28,25,23,1)] hover:-translate-x-0.5 hover:-translate-y-0.5`}>
               <div className={`w-8 h-8 rounded-lg ${c.icon} flex items-center justify-center mb-3 border-2 border-ink-900`}>
                 <s.icon className="w-4 h-4" />
               </div>
@@ -121,7 +121,7 @@ export default async function EstudianteDashboard() {
 
           {sesionesProximas.length === 0 ? (
             <div className="py-16 text-center px-6">
-              <div className="inline-block bg-amber-300 border-2 border-ink-900 p-4 -rotate-3 mb-4">
+              <div className="inline-block bg-amber-300 border-2 border-ink-900 p-4 mb-4">
                 <Sparkles className="w-10 h-10 text-ink-900" />
               </div>
               <p className="font-display font-black text-2xl text-ink-900 mb-2">Sin sesiones aún.</p>
@@ -164,7 +164,7 @@ export default async function EstudianteDashboard() {
         {/* CUPÓN promo en card amarilla rotada */}
         <div className="lg:col-span-4 space-y-4">
           {cuponesActivos > 0 && (
-            <div className="bg-emerald-300 border-2 border-ink-900 p-5 rotate-2 shadow-[5px_5px_0_0_rgba(28,25,23,1)]">
+            <div className="bg-emerald-300 border-2 border-ink-900 p-5 shadow-[5px_5px_0_0_rgba(28,25,23,1)]">
               <div className="flex items-start justify-between mb-3">
                 <div className="w-12 h-12 bg-ink-900 rounded-lg flex items-center justify-center border-2 border-ink-900 text-2xl">
                   🎁
@@ -183,7 +183,7 @@ export default async function EstudianteDashboard() {
           )}
 
           {/* Mini card invitar amigos */}
-          <div className="bg-ink-900 border-2 border-ink-900 p-5 -rotate-1 shadow-[5px_5px_0_0_rgba(217,119,6,1)]">
+          <div className="bg-ink-900 border-2 border-ink-900 p-5 shadow-[5px_5px_0_0_rgba(217,119,6,1)]">
             <p className="font-mono text-xs text-amber-400 uppercase tracking-wider mb-2 font-bold">★ Invita & gana</p>
             <p className="font-display font-black text-xl text-amber-300 leading-tight mb-3">
               Invita un amigo,<br />
@@ -208,7 +208,7 @@ export default async function EstudianteDashboard() {
             { href: "/logros",              label: "Mis logros",      icon: Star,      bg: "bg-rose-300",    ar: "bg-rose-200" },
           ].map((a, i) => (
             <Link key={a.href} href={a.href} data-cursor="hover"
-              className={`${a.bg} border-2 border-ink-900 p-4 flex items-center gap-3 ${i % 2 === 0 ? "-rotate-1" : "rotate-1"} hover:rotate-0 transition-all hover:shadow-[5px_5px_0_0_rgba(28,25,23,1)] shadow-[3px_3px_0_0_rgba(28,25,23,1)] hover:-translate-x-0.5 hover:-translate-y-0.5`}>
+              className={`${a.bg} border-2 border-ink-900 p-4 flex items-center gap-3  transition-all hover:shadow-[5px_5px_0_0_rgba(28,25,23,1)] shadow-[3px_3px_0_0_rgba(28,25,23,1)] hover:-translate-x-0.5 hover:-translate-y-0.5`}>
               <div className={`w-10 h-10 ${a.ar} rounded-lg flex items-center justify-center border-2 border-ink-900 flex-shrink-0`}>
                 <a.icon className="w-5 h-5 text-ink-900" />
               </div>

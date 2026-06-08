@@ -37,7 +37,7 @@ export default function ProfesorCard({ profesor }: Props) {
             />
             {/* Stamp verificado */}
             {profesor.nivelVerificacion === "DOCENTE" && (
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-400 border-2 border-ink-900 flex items-center justify-center -rotate-12">
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-400 border-2 border-ink-900 flex items-center justify-center">
                 <Star className="w-3 h-3 fill-ink-900 text-ink-900" />
               </div>
             )}
@@ -81,7 +81,7 @@ export default function ProfesorCard({ profesor }: Props) {
         {/* Materias estilo etiquetas */}
         <div className="flex flex-wrap gap-1.5 mb-5">
           {profesor.especialidades.slice(0, 3).map((mat, i) => (
-            <span key={mat} className={`text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-200 border border-ink-900 ${i % 2 ? "rotate-1" : "-rotate-1"}`}>
+            <span key={mat} className={`text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-200 border border-ink-900 `}>
               {mat}
             </span>
           ))}

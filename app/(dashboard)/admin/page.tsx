@@ -51,7 +51,7 @@ export default async function AdminDashboard() {
           { label: "Pendientes",       val: profesoresPendientes,             sub: "Tutores por verificar",                             icon: Clock,      bg: "bg-ink-900",   txt: "text-amber-300" },
         ].map((s, i) => (
           <div key={s.label}
-            className={`${s.bg} ${s.txt ?? "text-ink-900"} border-2 border-ink-900 p-5 ${i % 2 === 0 ? "-rotate-1" : "rotate-1"} hover:rotate-0 transition-all shadow-[3px_3px_0_0_rgba(28,25,23,1)] hover:shadow-[5px_5px_0_0_rgba(28,25,23,1)] hover:-translate-x-0.5 hover:-translate-y-0.5`}>
+            className={`${s.bg} ${s.txt ?? "text-ink-900"} border-2 border-ink-900 p-5  transition-all shadow-[3px_3px_0_0_rgba(28,25,23,1)] hover:shadow-[5px_5px_0_0_rgba(28,25,23,1)] hover:-translate-x-0.5 hover:-translate-y-0.5`}>
             <div className={`w-9 h-9 rounded-lg ${s.bg === "bg-ink-900" ? "bg-amber-300 text-ink-900" : "bg-ink-900 text-amber-300"} flex items-center justify-center mb-3 border-2 border-ink-900`}>
               <s.icon className="w-4 h-4" />
             </div>
@@ -64,7 +64,7 @@ export default async function AdminDashboard() {
 
       {/* Alerta pendientes — brutal */}
       {profesoresPendientes > 0 && (
-        <div className="bg-amber-400 border-2 border-ink-900 p-5 flex items-center justify-between gap-4 -rotate-1 shadow-[5px_5px_0_0_rgba(28,25,23,1)]">
+        <div className="bg-amber-400 border-2 border-ink-900 p-5 flex items-center justify-between gap-4 shadow-[5px_5px_0_0_rgba(28,25,23,1)]">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-ink-900 text-amber-400 rounded-lg flex items-center justify-center border-2 border-ink-900 flex-shrink-0 animate-pulse">
               <Clock className="w-6 h-6" />
@@ -90,7 +90,7 @@ export default async function AdminDashboard() {
           { val: `${totalProfesores > 0 ? Math.round((totalProfesores - profesoresPendientes) / Math.max(totalProfesores, 1) * 100) : 0}%`, label: "Tutores verificados", icon: CheckCircle, bg: "bg-cream-200" },
           { val: totalSesiones > 0 ? `S/${(ingresosProyectados / Math.max(sesionesCompletadas, 1)).toFixed(0)}` : "S/0", label: "Comisión promedio", icon: Sparkles, bg: "bg-amber-300" },
         ].map((s, i) => (
-          <div key={s.label} className={`${s.bg} border-2 border-ink-900 p-6 text-center ${i === 1 ? "rotate-1" : "-rotate-1"} shadow-[3px_3px_0_0_rgba(28,25,23,1)]`}>
+          <div key={s.label} className={`${s.bg} border-2 border-ink-900 p-6 text-center  shadow-[3px_3px_0_0_rgba(28,25,23,1)]`}>
             <div className="w-12 h-12 bg-ink-900 text-amber-300 rounded-lg flex items-center justify-center mx-auto mb-3 border-2 border-ink-900">
               <s.icon className="w-6 h-6" />
             </div>
@@ -110,7 +110,7 @@ export default async function AdminDashboard() {
             { href: "/admin/metricas",   title: "Métricas", sub: "Reportes globales",  icon: TrendingUp, bg: "bg-amber-300" },
           ].map((l, i) => (
             <Link key={l.href} href={l.href} data-cursor="hover"
-              className={`${l.bg} border-2 border-ink-900 p-5 flex items-center gap-4 ${i % 2 === 0 ? "-rotate-1" : "rotate-1"} hover:rotate-0 transition-all hover:shadow-[5px_5px_0_0_rgba(28,25,23,1)] shadow-[3px_3px_0_0_rgba(28,25,23,1)] hover:-translate-x-0.5 hover:-translate-y-0.5`}>
+              className={`${l.bg} border-2 border-ink-900 p-5 flex items-center gap-4  transition-all hover:shadow-[5px_5px_0_0_rgba(28,25,23,1)] shadow-[3px_3px_0_0_rgba(28,25,23,1)] hover:-translate-x-0.5 hover:-translate-y-0.5`}>
               <div className="w-12 h-12 bg-ink-900 text-amber-300 rounded-lg flex items-center justify-center border-2 border-ink-900 flex-shrink-0">
                 <l.icon className="w-6 h-6" />
               </div>

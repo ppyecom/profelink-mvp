@@ -149,7 +149,7 @@ export default async function ProfesoresPage({ searchParams }: PageProps) {
           <h1 className="font-display font-black text-5xl md:text-7xl lg:text-8xl text-ink-900 tracking-tighter leading-[0.9] text-balance">
             Encuentra a<br />
             <span className="italic">tu próximo</span><br />
-            <span className="bg-ink-900 text-amber-300 px-3 inline-block -rotate-1">tutor</span>.
+            <span className="bg-ink-900 text-amber-300 px-3 inline-block">tutor</span>.
           </h1>
 
           {/* Categorías rápidas */}
@@ -157,7 +157,7 @@ export default async function ProfesoresPage({ searchParams }: PageProps) {
             {["Matemáticas","Física","Inglés","Programación","Química","Historia","Economía","Cálculo"].map((c, i) => (
               <Link key={c} href={`/profesores?materia=${encodeURIComponent(c)}`}
                 data-cursor="hover"
-                className={`text-sm font-bold bg-white hover:bg-ink-900 hover:text-amber-300 border-2 border-ink-900 text-ink-900 px-4 py-2 rounded-full transition-all card-lift ${i % 2 === 0 ? "rotate-1" : "-rotate-1"} hover:rotate-0`}>
+                className={`text-sm font-bold bg-white hover:bg-ink-900 hover:text-amber-300 border-2 border-ink-900 text-ink-900 px-4 py-2 rounded-full transition-all card-lift `}>
                 {c}
               </Link>
             ))}

@@ -29,9 +29,9 @@ export default function CookieBanner() {
 
   return (
     <div className="fixed bottom-5 left-5 right-5 md:left-auto md:right-5 md:max-w-sm z-50 animate-fade-up">
-      <div className="relative bg-amber-300 border-2 border-ink-900 p-5 shadow-[6px_6px_0_0_rgba(28,25,23,1)] -rotate-1">
+      <div className="relative bg-amber-300 border-2 border-ink-900 p-5 shadow-[6px_6px_0_0_rgba(28,25,23,1)]">
         {/* Galleta sticker */}
-        <div className="absolute -top-5 -left-3 w-12 h-12 bg-ink-900 border-2 border-ink-900 rounded-full flex items-center justify-center text-2xl rotate-12 shadow-[3px_3px_0_0_rgba(217,119,6,1)]">
+        <div className="absolute -top-5 -left-3 w-12 h-12 bg-ink-900 border-2 border-ink-900 rounded-full flex items-center justify-center text-2xl shadow-[3px_3px_0_0_rgba(217,119,6,1)]">
           🍪
         </div>
 

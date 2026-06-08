@@ -81,7 +81,7 @@ export default async function ProfesorDashboard() {
           { label: "Ingresos netos",  val: formatSoles(ingresoTotal),   icon: DollarSign,  bg: "bg-ink-900",     ic: "bg-amber-300 text-ink-900", txt: "text-amber-300" },
         ].map((s, i) => (
           <div key={s.label}
-            className={`${s.bg} ${s.txt ?? "text-ink-900"} border-2 border-ink-900 p-5 ${i % 2 === 0 ? "-rotate-1" : "rotate-1"} hover:rotate-0 transition-all shadow-[3px_3px_0_0_rgba(28,25,23,1)] hover:shadow-[5px_5px_0_0_rgba(28,25,23,1)] hover:-translate-x-0.5 hover:-translate-y-0.5`}>
+            className={`${s.bg} ${s.txt ?? "text-ink-900"} border-2 border-ink-900 p-5  transition-all shadow-[3px_3px_0_0_rgba(28,25,23,1)] hover:shadow-[5px_5px_0_0_rgba(28,25,23,1)] hover:-translate-x-0.5 hover:-translate-y-0.5`}>
             <div className={`w-9 h-9 rounded-lg ${s.ic} flex items-center justify-center mb-3 border-2 border-ink-900`}>
               <s.icon className="w-4 h-4" />
             </div>
@@ -108,7 +108,7 @@ export default async function ProfesorDashboard() {
 
           {sesionesHoy.length === 0 ? (
             <div className="py-12 text-center px-5">
-              <div className="inline-block bg-amber-300 border-2 border-ink-900 p-3 -rotate-3 mb-3">
+              <div className="inline-block bg-amber-300 border-2 border-ink-900 p-3 mb-3">
                 <Sparkles className="w-8 h-8 text-ink-900" />
               </div>
               <p className="font-display font-black text-xl text-ink-900 mb-1">Día libre 😎</p>

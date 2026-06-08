@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LayoutDashboard, Calendar, Users, DollarSign, Search, LogOut, BookOpen, ChevronRight, UserCircle, ClipboardList, PanelLeftClose, PanelLeftOpen, TrendingUp, Wallet, Shield, Award, Heart, Tag, Lightbulb, MessageCircle, Trophy, Crown, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RolUsuario } from "@/types";
@@ -17,7 +17,7 @@ const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
     { href: "/estudiante/favoritos",  label: "Favoritos",      icon: Heart },
     { href: "/estudiante/cupones",    label: "Mis Cupones",    icon: Tag },
     { href: "/estudiante/referidos",  label: "Referidos",      icon: Users },
-    { href: "/estudiante/wishlist",   label: "Wishlist",       icon: Lightbulb },
+    { href: "/estudiante/wishlist",   label: "Lista de deseos", icon: Lightbulb },
     { href: "/logros",                label: "Logros",         icon: Trophy },
     { href: "/ejercicios",            label: "Ejercicios",     icon: BookOpen },
     { href: "/planes",                label: "Planes Pro",     icon: Crown },
@@ -63,6 +63,16 @@ export default function Sidebar({ rol, nombre }: { rol: RolUsuario; nombre: stri
   const pathname   = usePathname();
   const router     = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [unread,    setUnread]    = useState(0);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ count: number }>;
+      setUnread(ce.detail.count);
+    };
+    window.addEventListener("profelink:unread", handler);
+    return () => window.removeEventListener("profelink:unread", handler);
+  }, []);
 
   const initials = nombre.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
 
@@ -103,7 +113,15 @@ export default function Sidebar({ rol, nombre }: { rol: RolUsuario; nombre: stri
               {!collapsed && (
                 <span className="flex-1 truncate">{item.label}</span>
               )}
-              {active && !collapsed && <span className="font-mono text-xs">★</span>}
+              {item.href === "/inbox" && unread > 0 && (
+                <span className={cn(
+                  "bg-rose-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-ink-900",
+                  collapsed ? "absolute -top-1 -right-1 w-5 h-5" : "min-w-[20px] h-5 px-1.5"
+                )}>
+                  {unread > 9 ? "9+" : unread}
+                </span>
+              )}
+              {active && !collapsed && item.href !== "/inbox" && <span className="font-mono text-xs">★</span>}
             </Link>
           );
         })}
@@ -113,7 +131,7 @@ export default function Sidebar({ rol, nombre }: { rol: RolUsuario; nombre: stri
       <div className="p-3 border-t-2 border-ink-900 space-y-2 bg-cream-100">
         {/* User card */}
         {!collapsed && (
-          <div className="bg-white border-2 border-ink-900 p-2.5 -rotate-1 shadow-[3px_3px_0_0_rgba(28,25,23,1)]">
+          <div className="bg-white border-2 border-ink-900 p-2.5 shadow-[3px_3px_0_0_rgba(28,25,23,1)]">
             <div className="flex items-center gap-2.5">
               <div className={cn("w-9 h-9 rounded-lg bg-gradient-to-br flex items-center justify-center text-white text-xs font-black flex-shrink-0 border-2 border-ink-900", ROL_GRADIENT[rol])}>
                 {initials}

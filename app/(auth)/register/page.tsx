@@ -30,7 +30,7 @@ export default function RegisterPage() {
 
               <h1 className="font-display font-black text-4xl md:text-5xl text-ink-900 tracking-tighter leading-none mb-3">
                 Tu primera<br />
-                <span className="italic bg-amber-300 px-2 -rotate-2 inline-block">sesión gratis</span>.
+                <span className="italic bg-amber-300 px-2 inline-block">sesión gratis</span>.
               </h1>
               <p className="text-ink-600 text-sm">
                 ¿Ya tienes una?{" "}
@@ -40,7 +40,7 @@ export default function RegisterPage() {
               </p>
             </div>
 
-            <div className="bg-emerald-100 border-2 border-emerald-700 rounded-2xl p-3 flex items-center gap-3 mb-6 -rotate-1">
+            <div className="bg-emerald-100 border-2 border-emerald-700 rounded-2xl p-3 flex items-center gap-3 mb-6">
               <Gift className="w-5 h-5 text-emerald-700 flex-shrink-0" />
               <p className="text-xs font-bold text-emerald-900">
                 Cupón &ldquo;Primera gratis&rdquo; automático al registrarte

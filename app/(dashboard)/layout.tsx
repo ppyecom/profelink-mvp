@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import Sidebar from "@/components/layout/Sidebar";
 import MobileNav from "@/components/layout/MobileNav";
+import MessageNotifier from "@/components/inbox/MessageNotifier";
 import type { RolUsuario } from "@/types";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -24,6 +25,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* Nav inferior móvil */}
       <MobileNav rol={session.rol as RolUsuario} />
+
+      {/* Notificador global de mensajes nuevos (polling + toast tipo WhatsApp) */}
+      <MessageNotifier />
     </div>
   );
 }
