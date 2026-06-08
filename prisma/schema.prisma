@@ -314,8 +314,22 @@ model Sesion {
   tareas          Tarea[]
   participantes   ParticipanteGrupal[]
   archivos        ArchivoSesion[]
+  trazosPizarra   TrazoPizarra[]
 
   @@map("sesiones")
+}
+
+model TrazoPizarra {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sesionId     String   @map("sesion_id") @db.Uuid
+  autorId      String   @map("autor_id") @db.Uuid
+  datos        Json     // { tipo: 'linea' | 'borrar' | 'clear', puntos, color, grosor }
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  sesion       Sesion   @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+
+  @@index([sesionId, createdAt])
+  @@map("trazos_pizarra")
 }
 
 model ArchivoSesion {
