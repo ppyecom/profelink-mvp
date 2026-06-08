@@ -45,7 +45,9 @@ export async function POST(req: NextRequest) {
       modalidad: "VIRTUAL",
       estado: "CONFIRMADA",
       duracionMinutos: 30,
-      precioAcordado: 0,
+      // La BD tiene CHECK precio_acordado > 0, así que usamos 1.00 para pasar la validación
+      // (no se contabiliza para ingresos reales).
+      precioAcordado: 1,
       notas: "Sesión de prueba creada por admin",
     },
   });
