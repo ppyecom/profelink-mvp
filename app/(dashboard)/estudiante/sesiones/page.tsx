@@ -5,6 +5,7 @@ import { Star, MessageCircle, CreditCard, CheckCircle } from "lucide-react";
 import { formatDateTime, formatSoles, ESTADO_SESION_COLORS, ESTADO_SESION_LABELS } from "@/lib/utils";
 import ChatSesion from "@/components/chat/ChatSesion";
 import PagarSesionModal from "@/components/sesiones/PagarSesionModal";
+import EntrarSesionBoton from "@/components/sesiones/EntrarSesionBoton";
 import type { SesionResumen } from "@/types";
 
 const ESTADOS = [
@@ -113,6 +114,16 @@ export default function MisSesionesPage() {
 
                 {/* Acciones */}
                 <div className="flex flex-wrap gap-2">
+                  {/* Entrar a la sesión (solo VIRTUAL + confirmada y cerca de inicio) */}
+                  {s.modalidad === "VIRTUAL" && (
+                    <EntrarSesionBoton
+                      sesionId={s.id}
+                      fechaInicio={typeof s.fechaInicio === "string" ? s.fechaInicio : new Date(s.fechaInicio).toISOString()}
+                      fechaFin={typeof s.fechaFin === "string" ? s.fechaFin : new Date(s.fechaFin).toISOString()}
+                      estado={s.estado}
+                    />
+                  )}
+
                   {/* Pagar — solo para sesiones PENDIENTES (CONFIRMADA = ya fue pagada) */}
                   {s.estado === "PENDIENTE" && (
                     <button onClick={() => setPagoSesion(s)}
