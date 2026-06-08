@@ -9,6 +9,7 @@ import PizarraColaborativa from "@/components/sesiones/PizarraColaborativa";
 import AgregarCalendar from "@/components/sesiones/AgregarCalendar";
 import ChatSesion from "@/components/chat/ChatSesion";
 import ArchivosSesion from "@/components/sesiones/ArchivosSesion";
+import TareasSesion from "@/components/sesiones/TareasSesion";
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -107,6 +108,9 @@ export default async function SesionPage({ params }: PageProps) {
 
       {/* Archivos compartidos — solo el profesor de la sesión (o admin) puede subir */}
       <ArchivosSesion sesionId={sesion.id} puedeSubir={esProfesor || session.rol === "ADMIN"} />
+
+      {/* Tareas asignadas — el profesor crea, el alumno completa */}
+      <TareasSesion sesionId={sesion.id} esProfesor={esProfesor || session.rol === "ADMIN"} />
 
       {/* Chat de la sesión */}
       <div className="bento p-5 elev-1">
