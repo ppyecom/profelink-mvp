@@ -214,28 +214,22 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
     return acc;
   }, {} as Record<number, Slot[]>);
 
-  // Ordenar entries por fecha real (no por número de día), para que la próxima fecha aparezca primero.
-  // Siempre mostramos HOY si el tutor tiene ese día de la semana, aunque todas las horas hayan pasado
-  // (se muestran grises/deshabilitadas). Si HOY no quedan horas útiles, agregamos también el +7
-  // para que el alumno tenga horas reservables disponibles.
+  // Ordenar entries por fecha real (no por número de día).
+  // Si HOY no le quedan horas útiles → saltamos al +7. Si sí le quedan, mostramos HOY.
   const ahora = new Date();
-  const diasOrdenados: Array<{ dia: number; fecha: Date; slots: Slot[] }> = [];
-  for (const [diaStr, slots] of Object.entries(porDia)) {
-    const dia = Number(diaStr);
-    const fecha = proximaFecha(dia);
-    diasOrdenados.push({ dia, fecha, slots });
-
-    // Si la fecha es hoy y no quedan horas útiles, agregar también el +7 para que sí pueda reservar
-    if (isSameDay(fecha, ahora)) {
-      const algunaUtil = slots.some(slot =>
-        expandirSlot(slot, duracion).some(({ hora }) => !slotYaPaso(fecha, hora)),
-      );
-      if (!algunaUtil) {
-        diasOrdenados.push({ dia, fecha: addDays(fecha, 7), slots });
+  const diasOrdenados = Object.entries(porDia)
+    .map(([diaStr, slots]) => {
+      const dia = Number(diaStr);
+      let fecha = proximaFecha(dia);
+      if (isSameDay(fecha, ahora)) {
+        const algunaUtil = slots.some(slot =>
+          expandirSlot(slot, duracion).some(({ hora }) => !slotYaPaso(fecha, hora)),
+        );
+        if (!algunaUtil) fecha = addDays(fecha, 7);
       }
-    }
-  }
-  diasOrdenados.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
+      return { dia, fecha, slots };
+    })
+    .sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
 
   return (
     <div className="space-y-4">
@@ -313,39 +307,33 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
               {/* Slots de hora */}
               <div className="flex flex-wrap gap-2">
                 {slots.flatMap(slot =>
-                  expandirSlot(slot, duracion).map(({ hora, label }) => {
-                    const isSelected = selected?.slotId === slot.id && selected?.hora === hora;
-                    const [slH, slM] = hora.split(":").map(s => parseInt(s, 10));
-                    const slotInicio = setMinutes(setHours(new Date(fecha), slH), slM || 0);
-                    const slotFin = duracion === 30 ? addMinutes(slotInicio, 30) : addHours(slotInicio, 1);
-                    const ocupado = slotOcupadoEnGCal(slotInicio, slotFin);
-                    const pasado  = slotYaPaso(fecha, hora);
-                    const deshabilitado = ocupado || pasado;
-                    const titulo = pasado
-                      ? "Esta hora ya pasó"
-                      : ocupado
-                        ? "Tutor ocupado en Google Calendar"
-                        : undefined;
+                  expandirSlot(slot, duracion)
+                    .filter(({ hora }) => !slotYaPaso(fecha, hora))
+                    .map(({ hora, label }) => {
+                      const isSelected = selected?.slotId === slot.id && selected?.hora === hora;
+                      const [slH, slM] = hora.split(":").map(s => parseInt(s, 10));
+                      const slotInicio = setMinutes(setHours(new Date(fecha), slH), slM || 0);
+                      const slotFin = duracion === 30 ? addMinutes(slotInicio, 30) : addHours(slotInicio, 1);
+                      const ocupado = slotOcupadoEnGCal(slotInicio, slotFin);
 
-                    return (
-                      <button key={`${slot.id}-${hora}-${fecha.toISOString().slice(0,10)}`} type="button"
-                        disabled={deshabilitado}
-                        title={titulo}
-                        onClick={() => !deshabilitado && setSelected({ slotId: slot.id, hora, fechaIso: fecha.toISOString() })}
-                        className={cn(
-                          "text-xs font-semibold px-3 py-2 rounded-xl border-2 transition-all",
-                          isSelected
-                            ? "bg-indigo-600 border-indigo-600 text-white shadow-elev-2"
-                            : deshabilitado
-                              ? "bg-gray-100 border-gray-200 text-gray-400 line-through cursor-not-allowed"
-                              : "bg-white border-indigo-100 text-indigo-700 hover:border-indigo-400 hover:bg-indigo-50"
-                        )}>
-                        {label}
-                        {pasado && !ocupado && <span className="ml-1">⏰</span>}
-                        {ocupado && <span className="ml-1">🚫</span>}
-                      </button>
-                    );
-                  })
+                      return (
+                        <button key={`${slot.id}-${hora}`} type="button"
+                          disabled={ocupado}
+                          title={ocupado ? "Tutor ocupado en Google Calendar" : undefined}
+                          onClick={() => !ocupado && setSelected({ slotId: slot.id, hora, fechaIso: fecha.toISOString() })}
+                          className={cn(
+                            "text-xs font-semibold px-3 py-2 rounded-xl border-2 transition-all",
+                            isSelected
+                              ? "bg-indigo-600 border-indigo-600 text-white shadow-elev-2"
+                              : ocupado
+                                ? "bg-gray-100 border-gray-200 text-gray-400 line-through cursor-not-allowed"
+                                : "bg-white border-indigo-100 text-indigo-700 hover:border-indigo-400 hover:bg-indigo-50"
+                          )}>
+                          {label}
+                          {ocupado && <span className="ml-1">🚫</span>}
+                        </button>
+                      );
+                    })
                 )}
               </div>
             </div>
