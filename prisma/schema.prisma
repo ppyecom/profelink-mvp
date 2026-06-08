@@ -111,6 +111,7 @@ model Usuario {
   tokensEmailVerif       TokenEmailVerificacion[]
   cupones                Cupon[]
   favoritos              Favorito[]
+  archivosSubidos        ArchivoSesion[]
 
   @@map("usuarios")
 }
@@ -312,8 +313,27 @@ model Sesion {
   mensajes        Mensaje[]
   tareas          Tarea[]
   participantes   ParticipanteGrupal[]
+  archivos        ArchivoSesion[]
 
   @@map("sesiones")
+}
+
+model ArchivoSesion {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sesionId     String   @map("sesion_id") @db.Uuid
+  subidoPorId  String   @map("subido_por_id") @db.Uuid
+  nombre       String   @db.VarChar(255)
+  archivoUrl   String   @map("archivo_url") @db.VarChar(500)
+  mimeType     String   @map("mime_type") @db.VarChar(120)
+  tamanoBytes  Int      @map("tamano_bytes")
+  descripcion  String?  @db.VarChar(500)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  sesion       Sesion   @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+  subidoPor    Usuario  @relation(fields: [subidoPorId], references: [id], onDelete: Cascade)
+
+  @@index([sesionId, createdAt])
+  @@map("archivos_sesion")
 }
 
 model Tarea {

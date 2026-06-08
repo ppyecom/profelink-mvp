@@ -8,6 +8,7 @@ import VideoLlamada from "@/components/sesiones/VideoLlamada";
 import PizarraColaborativa from "@/components/sesiones/PizarraColaborativa";
 import AgregarCalendar from "@/components/sesiones/AgregarCalendar";
 import ChatSesion from "@/components/chat/ChatSesion";
+import ArchivosSesion from "@/components/sesiones/ArchivosSesion";
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -103,6 +104,9 @@ export default async function SesionPage({ params }: PageProps) {
 
       {/* Pizarra colaborativa */}
       {(enVivo || puedeEntrar) && <PizarraColaborativa sesionId={sesion.id} />}
+
+      {/* Archivos compartidos */}
+      <ArchivosSesion sesionId={sesion.id} />
 
       {/* Chat de la sesión */}
       <div className="bento p-5 elev-1">

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Calendar, CheckCircle, XCircle, Clock, MessageCircle } from "lucide-react";
 import { formatDateTime, formatSoles, ESTADO_SESION_COLORS, ESTADO_SESION_LABELS } from "@/lib/utils";
 import ChatSesion from "@/components/chat/ChatSesion";
+import EntrarSesionBoton from "@/components/sesiones/EntrarSesionBoton";
 import type { SesionResumen } from "@/types";
 
 const ESTADOS = [
@@ -89,6 +90,15 @@ export default function ProfesorSesionesPage() {
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
+                {s.modalidad === "VIRTUAL" && (
+                  <EntrarSesionBoton
+                    sesionId={s.id}
+                    fechaInicio={typeof s.fechaInicio === "string" ? s.fechaInicio : new Date(s.fechaInicio).toISOString()}
+                    fechaFin={typeof s.fechaFin === "string" ? s.fechaFin : new Date(s.fechaFin).toISOString()}
+                    estado={s.estado}
+                  />
+                )}
+
                 {s.estado === "PENDIENTE" && (
                   <>
                     <button onClick={() => cambiarEstado(s.id, "CONFIRMADA")}
