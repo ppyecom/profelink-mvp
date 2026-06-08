@@ -105,8 +105,8 @@ export default async function SesionPage({ params }: PageProps) {
       {/* Pizarra colaborativa */}
       {(enVivo || puedeEntrar) && <PizarraColaborativa sesionId={sesion.id} />}
 
-      {/* Archivos compartidos */}
-      <ArchivosSesion sesionId={sesion.id} />
+      {/* Archivos compartidos — solo el profesor de la sesión (o admin) puede subir */}
+      <ArchivosSesion sesionId={sesion.id} puedeSubir={esProfesor || session.rol === "ADMIN"} />
 
       {/* Chat de la sesión */}
       <div className="bento p-5 elev-1">

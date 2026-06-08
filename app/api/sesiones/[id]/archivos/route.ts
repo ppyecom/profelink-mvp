@@ -80,6 +80,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!sesion) return NextResponse.json({ error: "Sesión no encontrada" }, { status: 404 });
   if (!ok)     return NextResponse.json({ error: "Sin acceso" }, { status: 403 });
 
+  // Solo el profesor de la sesión (o admin) puede subir materiales.
+  // El alumno solo descarga.
+  const esProfesorDeEstaSesion = sesion.profesor.usuarioId === session.sub;
+  if (!esProfesorDeEstaSesion && session.rol !== "ADMIN") {
+    return NextResponse.json(
+      { error: "Solo el profesor de esta sesión puede subir materiales" },
+      { status: 403 },
+    );
+  }
+
   if (sesion.estado === "CANCELADA") {
     return NextResponse.json({ error: "Esta sesión fue cancelada" }, { status: 400 });
   }

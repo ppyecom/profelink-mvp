@@ -95,7 +95,10 @@ export async function GET() {
   return NextResponse.json({ items });
 }
 
-// POST: enviar mensaje directo (pre-reserva)
+// POST: enviar mensaje desde el inbox.
+// Si los dos usuarios tienen una sesión PENDIENTE o CONFIRMADA, lo asociamos
+// a esa sesión para que aparezca también en el chat de la sala (y así NO hay
+// "dos chats" separados que no se sincronizan).
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -108,14 +111,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No puedes enviarte mensajes a ti mismo" }, { status: 400 });
   }
 
+  // Buscar sesión activa entre los dos (cualquier rol — yo estudiante/él profe o viceversa)
+  const sesionActiva = await prisma.sesion.findFirst({
+    where: {
+      estado: { in: ["PENDIENTE", "CONFIRMADA"] },
+      OR: [
+        { estudianteId: session.sub, profesor: { usuarioId: parsed.data.destinatarioId } },
+        { estudianteId: parsed.data.destinatarioId, profesor: { usuarioId: session.sub } },
+      ],
+    },
+    orderBy: { fechaInicio: "desc" },
+    select: { id: true },
+  });
+
   const mensaje = await prisma.mensaje.create({
     data: {
-      sesionId: null,
+      // Si hay sesión activa → adjuntamos a ella (chat unificado)
+      // Si no → directo (sesionId null)
+      sesionId: sesionActiva?.id ?? null,
       remitenteId: session.sub,
-      destinatarioId: parsed.data.destinatarioId,
+      destinatarioId: sesionActiva ? null : parsed.data.destinatarioId,
       contenido: parsed.data.contenido,
     },
   });
 
-  return NextResponse.json({ ok: true, mensaje });
+  return NextResponse.json({ ok: true, mensaje, sesionId: sesionActiva?.id ?? null });
 }

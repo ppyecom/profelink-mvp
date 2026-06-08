@@ -4,14 +4,19 @@ import { useState } from "react";
 import { Palette, ExternalLink, Copy, CheckCircle } from "lucide-react";
 
 /**
- * Pizarra colaborativa usando Excalidraw+ (excalidraw.com con plus.app).
- * Genera sala única por sesión. 100% gratis.
+ * Pizarra REAL colaborativa usando tldraw (https://www.tldraw.com/r/<id>).
+ * tldraw expone salas multiusuario gratis: cualquiera con el link entra y
+ * todos los trazos se sincronizan en tiempo real vía su servidor.
+ *
+ * (Antes usábamos Excalidraw #room=... pero esa modalidad pública ya no
+ * existe — cada usuario veía su propia pizarra local sin sync.)
  */
 export default function PizarraColaborativa({ sesionId }: { sesionId: string }) {
   const [copiado, setCopiado] = useState(false);
-  // Excalidraw embedded usa hash que es la "sala"
-  const salaId = `profelink-${sesionId.substring(0, 12)}`;
-  const url = `https://excalidraw.com/#room=${salaId},aBcDeFgHiJkLmNoPqRsTuV`;
+
+  // Sala única determinística por sesión (mismo ID → misma sala para ambos)
+  const salaId = `profelink-${sesionId}`;
+  const url    = `https://www.tldraw.com/r/${salaId}`;
 
   const copiar = () => {
     navigator.clipboard.writeText(url);
@@ -26,6 +31,9 @@ export default function PizarraColaborativa({ sesionId }: { sesionId: string }) 
           <div className="flex items-center gap-2">
             <Palette className="w-5 h-5 text-violet-600" />
             <p className="font-heading font-bold text-brand-text">Pizarra colaborativa</p>
+            <span className="bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+              EN VIVO
+            </span>
           </div>
           <div className="flex gap-2">
             <button onClick={copiar}
@@ -34,18 +42,19 @@ export default function PizarraColaborativa({ sesionId }: { sesionId: string }) 
             </button>
             <a href={url} target="_blank" rel="noopener noreferrer"
               className="text-xs bg-violet-600 hover:bg-violet-700 text-white font-semibold px-3 py-1.5 rounded-xl inline-flex items-center gap-1">
-              <ExternalLink className="w-3 h-3" /> Abrir
+              <ExternalLink className="w-3 h-3" /> Abrir en pestaña
             </a>
           </div>
         </div>
         <p className="text-xs text-violet-700 mt-1">
-          Comparte el link con tu compañero. Pueden dibujar y resolver ejercicios juntos.
+          Misma sala para profesor y alumno. Lo que dibujas aparece en pantalla del otro al instante.
         </p>
       </div>
       <iframe
         src={url}
-        className="w-full h-[500px] border-0"
+        className="w-full h-[560px] border-0"
         title="Pizarra colaborativa"
+        allow="clipboard-read; clipboard-write"
       />
     </div>
   );

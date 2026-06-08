@@ -43,11 +43,26 @@ export default function ChatSesion({ sesionId, nombreOtro, flotante = false }: P
   const bottomRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
 
-  // Cargar historial vía REST una vez
+  // Cargar historial vía REST (también funciona como polling de respaldo)
   const cargarHistorial = useCallback(async () => {
-    const res = await fetch(`/api/chat/${sesionId}`);
-    if (res.ok) setMensajes(await res.json());
+    const res = await fetch(`/api/chat/${sesionId}`, { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      setMensajes((prev) => {
+        // merge respetando IDs ya presentes
+        const seen = new Set(prev.map((m) => m.id));
+        const nuevos = data.filter((m: Mensaje) => !seen.has(m.id));
+        return nuevos.length === 0 ? prev : [...prev, ...nuevos];
+      });
+    }
   }, [sesionId]);
+
+  // Polling REST cada 5s como fallback (captura mensajes que llegan por inbox
+  // o si el WebSocket se desconecta). socket.io sigue actualizando en vivo.
+  useEffect(() => {
+    const id = setInterval(cargarHistorial, 5000);
+    return () => clearInterval(id);
+  }, [cargarHistorial]);
 
   useEffect(() => {
     cargarHistorial();

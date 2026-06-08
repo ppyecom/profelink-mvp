@@ -28,7 +28,13 @@ function IconoArchivo({ mime }: { mime: string }) {
   return <FileIcon className="w-5 h-5 text-ink-600" />;
 }
 
-export default function ArchivosSesion({ sesionId }: { sesionId: string }) {
+interface ArchivosSesionProps {
+  sesionId: string;
+  /** Si es false, oculta el upload (lectura/descarga solamente) */
+  puedeSubir: boolean;
+}
+
+export default function ArchivosSesion({ sesionId, puedeSubir }: ArchivosSesionProps) {
   const [archivos, setArchivos] = useState<Archivo[]>([]);
   const [loading, setLoading]   = useState(true);
   const [subiendo, setSubiendo] = useState(false);
@@ -86,7 +92,8 @@ export default function ArchivosSesion({ sesionId }: { sesionId: string }) {
         </h2>
       </div>
 
-      {/* Subir */}
+      {/* Subir (solo si el profesor o admin) */}
+      {puedeSubir ? (
       <div className="space-y-2">
         <input
           type="text"
@@ -123,6 +130,11 @@ export default function ArchivosSesion({ sesionId }: { sesionId: string }) {
           </div>
         )}
       </div>
+      ) : (
+        <p className="text-xs text-ink-500 italic bg-ink-50 border border-ink-200 px-3 py-2">
+          📥 Solo el profesor sube materiales. Tú puedes descargar lo que comparta.
+        </p>
+      )}
 
       {/* Lista */}
       {loading ? (
