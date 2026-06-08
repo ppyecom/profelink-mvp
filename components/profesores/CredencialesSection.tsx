@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Award, Plus, X, Clock, CheckCircle, XCircle, FileText, Link2, Loader2, Trophy, Shield, BadgeCheck } from "lucide-react";
+import { Award, Plus, X, Clock, CheckCircle, XCircle, FileText, Link2, Loader2, Trophy, Shield, BadgeCheck, Upload, Paperclip } from "lucide-react";
 
 interface Credencial {
   id: string;
@@ -41,8 +41,9 @@ export default function CredencialesSection({ nivelVerificacion }: { nivelVerifi
   const [creds, setCreds] = useState<Credencial[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({ tipo: "CERTIFICADO", titulo: "", descripcion: "", enlaceExterno: "" });
+  const [form, setForm] = useState({ tipo: "CERTIFICADO", titulo: "", descripcion: "", enlaceExterno: "", archivoUrl: "", archivoNombre: "" });
   const [enviando, setEnviando] = useState(false);
+  const [subiendoArchivo, setSubiendoArchivo] = useState(false);
   const [error, setError] = useState("");
 
   const cargar = async () => {
@@ -57,17 +58,51 @@ export default function CredencialesSection({ nivelVerificacion }: { nivelVerifi
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(""); setEnviando(true);
+
+    // Al menos un enlace o archivo
+    if (!form.enlaceExterno && !form.archivoUrl) {
+      setError("Adjunta un archivo o pega un enlace verificable");
+      setEnviando(false);
+      return;
+    }
+
     const res = await fetch("/api/credenciales", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        tipo: form.tipo,
+        titulo: form.titulo,
+        descripcion: form.descripcion,
+        enlaceExterno: form.enlaceExterno,
+        archivoUrl: form.archivoUrl || undefined,
+      }),
     });
     const data = await res.json();
     setEnviando(false);
     if (!res.ok) { setError(data.error ?? "Error"); return; }
     setModalOpen(false);
-    setForm({ tipo: "CERTIFICADO", titulo: "", descripcion: "", enlaceExterno: "" });
+    setForm({ tipo: "CERTIFICADO", titulo: "", descripcion: "", enlaceExterno: "", archivoUrl: "", archivoNombre: "" });
     cargar();
+  };
+
+  const subirArchivo = async (file: File) => {
+    setError("");
+    setSubiendoArchivo(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload/credencial", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Error al subir");
+      } else {
+        setForm(f => ({ ...f, archivoUrl: data.url, archivoNombre: data.nombre ?? file.name }));
+      }
+    } catch {
+      setError("Error de red al subir el archivo");
+    } finally {
+      setSubiendoArchivo(false);
+    }
   };
 
   const eliminar = async (id: string) => {
@@ -118,12 +153,20 @@ export default function CredencialesSection({ nivelVerificacion }: { nivelVerifi
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm text-brand-text">{c.titulo}</p>
                   <p className="text-xs text-gray-500">{tipoLabel(c.tipo)}</p>
-                  {c.enlaceExterno && (
-                    <a href={c.enlaceExterno} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline mt-0.5">
-                      <Link2 className="w-3 h-3" /> Ver enlace
-                    </a>
-                  )}
+                  <div className="flex flex-wrap gap-3 mt-0.5">
+                    {c.enlaceExterno && (
+                      <a href={c.enlaceExterno} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline">
+                        <Link2 className="w-3 h-3" /> Ver enlace
+                      </a>
+                    )}
+                    {c.archivoUrl && (
+                      <a href={c.archivoUrl} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-emerald-700 hover:underline">
+                        <Paperclip className="w-3 h-3" /> Ver archivo
+                      </a>
+                    )}
+                  </div>
                   {c.notaAdmin && c.estado === "RECHAZADA" && (
                     <p className="text-xs text-red-600 italic mt-1">Motivo: {c.notaAdmin}</p>
                   )}
@@ -175,12 +218,49 @@ export default function CredencialesSection({ nivelVerificacion }: { nivelVerifi
             </div>
 
             <div>
-              <label className="block text-xs text-gray-500 mb-1.5 font-medium">Enlace verificable (opcional)</label>
+              <label className="block text-xs text-gray-500 mb-1.5 font-medium">Adjuntar archivo (PDF, JPG, PNG · máx 10 MB)</label>
+              {form.archivoUrl ? (
+                <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2.5 text-sm">
+                  <Paperclip className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  <span className="flex-1 truncate text-emerald-800">{form.archivoNombre}</span>
+                  <button type="button"
+                    onClick={() => setForm(f => ({ ...f, archivoUrl: "", archivoNombre: "" }))}
+                    className="text-emerald-600 hover:text-emerald-900">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-gray-300 hover:border-amber-500 hover:bg-amber-50 rounded-xl px-3 py-4 text-sm text-gray-500 cursor-pointer transition-colors">
+                  {subiendoArchivo ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Subiendo...</>
+                  ) : (
+                    <><Upload className="w-4 h-4" /> Seleccionar archivo</>
+                  )}
+                  <input
+                    type="file"
+                    accept="application/pdf,image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    disabled={subiendoArchivo}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) subirArchivo(f);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs text-gray-500 mb-1.5 font-medium">Enlace verificable (opcional si subes archivo)</label>
               <input type="url"
                 value={form.enlaceExterno}
                 onChange={e => setForm(f => ({ ...f, enlaceExterno: e.target.value }))}
                 placeholder="https://linkedin.com/in/... o https://github.com/..."
                 className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+              <p className="text-[10px] text-gray-400 mt-1">
+                💡 Puedes adjuntar archivo, enlace o ambos. El admin necesita al menos uno para verificar.
+              </p>
             </div>
 
             <div>

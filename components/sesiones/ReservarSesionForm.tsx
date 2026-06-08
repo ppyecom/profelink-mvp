@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { addDays, addHours, addMinutes, format, setHours, setMinutes } from "date-fns";
+import { addDays, addHours, addMinutes, format, isSameDay, setHours, setMinutes } from "date-fns";
 import { es } from "date-fns/locale";
 import { CheckCircle, Clock, Calendar, Tag, Loader2, Gift, X } from "lucide-react";
 import { cn, formatSoles } from "@/lib/utils";
@@ -23,10 +23,26 @@ interface CuponDisponible { id: string; codigo: string; tipo: string; valor: num
 
 const DIAS_SHORT: Record<number, string> = { 0:"Dom", 1:"Lun", 2:"Mar", 3:"Mié", 4:"Jue", 5:"Vie", 6:"Sáb" };
 
+// Próxima fecha para un día de la semana. Incluye HOY si coincide con diaSemana.
+// (Antes saltaba siempre al próximo, así no se podía reservar para hoy mismo).
 function proximaFecha(diaSemana: number): Date {
   const hoy = new Date();
-  const diff = (diaSemana - hoy.getDay() + 7) % 7 || 7;
+  const diff = (diaSemana - hoy.getDay() + 7) % 7; // 0 = hoy
   return addDays(hoy, diff);
+}
+
+// Margen mínimo (en min) entre AHORA y el inicio del slot para poder reservar
+// (evita reservar a las 14:59 una sesión que arranca 15:00 sin tiempo de avisar).
+const BUFFER_MIN = 30;
+
+// Devuelve true si la hora del slot ya pasó respecto al instante actual.
+// Solo aplica cuando la fecha es HOY; para fechas futuras siempre devuelve false.
+function slotYaPaso(fecha: Date, horaStr: string): boolean {
+  const ahora = new Date();
+  if (!isSameDay(fecha, ahora)) return false;
+  const [h, m] = horaStr.split(":").map(s => parseInt(s, 10));
+  const slotDate = setMinutes(setHours(new Date(fecha), h), m || 0);
+  return slotDate.getTime() < ahora.getTime() + BUFFER_MIN * 60_000;
 }
 
 // Expande un slot en sub-bloques según la duración elegida (30 o 60 min)
@@ -53,7 +69,7 @@ function expandirSlot(slot: Slot, duracionMin: number): { hora: string; label: s
 
 export default function ReservarSesionForm({ profesorId, disponibilidad, modalidad, precioHora, precio30min, aceptaPrimeraGratis }: Props) {
   const router = useRouter();
-  const [selected, setSelected] = useState<{ slotId: string; hora: string } | null>(null);
+  const [selected, setSelected] = useState<{ slotId: string; hora: string; fechaIso: string } | null>(null);
   const [duracion, setDuracion] = useState<30 | 60>(60);
   const [repetir, setRepetir]   = useState<number>(1); // semanas a repetir
   const [notas, setNotas]       = useState("");
@@ -135,8 +151,7 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
     if (!selected) return;
     setError(""); setLoading(true);
 
-    const slot  = disponibilidad.find(s => s.id === selected.slotId)!;
-    const fechaBase = proximaFecha(slot.diaSemana);
+    const fechaBase = new Date(selected.fechaIso);
     const [hNum, mNum] = selected.hora.split(":").map(s => parseInt(s, 10));
 
     let creadas = 0;
@@ -198,9 +213,24 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
     return acc;
   }, {} as Record<number, Slot[]>);
 
-  // Ordenar entries por fecha real (no por número de día), para que la próxima fecha aparezca primero
+  // Ordenar entries por fecha real (no por número de día), para que la próxima fecha aparezca primero.
+  // Si HOY coincide con ese diaSemana y todas las horas ya pasaron, saltar a +7 días.
   const diasOrdenados = Object.entries(porDia)
-    .map(([diaStr, slots]) => ({ dia: Number(diaStr), fecha: proximaFecha(Number(diaStr)), slots }))
+    .map(([diaStr, slots]) => {
+      const dia = Number(diaStr);
+      let fecha = proximaFecha(dia);
+
+      // ¿Quedan horas útiles hoy?
+      const ahora = new Date();
+      if (isSameDay(fecha, ahora)) {
+        const algunaUtil = slots.some(slot =>
+          expandirSlot(slot, duracion).some(({ hora }) => !slotYaPaso(fecha, hora)),
+        );
+        if (!algunaUtil) fecha = addDays(fecha, 7); // pasamos al siguiente
+      }
+
+      return { dia, fecha, slots };
+    })
     .sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
 
   return (
@@ -257,6 +287,8 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
 
       <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
         {diasOrdenados.map(({ dia, fecha, slots }) => {
+          const ahora = new Date();
+          const esHoy = isSameDay(fecha, ahora);
           const fechaLabel = format(fecha, "d MMM", { locale: es });
 
           return (
@@ -267,37 +299,43 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
                   {DIAS_SHORT[dia]}
                 </div>
                 <span className="text-xs text-gray-400 font-medium">{fechaLabel}</span>
+                {esHoy && (
+                  <span className="bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                    Hoy
+                  </span>
+                )}
               </div>
 
               {/* Slots de hora */}
               <div className="flex flex-wrap gap-2">
                 {slots.flatMap(slot =>
-                  expandirSlot(slot, duracion).map(({ hora, label }) => {
-                    const isSelected = selected?.slotId === slot.id && selected?.hora === hora;
-                    const slotFecha = proximaFecha(slot.diaSemana);
-                    const [slH, slM] = hora.split(":").map(s => parseInt(s, 10));
-                    const slotInicio = setMinutes(setHours(slotFecha, slH), slM || 0);
-                    const slotFin = duracion === 30 ? addMinutes(slotInicio, 30) : addHours(slotInicio, 1);
-                    const ocupado = slotOcupadoEnGCal(slotInicio, slotFin);
+                  expandirSlot(slot, duracion)
+                    .filter(({ hora }) => !slotYaPaso(fecha, hora))
+                    .map(({ hora, label }) => {
+                      const isSelected = selected?.slotId === slot.id && selected?.hora === hora;
+                      const [slH, slM] = hora.split(":").map(s => parseInt(s, 10));
+                      const slotInicio = setMinutes(setHours(new Date(fecha), slH), slM || 0);
+                      const slotFin = duracion === 30 ? addMinutes(slotInicio, 30) : addHours(slotInicio, 1);
+                      const ocupado = slotOcupadoEnGCal(slotInicio, slotFin);
 
-                    return (
-                      <button key={`${slot.id}-${hora}`} type="button"
-                        disabled={ocupado}
-                        title={ocupado ? "Tutor ocupado en Google Calendar" : undefined}
-                        onClick={() => !ocupado && setSelected({ slotId: slot.id, hora })}
-                        className={cn(
-                          "text-xs font-semibold px-3 py-2 rounded-xl border-2 transition-all",
-                          isSelected
-                            ? "bg-indigo-600 border-indigo-600 text-white shadow-elev-2"
-                            : ocupado
-                              ? "bg-gray-100 border-gray-200 text-gray-400 line-through cursor-not-allowed"
-                              : "bg-white border-indigo-100 text-indigo-700 hover:border-indigo-400 hover:bg-indigo-50"
-                        )}>
-                        {label}
-                        {ocupado && <span className="ml-1">🚫</span>}
-                      </button>
-                    );
-                  })
+                      return (
+                        <button key={`${slot.id}-${hora}`} type="button"
+                          disabled={ocupado}
+                          title={ocupado ? "Tutor ocupado en Google Calendar" : undefined}
+                          onClick={() => !ocupado && setSelected({ slotId: slot.id, hora, fechaIso: fecha.toISOString() })}
+                          className={cn(
+                            "text-xs font-semibold px-3 py-2 rounded-xl border-2 transition-all",
+                            isSelected
+                              ? "bg-indigo-600 border-indigo-600 text-white shadow-elev-2"
+                              : ocupado
+                                ? "bg-gray-100 border-gray-200 text-gray-400 line-through cursor-not-allowed"
+                                : "bg-white border-indigo-100 text-indigo-700 hover:border-indigo-400 hover:bg-indigo-50"
+                          )}>
+                          {label}
+                          {ocupado && <span className="ml-1">🚫</span>}
+                        </button>
+                      );
+                    })
                 )}
               </div>
             </div>
@@ -307,8 +345,7 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
 
       {/* Resumen seleccionado */}
       {selected && (() => {
-        const slot  = disponibilidad.find(s => s.id === selected.slotId)!;
-        const fecha = proximaFecha(slot.diaSemana);
+        const fecha = new Date(selected.fechaIso);
         // Calcular hora fin del slot seleccionado
         const [sH, sM] = selected.hora.split(":").map(s => parseInt(s, 10));
         const inicio = setMinutes(setHours(fecha, sH), sM || 0);
