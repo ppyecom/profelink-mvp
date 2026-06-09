@@ -7,6 +7,7 @@ import { Star, CheckCircle, Monitor, MapPin, ArrowLeft, Clock, Building2, BookOp
 import { formatSoles, NIVEL_LABELS, formatTime } from "@/lib/utils";
 import ResenaCard from "@/components/profesores/ResenaCard";
 import ReservarSesionForm from "@/components/sesiones/ReservarSesionForm";
+import VideoPresentacion from "@/components/profesores/VideoPresentacion";
 import DisponibilidadGrid from "@/components/disponibilidad/DisponibilidadGrid";
 import NivelBadge from "@/components/profesores/NivelBadge";
 import BotonFavorito from "@/components/profesores/BotonFavorito";
@@ -193,6 +194,11 @@ export default async function ProfesorDetallePage({ params }: PageProps) {
                 </div>
               ))}
             </div>
+
+            {/* Video de presentación (si existe) */}
+            {perfil.videoPresentacion && (
+              <VideoPresentacion url={perfil.videoPresentacion} nombre={perfil.usuario.nombre} />
+            )}
 
             {/* Bio */}
             {perfil.bio && (

@@ -2,7 +2,8 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { ArrowLeft, User, Mail, Calendar, Shield, CheckCircle, XCircle, Clock, AlertCircle, FileText, Wallet, BookOpen, Tag, Star, Trash2 } from "lucide-react";
+import { ArrowLeft, User, Mail, Calendar, Shield, CheckCircle, XCircle, Clock, AlertCircle, FileText, Wallet, BookOpen, Tag, Star, Trash2, Play } from "lucide-react";
+import VideoPresentacion from "@/components/profesores/VideoPresentacion";
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -208,6 +209,13 @@ export default function UsuarioDetallePage({ params }: Props) {
               <p className="text-ink-800 whitespace-pre-wrap">{p.bio}</p>
             </div>
           )}
+        </Section>
+      )}
+
+      {/* ── Video de presentación ── */}
+      {p?.videoPresentacion && (
+        <Section title="Video de presentación" icon={Play}>
+          <VideoPresentacion url={p.videoPresentacion} nombre={u.nombre} />
         </Section>
       )}
 

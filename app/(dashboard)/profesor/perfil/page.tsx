@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { CheckCircle, Save, Plus, X, Upload, Camera, Loader2 } from "lucide-react";
 import CredencialesSection from "@/components/profesores/CredencialesSection";
+import VideoPresentacion from "@/components/profesores/VideoPresentacion";
 
 const NIVELES = ["SECUNDARIA", "TECNICA", "UNIVERSITARIA"] as const;
 const NIVEL_LABELS: Record<string, string> = { SECUNDARIA: "Secundaria", TECNICA: "Técnica", UNIVERSITARIA: "Universitaria" };
@@ -231,7 +232,15 @@ export default function ProfesorPerfilPage() {
                 placeholder="https://youtube.com/... o https://vimeo.com/..."
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-[10px] text-gray-400 mt-1">Un video corto (1-2 min) presentándote ayuda a los alumnos a elegirte</p>
+              <p className="text-[10px] text-gray-400 mt-1">Un video corto (1-2 min) presentándote ayuda a los alumnos a elegirte. Soporta YouTube, Vimeo, Loom y MP4.</p>
+
+              {/* Preview en vivo del video */}
+              {form.videoPresentacion && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-bold uppercase text-gray-500 mb-1.5">Así lo verán los alumnos:</p>
+                  <VideoPresentacion url={form.videoPresentacion} nombre="ti" />
+                </div>
+              )}
             </div>
           </div>
         </div>
