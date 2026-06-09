@@ -25,7 +25,8 @@ function getEmbedUrl(rawUrl: string): { embedUrl: string | null; platform: strin
         videoId = url.pathname.split("/shorts/")[1];
       }
       if (videoId) {
-        return { embedUrl: `https://www.youtube.com/embed/${videoId}`, platform: "YouTube" };
+        // youtube-nocookie no setea cookies hasta que el user le da play
+        return { embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}`, platform: "YouTube" };
       }
     }
 
