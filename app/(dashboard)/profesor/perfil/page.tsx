@@ -23,6 +23,11 @@ export default function ProfesorPerfilPage() {
     aceptaPrimeraGratis: false,
     modalidad: "VIRTUAL" as "VIRTUAL" | "PRESENCIAL",
     especialidades: [] as string[],
+    // Información profesional
+    ciudad: "",
+    institucion: "",
+    anosExperiencia: 0,
+    videoPresentacion: "",
   });
   const [nivelVerificacion, setNivelVerificacion] = useState<string>("BASICO");
   const [nuevaEsp, setNuevaEsp] = useState("");
@@ -62,6 +67,10 @@ export default function ProfesorPerfilPage() {
           aceptaPrimeraGratis: data.aceptaPrimeraGratis ?? false,
           modalidad: data.modalidad ?? "VIRTUAL",
           especialidades: data.especialidades ?? [],
+          ciudad: data.ciudad ?? "",
+          institucion: data.institucion ?? "",
+          anosExperiencia: data.anosExperiencia ?? 0,
+          videoPresentacion: data.videoPresentacion ?? "",
         });
         setNivelVerificacion(data.nivelVerificacion ?? "BASICO");
       })
@@ -171,6 +180,58 @@ export default function ProfesorPerfilPage() {
               )}
               <p className="text-xs text-gray-400 mt-2">JPG, PNG o WebP · Máximo 5 MB</p>
               {errorFoto && <p className="text-red-500 text-xs mt-1">{errorFoto}</p>}
+            </div>
+          </div>
+        </div>
+
+        {/* Información profesional */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h2 className="font-semibold text-gray-900 mb-4">Información profesional</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1.5 font-medium">Ciudad</label>
+              <input
+                type="text"
+                value={form.ciudad}
+                onChange={(e) => setForm(f => ({ ...f, ciudad: e.target.value }))}
+                placeholder="Ej: Lima, Arequipa"
+                maxLength={80}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1.5 font-medium">Años de experiencia</label>
+              <input
+                type="number"
+                min={0}
+                max={80}
+                value={form.anosExperiencia}
+                onChange={(e) => setForm(f => ({ ...f, anosExperiencia: Number(e.target.value) || 0 }))}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs text-gray-500 mb-1.5 font-medium">Institución</label>
+              <input
+                type="text"
+                value={form.institucion}
+                onChange={(e) => setForm(f => ({ ...f, institucion: e.target.value }))}
+                placeholder="Ej: PUCP, UNI, UNMSM, autodidacta..."
+                maxLength={120}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[10px] text-gray-400 mt-1">Universidad, instituto o lugar donde te formaste</p>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs text-gray-500 mb-1.5 font-medium">Video de presentación (URL — opcional)</label>
+              <input
+                type="url"
+                value={form.videoPresentacion}
+                onChange={(e) => setForm(f => ({ ...f, videoPresentacion: e.target.value }))}
+                placeholder="https://youtube.com/... o https://vimeo.com/..."
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[10px] text-gray-400 mt-1">Un video corto (1-2 min) presentándote ayuda a los alumnos a elegirte</p>
             </div>
           </div>
         </div>
