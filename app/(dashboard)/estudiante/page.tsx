@@ -76,7 +76,7 @@ export default async function EstudianteDashboard() {
               {nombre}<span className="text-ink-900/30">.</span>
             </h1>
             <p className="text-ink-800 text-base mt-3 max-w-md">
-              ¿Qué quieres aprender hoy? Tenemos <strong className="bg-ink-900 text-amber-300 px-1.5">500+ tutores</strong> listos.
+              ¿Qué quieres aprender hoy? Tenemos <strong className="bg-ink-900 text-amber-300 px-1.5">10+ tutores</strong> listos.
             </p>
           </div>
           <Link href="/profesores"

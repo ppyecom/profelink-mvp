@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Users, Trash2, Search, RefreshCw, Gift } from "lucide-react";
+import { Users, Trash2, Search, RefreshCw, Gift, Eye } from "lucide-react";
+import Link from "next/link";
 
 interface Usuario {
   id: string;
@@ -119,16 +120,24 @@ export default function AdminUsuariosPage() {
                     : <span className="text-ink-400 font-bold">● Eliminado</span>}
                 </td>
                 <td className="p-3">
-                  {u.activo && u.rol !== "ADMIN" ? (
-                    <button
-                      onClick={() => eliminar(u)}
-                      className="bg-rose-600 text-cream-50 px-3 py-1 border-2 border-ink-900 text-xs font-bold uppercase flex items-center gap-1 shadow-[2px_2px_0_#0a0a0a]"
+                  <div className="flex items-center gap-1">
+                    <Link
+                      href={`/admin/usuarios/${u.id}`}
+                      className="bg-ink-900 text-cream-50 px-3 py-1 border-2 border-ink-900 text-xs font-bold uppercase flex items-center gap-1 shadow-[2px_2px_0_#d97706]"
+                      title="Ver detalle"
                     >
-                      <Trash2 className="w-3 h-3" /> Eliminar
-                    </button>
-                  ) : (
-                    <span className="text-xs text-ink-400">—</span>
-                  )}
+                      <Eye className="w-3 h-3" /> Ver
+                    </Link>
+                    {u.activo && u.rol !== "ADMIN" && (
+                      <button
+                        onClick={() => eliminar(u)}
+                        className="bg-rose-600 text-cream-50 px-3 py-1 border-2 border-ink-900 text-xs font-bold uppercase flex items-center gap-1 shadow-[2px_2px_0_#0a0a0a]"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
