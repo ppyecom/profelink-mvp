@@ -35,8 +35,8 @@ export async function GET(req: NextRequest) {
     ratingPromedio: Number(perfil.ratingPromedio),
     totalResenas: perfil.totalResenas,
     especialidades: perfil.especialidades.map(e => e.materia),
-    ciudad: (perfil as Record<string, unknown>).ciudad,
-    anosExperiencia: (perfil as Record<string, unknown>).anosExperiencia,
-    institucion: (perfil as Record<string, unknown>).institucion,
+    ciudad: perfil.ciudad,
+    anosExperiencia: perfil.anosExperiencia,
+    institucion: perfil.institucion,
   });
 }

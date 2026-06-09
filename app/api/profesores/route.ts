@@ -76,7 +76,11 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { bio, fotoUrl, videoPresentacion, nivel, precioHora, precio30min, aceptaPrimeraGratis, modalidad, especialidades } = parsed.data;
+  const {
+    bio, fotoUrl, videoPresentacion, nivel,
+    precioHora, precio30min, aceptaPrimeraGratis, modalidad, especialidades,
+    ciudad, institucion, anosExperiencia,
+  } = parsed.data;
 
   const perfil = await prisma.perfilProfesor.findUnique({ where: { usuarioId: session.sub } });
   if (!perfil) {
@@ -95,6 +99,9 @@ export async function PUT(req: NextRequest) {
         precio30min: precio30min ?? null,
         aceptaPrimeraGratis,
         modalidad,
+        ciudad: ciudad || null,
+        institucion: institucion || null,
+        anosExperiencia,
       },
     }),
     prisma.especialidad.deleteMany({ where: { profesorId: perfil.id } }),

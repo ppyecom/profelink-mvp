@@ -49,6 +49,10 @@ export const perfilProfesorSchema = z.object({
   aceptaPrimeraGratis: z.boolean().default(false),
   modalidad: z.enum(["VIRTUAL", "PRESENCIAL"]).default("VIRTUAL"),
   especialidades: z.array(z.string().min(1).max(100)).default([]),
+  // Nuevos campos del perfil profesional
+  ciudad: z.string().max(80).optional().or(z.literal("")),
+  institucion: z.string().max(120).optional().or(z.literal("")),
+  anosExperiencia: z.number().int().min(0).max(80).default(0),
 });
 
 export type CrearSesionInput = z.infer<typeof crearSesionSchema>;
