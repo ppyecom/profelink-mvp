@@ -23,8 +23,8 @@ const TESTIMONIOS = [
 ];
 
 const NUMEROS = [
-  { val: 500, suffix: "+",  label: "Tutores verificados",  big: true },
-  { val: 10,  suffix: "k+", label: "Sesiones completadas" },
+  { val: 10,  suffix: "+",  label: "Tutores verificados",        big: true },
+  { val: 100, suffix: "+",  label: "Sesiones desde mayo 2026" },
   { val: 4,   suffix: ".9", label: "Rating promedio" },
   { val: 98,  suffix: "%",  label: "Satisfacción" },
 ];
@@ -60,7 +60,7 @@ export default function HomePage() {
           <ScrollReveal delay={0}>
             <div className="inline-flex items-center gap-2 bg-ink-900 text-cream-100 text-xs font-bold px-3 py-1.5 rounded-full mb-8">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              500+ TUTORES ACTIVOS HOY
+              10+ TUTORES ACTIVOS HOY
             </div>
           </ScrollReveal>
 
@@ -476,7 +476,7 @@ export default function HomePage() {
                   </div>
                   {[
                     "🎁 Cupón de 1ª sesión GRATIS",
-                    "🦉 Acceso a 500+ tutores verificados",
+                    "🦉 Acceso a 10+ tutores verificados",
                     "📹 Videollamada + pizarra integradas",
                     "🏆 Sistema de logros y referidos",
                     "💸 Cancela con reembolso 100%",
