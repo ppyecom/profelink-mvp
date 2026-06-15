@@ -1,0 +1,82 @@
+# ───────────────────────────────────────────────────────────────
+# Deploy a GCP Cloud Run
+# Se activa MANUALMENTE (workflow_dispatch) hasta que la VM esté apagada.
+# Cuando hagamos el switch definitivo a GCP, cambiar el trigger a:
+#   on: { push: { branches: [main] } }
+# y eliminar el archivo deploy.yml (el de VM self-hosted).
+# ───────────────────────────────────────────────────────────────
+name: Deploy to GCP Cloud Run
+
+on:
+  workflow_dispatch:
+
+env:
+  PROJECT_ID:    profelink-prod
+  REGION:        southamerica-east1
+  SERVICE:       profelink
+  REPO:          profelink
+  IMAGE:         profelink/app
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Auth to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          # Configurar Workload Identity Federation primero (ver GCP_SETUP.md)
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account:            ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configurar Docker para Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build imagen Docker
+        run: |
+          IMG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE }}"
+          docker build -t "$IMG:${{ github.sha }}" -t "$IMG:latest" .
+
+      - name: Push imagen
+        run: |
+          IMG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE }}"
+          docker push "$IMG:${{ github.sha }}"
+          docker push "$IMG:latest"
+
+      - name: Deploy a Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ github.sha }} \
+            --region=${{ env.REGION }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --add-cloudsql-instances=${{ secrets.CLOUDSQL_CONNECTION_NAME }} \
+            --set-secrets=JWT_SECRET=JWT_SECRET:latest,DATABASE_URL=DATABASE_URL:latest,RESEND_API_KEY=RESEND_API_KEY:latest,GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET:latest \
+            --set-env-vars=NODE_ENV=production,STORAGE_DRIVER=gcs,GCS_BUCKET=${{ secrets.GCS_BUCKET }},NEXT_PUBLIC_APP_URL=${{ secrets.PUBLIC_APP_URL }},GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+            --min-instances=0 \
+            --max-instances=10 \
+            --memory=512Mi \
+            --cpu=1 \
+            --timeout=60s
+
+      - name: Health check
+        run: |
+          URL=$(gcloud run services describe ${{ env.SERVICE }} --region=${{ env.REGION }} --format='value(status.url)')
+          echo "Service URL: $URL"
+          sleep 5
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          if [ "$STATUS" != "200" ]; then
+            echo "❌ Health check falló (status $STATUS)"
+            exit 1
+          fi
+          echo "✅ Deploy OK"
