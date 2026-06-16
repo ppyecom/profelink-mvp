@@ -80,6 +80,7 @@ export async function PUT(req: NextRequest) {
     bio, fotoUrl, videoPresentacion, nivel,
     precioHora, precio30min, aceptaPrimeraGratis, modalidad, especialidades,
     ciudad, institucion, anosExperiencia,
+    yapeNumero, yapeQrUrl, plinNumero, plinQrUrl,
   } = parsed.data;
 
   const perfil = await prisma.perfilProfesor.findUnique({ where: { usuarioId: session.sub } });
@@ -102,6 +103,10 @@ export async function PUT(req: NextRequest) {
         ciudad: ciudad || null,
         institucion: institucion || null,
         anosExperiencia,
+        yapeNumero: yapeNumero || null,
+        yapeQrUrl: yapeQrUrl || null,
+        plinNumero: plinNumero || null,
+        plinQrUrl: plinQrUrl || null,
       },
     }),
     prisma.especialidad.deleteMany({ where: { profesorId: perfil.id } }),
