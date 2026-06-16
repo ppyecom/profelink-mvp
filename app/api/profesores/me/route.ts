@@ -38,5 +38,9 @@ export async function GET(req: NextRequest) {
     ciudad: perfil.ciudad,
     anosExperiencia: perfil.anosExperiencia,
     institucion: perfil.institucion,
+    yapeNumero: perfil.yapeNumero,
+    yapeQrUrl: perfil.yapeQrUrl,
+    plinNumero: perfil.plinNumero,
+    plinQrUrl: perfil.plinQrUrl,
   });
 }

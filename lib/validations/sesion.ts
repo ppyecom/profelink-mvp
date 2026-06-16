@@ -53,6 +53,19 @@ export const perfilProfesorSchema = z.object({
   ciudad: z.string().max(80).optional().or(z.literal("")),
   institucion: z.string().max(120).optional().or(z.literal("")),
   anosExperiencia: z.number().int().min(0).max(80).default(0),
+  // Pago manual Yape / Plin
+  yapeNumero: z.string().regex(/^\d{9}$/, "Debe ser un número de 9 dígitos").optional().or(z.literal("")),
+  yapeQrUrl: z.union([
+    z.string().regex(/^\/(api\/)?uploads\//, "Ruta inválida"),
+    z.string().url(),
+    z.literal(""),
+  ]).optional(),
+  plinNumero: z.string().regex(/^\d{9}$/, "Debe ser un número de 9 dígitos").optional().or(z.literal("")),
+  plinQrUrl: z.union([
+    z.string().regex(/^\/(api\/)?uploads\//, "Ruta inválida"),
+    z.string().url(),
+    z.literal(""),
+  ]).optional(),
 });
 
 export type CrearSesionInput = z.infer<typeof crearSesionSchema>;

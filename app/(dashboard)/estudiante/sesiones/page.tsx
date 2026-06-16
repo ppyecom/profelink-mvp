@@ -226,6 +226,7 @@ export default function MisSesionesPage() {
       {pagoSesion && pagoSesion.profesor && (
         <PagarSesionModal
           sesionId={pagoSesion.id}
+          profesorId={pagoSesion.profesor.id}
           monto={pagoSesion.precioAcordado}
           nombreProfesor={pagoSesion.profesor.nombre}
           onPagado={() => { setPagoSesion(null); cargar(); }}

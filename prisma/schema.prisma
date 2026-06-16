@@ -190,6 +190,11 @@ model PerfilProfesor {
   totalResenas       Int               @default(0) @map("total_resenas")
   estadoDisponibilidad EstadoDisponibilidad @default(DISPONIBLE) @map("estado_disponibilidad")
   mensajeAutoRespuesta String?         @map("mensaje_auto_respuesta")
+  // Datos de pago manual (Yape / Plin) — el alumno paga directo al tutor
+  yapeNumero        String?            @map("yape_numero") @db.VarChar(20)
+  yapeQrUrl         String?            @map("yape_qr_url")
+  plinNumero        String?            @map("plin_numero") @db.VarChar(20)
+  plinQrUrl         String?            @map("plin_qr_url")
   createdAt          DateTime          @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt          DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
