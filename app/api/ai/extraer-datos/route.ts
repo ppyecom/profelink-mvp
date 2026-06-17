@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth";
 import { analizarCredencial, type TipoDocumento } from "@/lib/ai";
 
+// Le decimos a Next.js que esta ruta puede tardar hasta 120 segundos
+// (un PDF pesado puede tomar 30-60s en Gemini)
+export const maxDuration = 120;
+export const dynamic = "force-dynamic";
+
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB (CVs en PDF pueden pesar)
 const ALLOWED  = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 

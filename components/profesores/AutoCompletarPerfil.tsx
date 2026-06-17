@@ -60,20 +60,34 @@ export default function AutoCompletarPerfil({ onSugerir }: Props) {
     setError("");
     setResultado(null);
     setLoading(true);
+
+    // Timeout cliente — abortamos a los 90s con mensaje claro
+    const controller = new AbortController();
+    const abortTimer = setTimeout(() => controller.abort(), 90_000);
+
     try {
       const fd = new FormData();
       fd.append("file", file);
       fd.append("tipo", tipo);
-      const res = await fetch("/api/ai/extraer-datos", { method: "POST", body: fd });
+      const res = await fetch("/api/ai/extraer-datos", {
+        method: "POST",
+        body: fd,
+        signal: controller.signal,
+      });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "No se pudo analizar la imagen");
         return;
       }
       setResultado(data);
-    } catch {
-      setError("Error de red");
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") {
+        setError("La IA tardó demasiado (>90s). Prueba con un PDF más liviano o una imagen JPG.");
+      } else {
+        setError("Error de red");
+      }
     } finally {
+      clearTimeout(abortTimer);
       setLoading(false);
     }
   };

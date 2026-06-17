@@ -153,6 +153,8 @@ export async function analizarCredencial(
 
     for (const nombre of MODELOS_PREFERIDOS) {
       try {
+        const t0 = Date.now();
+        console.log(`[ai] intentando ${nombre} (mime: ${mimeType}, size: ${(imagenBuffer.length / 1024).toFixed(0)} KB)`);
         const response = await ai.models.generateContent({
           model: nombre,
           contents,
@@ -162,7 +164,7 @@ export async function analizarCredencial(
           },
         });
         responseText = response.text ?? null;
-        console.log(`[ai] usando modelo: ${nombre}`);
+        console.log(`[ai] ${nombre} respondió en ${((Date.now() - t0) / 1000).toFixed(1)}s`);
         break;
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);

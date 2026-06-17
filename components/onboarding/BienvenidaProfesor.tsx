@@ -28,22 +28,52 @@ export default function BienvenidaProfesor({ nombre }: { nombre: string }) {
   const router = useRouter();
   const [vista, setVista] = useState<Opcion>("menu");
   const [loading, setLoading] = useState(false);
+  const [progreso, setProgreso] = useState("");
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [error, setError] = useState("");
   const [guardando, setGuardando] = useState(false);
 
   const analizarCV = async (file: File) => {
     setError(""); setResultado(null); setLoading(true);
+    setProgreso("Subiendo archivo...");
+
+    // Mensajes progresivos para que el user vea actividad
+    const tiempos = [
+      { ms: 3000,  msg: "Leyendo el documento..." },
+      { ms: 10000, msg: "Identificando habilidades..." },
+      { ms: 20000, msg: "Casi listo, generando bio..." },
+      { ms: 40000, msg: "Está tardando más de lo normal — sé paciente 🙏" },
+    ];
+    const timers = tiempos.map(t => setTimeout(() => setProgreso(t.msg), t.ms));
+
+    // Timeout cliente: si pasan 90s, abortamos con mensaje claro
+    const controller = new AbortController();
+    const abortTimer = setTimeout(() => controller.abort(), 90_000);
+
     try {
       const fd = new FormData();
       fd.append("file", file);
       fd.append("tipo", "CV");
-      const res = await fetch("/api/ai/extraer-datos", { method: "POST", body: fd });
+      const res = await fetch("/api/ai/extraer-datos", {
+        method: "POST",
+        body: fd,
+        signal: controller.signal,
+      });
       const data = await res.json();
       if (!res.ok) setError(data.error ?? "No se pudo analizar");
       else setResultado(data);
-    } catch { setError("Error de red"); }
-    setLoading(false);
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") {
+        setError("La IA tardó demasiado (>90s). Intenta con un PDF más liviano o una imagen JPG.");
+      } else {
+        setError("Error de red. Verifica tu conexión e intenta de nuevo.");
+      }
+    } finally {
+      clearTimeout(abortTimer);
+      timers.forEach(clearTimeout);
+      setLoading(false);
+      setProgreso("");
+    }
   };
 
   const guardarTodo = async () => {
@@ -203,7 +233,8 @@ export default function BienvenidaProfesor({ nombre }: { nombre: string }) {
             <div className="flex flex-col items-center gap-2 text-violet-700">
               <Loader2 className="w-10 h-10 animate-spin" />
               <p className="font-bold">Analizando tu CV con IA...</p>
-              <p className="text-xs text-violet-500">Esto toma 5-10 segundos</p>
+              <p className="text-xs text-violet-600 min-h-[1em]">{progreso || "Iniciando..."}</p>
+              <p className="text-[10px] text-violet-400 mt-2">Los PDFs pesados pueden tomar hasta 1 minuto</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2 text-violet-700">
