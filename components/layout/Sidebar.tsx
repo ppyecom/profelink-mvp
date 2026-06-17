@@ -30,7 +30,6 @@ const NAV_BY_ROL: Record<RolUsuario, NavItem[]> = {
     { href: "/inbox",                   label: "Mensajes",       icon: MessageCircle },
     { href: "/profesor/estudiantes",    label: "Estudiantes",    icon: Users },
     { href: "/profesor/oportunidades",  label: "Oportunidades",  icon: Lightbulb },
-    { href: "/profesor/disponibilidad", label: "Disponibilidad", icon: Calendar },
     { href: "/profesor/ingresos",       label: "Ingresos",       icon: DollarSign },
     { href: "/profesor/perfil",         label: "Mi Perfil",      icon: UserCircle },
     { href: "/planes",                  label: "Plus",           icon: Crown },
