@@ -11,7 +11,13 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const MODEL_NAME = "gemini-1.5-flash";
+// Lista de modelos a probar en orden (Google deprecó los 1.5).
+// Usamos el primero que esté disponible para nuestra API key.
+const MODELOS_PREFERIDOS = [
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-flash-latest",
+];
 
 function getClient() {
   const key = process.env.GEMINI_API_KEY;
@@ -97,27 +103,41 @@ export async function analizarCredencial(
 ): Promise<ResultadoVerificacion> {
   try {
     const client = getClient();
-    const model = client.getGenerativeModel({
-      model: MODEL_NAME,
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.1,
-      },
-    });
-
     const prompt = getPromptParaTipo(tipo, nombreUsuario);
+    const imageInput = {
+      inlineData: { data: imagenBuffer.toString("base64"), mimeType },
+    };
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: imagenBuffer.toString("base64"),
-          mimeType,
-        },
-      },
-    ]);
+    // Probamos cada modelo en orden hasta que uno responda OK
+    let responseText: string | null = null;
+    let lastError: unknown = null;
+    for (const nombre of MODELOS_PREFERIDOS) {
+      try {
+        const model = client.getGenerativeModel({
+          model: nombre,
+          generationConfig: { responseMimeType: "application/json", temperature: 0.1 },
+        });
+        const result = await model.generateContent([prompt, imageInput]);
+        responseText = result.response.text();
+        console.log(`[ai] usando modelo: ${nombre}`);
+        break;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        lastError = e;
+        // Si es 404 (modelo no existe), prueba con el siguiente
+        if (msg.includes("404") || msg.includes("not found")) {
+          console.warn(`[ai] modelo ${nombre} no disponible, probando siguiente...`);
+          continue;
+        }
+        // Cualquier otro error (auth, cuota, etc.) → no tiene sentido seguir intentando
+        throw e;
+      }
+    }
 
-    const responseText = result.response.text();
+    if (!responseText) {
+      throw lastError ?? new Error("Ningún modelo Gemini disponible");
+    }
+
     const datos: DatosExtraidos = JSON.parse(responseText);
 
     if (!datos.esDocumentoValido) {
