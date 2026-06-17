@@ -182,7 +182,6 @@ function EditMode({ slots, onEditChange }: { slots: Slot[]; onEditChange?: (cell
           </Fragment>
         ))}
       </div>
-      <p className="text-xs text-gray-400 mt-2">Arrastra para marcar tu disponibilidad</p>
     </div>
   );
 }
