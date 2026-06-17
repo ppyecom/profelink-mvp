@@ -175,9 +175,15 @@ export async function GET(req: Request) {
     const destinoPorRol = usuario.rol === "ADMIN" ? "/admin" :
       usuario.rol === "PROFESOR" ? "/profesor" : "/estudiante";
     const redirectDestino = getSafeRedirect(stateData.redirect);
-    const destino = !esNuevo && redirectDestino ? redirectDestino : destinoPorRol;
 
-    const res = NextResponse.redirect(`${APP_URL}${destino}${esNuevo ? "?bienvenida=1" : ""}`);
+    // Si es nuevo registro → onboarding /bienvenida (la página decide si redirige al dash)
+    // Si vuelve a entrar con redirect explícito → respeta el redirect
+    // Si vuelve a entrar sin redirect → su dashboard normal
+    const destino = esNuevo
+      ? "/bienvenida"
+      : (redirectDestino ?? destinoPorRol);
+
+    const res = NextResponse.redirect(`${APP_URL}${destino}`);
     res.cookies.set(setAuthCookie(token));
     res.cookies.delete("oauth_state");
     return res;
