@@ -31,7 +31,7 @@ function getClient() {
  * Tipos del resultado de análisis
  * ───────────────────────────────────────────────────────────── */
 
-export type TipoDocumento = "IDENTIDAD" | "TITULO" | "CERTIFICADO" | "RECORD" | "PROYECTO" | "EXPERIENCIA" | "EXAMEN_INTERNO";
+export type TipoDocumento = "IDENTIDAD" | "TITULO" | "CERTIFICADO" | "CV" | "RECORD" | "PROYECTO" | "EXPERIENCIA" | "EXAMEN_INTERNO";
 
 export interface DatosExtraidos {
   esDocumentoValido: boolean;
@@ -42,6 +42,11 @@ export interface DatosExtraidos {
   fechaEmision: string | null;           // YYYY-MM-DD si aplica
   tituloOCurso: string | null;
   textoAdicional: string | null;         // notas observadas (firma, sello, etc.)
+  // Solo cuando se analiza un CV completo
+  anosExperiencia?: number | null;       // estimado a partir de las fechas del CV
+  especialidades?: string[];             // ["Cálculo", "Python", "Inglés"...]
+  ciudad?: string | null;
+  bioSugerida?: string | null;           // 2-3 frases generadas para "Sobre mí"
 }
 
 export interface ResultadoVerificacion {
@@ -58,7 +63,9 @@ export interface ResultadoVerificacion {
  * ───────────────────────────────────────────────────────────── */
 
 function getPromptParaTipo(tipo: TipoDocumento, nombreUsuario: string): string {
-  const base = `Analiza la imagen adjunta y extrae los datos estructurados que veas.
+  // Schema base para documentos cortos (DNI, título, certificado, etc.)
+  if (tipo !== "CV") {
+    const base = `Analiza la imagen adjunta y extrae los datos estructurados que veas.
 El usuario que sube este documento se registró con el nombre: "${nombreUsuario}".
 
 DEBES responder ÚNICAMENTE con un JSON válido (sin markdown, sin texto extra) con esta estructura exacta:
@@ -80,17 +87,46 @@ Reglas:
 - nombrePersona: extrae el nombre COMPLETO tal como aparece en el documento.
 `;
 
-  const especificos: Record<TipoDocumento, string> = {
-    IDENTIDAD: `Este documento debería ser un DNI peruano. tipoDetectado = "DNI peruano" si lo es.`,
-    TITULO: `Este documento debería ser un título universitario o bachiller. Extrae institución, carrera y nombre del titular.`,
-    CERTIFICADO: `Este documento es un certificado de un curso online (Coursera, edX, Platzi, etc). Extrae nombre del curso, plataforma y participante.`,
-    RECORD: `Este documento es un récord académico (notas de la universidad). Extrae institución y nombre del estudiante.`,
-    PROYECTO: `Este documento muestra un proyecto/portfolio. Extrae nombre del autor y tipo de proyecto.`,
-    EXPERIENCIA: `Este documento certifica experiencia laboral o LinkedIn. Extrae nombre, empresa y rol.`,
-    EXAMEN_INTERNO: `Este documento es un resultado de examen interno de ProfeLink.`,
-  };
+    const especificos: Record<Exclude<TipoDocumento, "CV">, string> = {
+      IDENTIDAD: `Este documento debería ser un DNI peruano. tipoDetectado = "DNI peruano" si lo es.`,
+      TITULO: `Este documento debería ser un título universitario o bachiller. Extrae institución, carrera y nombre del titular.`,
+      CERTIFICADO: `Este documento es un certificado de un curso online (Coursera, edX, Platzi, etc). Extrae nombre del curso, plataforma y participante.`,
+      RECORD: `Este documento es un récord académico (notas de la universidad). Extrae institución y nombre del estudiante.`,
+      PROYECTO: `Este documento muestra un proyecto/portfolio. Extrae nombre del autor y tipo de proyecto.`,
+      EXPERIENCIA: `Este documento certifica experiencia laboral o LinkedIn. Extrae nombre, empresa y rol.`,
+      EXAMEN_INTERNO: `Este documento es un resultado de examen interno de ProfeLink.`,
+    };
 
-  return base + "\n" + especificos[tipo];
+    return base + "\n" + especificos[tipo as Exclude<TipoDocumento, "CV">];
+  }
+
+  // Prompt especializado para CV — extrae mucho más
+  return `Analiza el CV adjunto y extrae los datos estructurados.
+El candidato se registró con el nombre: "${nombreUsuario}".
+
+DEBES responder ÚNICAMENTE con un JSON válido (sin markdown) con esta estructura EXACTA:
+{
+  "esDocumentoValido": boolean,
+  "tipoDetectado": "CV / Hoja de vida",
+  "nombrePersona": string | null,
+  "numeroDocumento": null,
+  "institucion": string | null,           // la institución educativa más reciente o relevante
+  "fechaEmision": null,
+  "tituloOCurso": string | null,          // el título educativo más alto
+  "textoAdicional": string | null,        // 1 línea resumen (ej: "5 años exp · Backend · ESPOL")
+  "anosExperiencia": number | null,       // suma de años de experiencia laboral
+  "especialidades": string[],             // 3-8 temas/habilidades que podría enseñar (ej: "Python", "Cálculo Diferencial", "Inglés", "React"). NO incluyas "Comunicación efectiva" ni soft skills genéricas.
+  "ciudad": string | null,                // ciudad de residencia si la menciona
+  "bioSugerida": string | null            // 2-3 frases en primera persona para "Sobre mí" en una plataforma de tutorías. NO inventes datos.
+}
+
+Reglas:
+- Si el archivo NO es un CV, esDocumentoValido = false y todo lo demás null.
+- anosExperiencia: estima sumando los rangos de fechas de cada trabajo. Si no hay fechas, devuelve null.
+- especialidades: enfócate en lo ENSEÑABLE (materias académicas, lenguajes, herramientas, idiomas). Máximo 8.
+- bioSugerida: tono profesional y cercano. Empieza con "Soy" o similar. NO incluyas datos que no estén en el CV.
+- Si el CV está en inglés, traduce las especialidades al español.
+`;
 }
 
 /* ───────────────────────────────────────────────────────────────

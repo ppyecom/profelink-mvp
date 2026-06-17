@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth";
 import { analizarCredencial, type TipoDocumento } from "@/lib/ai";
 
-const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
-const ALLOWED  = ["image/jpeg", "image/png", "image/webp"];
+const MAX_SIZE = 10 * 1024 * 1024; // 10 MB (CVs en PDF pueden pesar)
+const ALLOWED  = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 
 /**
  * POST /api/ai/extraer-datos
@@ -29,10 +29,10 @@ export async function POST(req: NextRequest) {
 
     if (!file) return NextResponse.json({ error: "Archivo no encontrado" }, { status: 400 });
     if (!ALLOWED.includes(file.type)) {
-      return NextResponse.json({ error: "Solo JPG, PNG o WebP" }, { status: 400 });
+      return NextResponse.json({ error: "Solo JPG, PNG, WebP o PDF" }, { status: 400 });
     }
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: "Imagen muy grande (máx 5 MB)" }, { status: 400 });
+      return NextResponse.json({ error: "Archivo muy grande (máx 10 MB)" }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());

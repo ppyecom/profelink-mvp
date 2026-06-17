@@ -12,6 +12,10 @@ interface DatosExtraidos {
   fechaEmision: string | null;
   tituloOCurso: string | null;
   textoAdicional: string | null;
+  anosExperiencia?: number | null;
+  especialidades?: string[];
+  ciudad?: string | null;
+  bioSugerida?: string | null;
 }
 
 interface Resultado {
@@ -22,7 +26,7 @@ interface Resultado {
   resumen: string;
 }
 
-type Tipo = "IDENTIDAD" | "TITULO" | "CERTIFICADO";
+type Tipo = "IDENTIDAD" | "TITULO" | "CERTIFICADO" | "CV";
 
 interface SugerenciasParaPerfil {
   ciudad?: string;
@@ -39,9 +43,10 @@ interface Props {
 }
 
 const OPCIONES: { value: Tipo; label: string; emoji: string; desc: string }[] = [
-  { value: "IDENTIDAD",  label: "DNI",                emoji: "🆔", desc: "Extrae nombre completo + número de DNI" },
-  { value: "TITULO",     label: "Título universitario", emoji: "🎓", desc: "Extrae institución, carrera y año" },
-  { value: "CERTIFICADO",label: "Certificado de curso", emoji: "📜", desc: "Extrae materia, plataforma y nombre del curso" },
+  { value: "CV",         label: "CV",                  emoji: "📄", desc: "🔥 Extrae TODO: institución, años de exp, materias, bio. PDF también." },
+  { value: "TITULO",     label: "Título",              emoji: "🎓", desc: "Extrae institución, carrera y año del título" },
+  { value: "CERTIFICADO",label: "Certificado",         emoji: "📜", desc: "Extrae materia, plataforma y nombre del curso" },
+  { value: "IDENTIDAD",  label: "DNI",                 emoji: "🆔", desc: "Extrae nombre completo + número de DNI" },
 ];
 
 export default function AutoCompletarPerfil({ onSugerir }: Props) {
@@ -77,27 +82,36 @@ export default function AutoCompletarPerfil({ onSugerir }: Props) {
     if (!resultado?.datos) return;
     const d = resultado.datos;
 
-    // Mapeo de los datos extraídos a campos del perfil
     const sug: SugerenciasParaPerfil = {};
     if (d.institucion) sug.institucion = d.institucion;
 
-    // Si extraído un título, sugerimos años de experiencia 1 por defecto
-    if (tipo === "TITULO" && d.fechaEmision) {
-      const ano = parseInt(d.fechaEmision.slice(0, 4), 10);
-      if (!isNaN(ano)) {
-        const exp = new Date().getFullYear() - ano;
-        if (exp >= 0 && exp <= 60) sug.anosExperiencia = exp;
+    // ── CV: tiene TODO listo, lo aplicamos directo ──
+    if (tipo === "CV") {
+      if (d.ciudad) sug.ciudad = d.ciudad;
+      if (typeof d.anosExperiencia === "number" && d.anosExperiencia >= 0) {
+        sug.anosExperiencia = d.anosExperiencia;
       }
-    }
-
-    // Si es certificado, sugerimos agregar la materia a especialidades
-    if (tipo === "CERTIFICADO" && d.tituloOCurso) {
-      sug.especialidades = [d.tituloOCurso.slice(0, 80)];
-    }
-
-    // Generamos una bio sugerida básica
-    if (d.tituloOCurso && d.institucion && tipo === "TITULO") {
-      sug.bio = `${d.tituloOCurso} formado en ${d.institucion}. Apasionado por enseñar y compartir conocimiento.`;
+      if (d.especialidades && d.especialidades.length > 0) {
+        sug.especialidades = d.especialidades.slice(0, 8);
+      }
+      if (d.bioSugerida) sug.bio = d.bioSugerida;
+    } else {
+      // ── Título: calculamos años exp por fecha emisión ──
+      if (tipo === "TITULO" && d.fechaEmision) {
+        const ano = parseInt(d.fechaEmision.slice(0, 4), 10);
+        if (!isNaN(ano)) {
+          const exp = new Date().getFullYear() - ano;
+          if (exp >= 0 && exp <= 60) sug.anosExperiencia = exp;
+        }
+      }
+      // ── Certificado: agregamos el curso como especialidad ──
+      if (tipo === "CERTIFICADO" && d.tituloOCurso) {
+        sug.especialidades = [d.tituloOCurso.slice(0, 80)];
+      }
+      // ── Bio sugerida básica para título ──
+      if (d.tituloOCurso && d.institucion && tipo === "TITULO") {
+        sug.bio = `${d.tituloOCurso} formado en ${d.institucion}. Apasionado por enseñar y compartir conocimiento.`;
+      }
     }
 
     onSugerir(sug, d);
@@ -144,18 +158,23 @@ export default function AutoCompletarPerfil({ onSugerir }: Props) {
       </div>
 
       {/* Selector de tipo */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {OPCIONES.map(o => (
           <button
             key={o.value}
             type="button"
             onClick={() => setTipo(o.value)}
-            className={`p-3 rounded-xl border-2 text-center transition-all ${
+            className={`p-3 rounded-xl border-2 text-center transition-all relative ${
               tipo === o.value
                 ? "border-violet-500 bg-violet-50"
                 : "border-gray-200 hover:border-gray-300"
             }`}
           >
+            {o.value === "CV" && (
+              <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">
+                BEST
+              </span>
+            )}
             <div className="text-2xl mb-1">{o.emoji}</div>
             <p className={`text-xs font-bold ${tipo === o.value ? "text-violet-700" : "text-gray-600"}`}>
               {o.label}
@@ -169,13 +188,19 @@ export default function AutoCompletarPerfil({ onSugerir }: Props) {
       {!resultado && (
         <label className={`flex items-center justify-center gap-2 w-full border-2 border-dashed border-violet-300 hover:bg-violet-50 rounded-xl py-6 text-sm text-violet-700 cursor-pointer transition-colors ${loading ? "opacity-60 cursor-wait" : ""}`}>
           {loading ? (
-            <><Loader2 className="w-5 h-5 animate-spin" /> Analizando con IA...</>
+            <><Loader2 className="w-5 h-5 animate-spin" /> Analizando con IA{tipo === "CV" ? " (puede tardar 5-10s)" : ""}...</>
           ) : (
-            <><Upload className="w-5 h-5" /> Subir imagen (JPG/PNG, máx 5MB)</>
+            <><Upload className="w-5 h-5" />
+              {tipo === "CV"
+                ? "Subir CV (PDF, JPG o PNG, máx 10MB)"
+                : "Subir imagen (JPG/PNG, máx 5MB)"}
+            </>
           )}
           <input
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept={tipo === "CV"
+              ? "application/pdf,image/jpeg,image/png,image/webp"
+              : "image/jpeg,image/png,image/webp"}
             disabled={loading}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) analizar(f); }}
             className="hidden"
@@ -201,16 +226,37 @@ export default function AutoCompletarPerfil({ onSugerir }: Props) {
             </div>
           ) : (
             <>
-              <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-3 space-y-1.5 text-sm">
+              <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-3 space-y-1.5 text-sm max-h-72 overflow-y-auto">
                 <p className="font-bold text-emerald-900 flex items-center gap-1">
                   <CheckCircle className="w-4 h-4" /> Datos extraídos
                 </p>
-                {resultado.datos.tipoDetectado && <Dato label="Tipo" valor={resultado.datos.tipoDetectado} />}
-                {resultado.datos.nombrePersona && <Dato label="Nombre" valor={resultado.datos.nombrePersona} />}
-                {resultado.datos.numeroDocumento && <Dato label="Número" valor={resultado.datos.numeroDocumento} />}
-                {resultado.datos.institucion && <Dato label="Institución" valor={resultado.datos.institucion} />}
-                {resultado.datos.tituloOCurso && <Dato label="Título/Curso" valor={resultado.datos.tituloOCurso} />}
-                {resultado.datos.fechaEmision && <Dato label="Fecha" valor={resultado.datos.fechaEmision} />}
+                {resultado.datos.tipoDetectado  && <Dato label="Tipo"        valor={resultado.datos.tipoDetectado} />}
+                {resultado.datos.nombrePersona  && <Dato label="Nombre"      valor={resultado.datos.nombrePersona} />}
+                {resultado.datos.numeroDocumento&& <Dato label="Número"      valor={resultado.datos.numeroDocumento} />}
+                {resultado.datos.institucion    && <Dato label="Institución" valor={resultado.datos.institucion} />}
+                {resultado.datos.tituloOCurso   && <Dato label="Título/Curso" valor={resultado.datos.tituloOCurso} />}
+                {resultado.datos.fechaEmision   && <Dato label="Fecha"       valor={resultado.datos.fechaEmision} />}
+                {resultado.datos.ciudad         && <Dato label="Ciudad"      valor={resultado.datos.ciudad} />}
+                {typeof resultado.datos.anosExperiencia === "number" &&
+                  <Dato label="Años exp." valor={String(resultado.datos.anosExperiencia)} />}
+                {resultado.datos.especialidades && resultado.datos.especialidades.length > 0 && (
+                  <div className="text-emerald-900">
+                    <span className="font-bold">Especialidades sugeridas:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {resultado.datos.especialidades.map((esp, i) => (
+                        <span key={i} className="bg-white border border-emerald-300 text-emerald-700 text-[10px] px-2 py-0.5 rounded">
+                          {esp}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {resultado.datos.bioSugerida && (
+                  <div className="text-emerald-900 mt-2 pt-2 border-t border-emerald-200">
+                    <p className="font-bold mb-1">Bio sugerida:</p>
+                    <p className="italic text-emerald-800 text-xs whitespace-pre-wrap">&ldquo;{resultado.datos.bioSugerida}&rdquo;</p>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2">
