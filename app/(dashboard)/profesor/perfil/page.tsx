@@ -5,6 +5,7 @@ import Image from "next/image";
 import { CheckCircle, Save, Plus, X, Upload, Camera, Loader2 } from "lucide-react";
 import CredencialesSection from "@/components/profesores/CredencialesSection";
 import VideoPresentacion from "@/components/profesores/VideoPresentacion";
+import AutoCompletarPerfil from "@/components/profesores/AutoCompletarPerfil";
 
 const NIVELES = ["SECUNDARIA", "TECNICA", "UNIVERSITARIA"] as const;
 const NIVEL_LABELS: Record<string, string> = { SECUNDARIA: "Secundaria", TECNICA: "Técnica", UNIVERSITARIA: "Universitaria" };
@@ -211,6 +212,23 @@ export default function ProfesorPerfilPage() {
             </div>
           </div>
         </div>
+
+        {/* Autocompletar con IA */}
+        <AutoCompletarPerfil
+          onSugerir={(sug) => {
+            setForm(f => ({
+              ...f,
+              // Solo aplica si el campo está vacío (no sobreescribimos lo que ya escribiste)
+              institucion:     f.institucion     || sug.institucion     || "",
+              ciudad:          f.ciudad          || sug.ciudad          || "",
+              anosExperiencia: f.anosExperiencia || sug.anosExperiencia || 0,
+              bio:             f.bio             || sug.bio             || "",
+              especialidades:  f.especialidades.length > 0
+                ? f.especialidades
+                : (sug.especialidades ?? []),
+            }));
+          }}
+        />
 
         {/* Información profesional */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
