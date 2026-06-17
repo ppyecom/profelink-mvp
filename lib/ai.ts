@@ -1,5 +1,6 @@
 /**
- * Wrapper de Google Gemini 1.5 Flash para verificación inteligente de credenciales.
+ * Wrapper de Google Gemini para verificación inteligente de credenciales.
+ * Usa el SDK oficial nuevo @google/genai (no el legacy @google/generative-ai).
  *
  * Capabilities usadas:
  *  - Multimodal (imagen + texto)
@@ -9,20 +10,21 @@
  * Requiere env var GEMINI_API_KEY (https://aistudio.google.com/apikey)
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
-// Lista de modelos a probar en orden (Google deprecó los 1.5).
-// Usamos el primero que esté disponible para nuestra API key.
+// Lista de modelos a probar en orden. Si el primero no está disponible
+// para tu API key, prueba el siguiente.
 const MODELOS_PREFERIDOS = [
+  "gemini-3.5-flash",
   "gemini-2.5-flash",
   "gemini-2.0-flash",
   "gemini-flash-latest",
 ];
 
 function getClient() {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new Error("Falta GEMINI_API_KEY en .env");
-  return new GoogleGenerativeAI(key);
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("Falta GEMINI_API_KEY en .env");
+  return new GoogleGenAI({ apiKey });
 }
 
 /* ───────────────────────────────────────────────────────────────
@@ -102,34 +104,37 @@ export async function analizarCredencial(
   nombreUsuario: string,
 ): Promise<ResultadoVerificacion> {
   try {
-    const client = getClient();
+    const ai = getClient();
     const prompt = getPromptParaTipo(tipo, nombreUsuario);
-    const imageInput = {
-      inlineData: { data: imagenBuffer.toString("base64"), mimeType },
-    };
+    const contents = [
+      { text: prompt },
+      { inlineData: { data: imagenBuffer.toString("base64"), mimeType } },
+    ];
 
     // Probamos cada modelo en orden hasta que uno responda OK
     let responseText: string | null = null;
     let lastError: unknown = null;
+
     for (const nombre of MODELOS_PREFERIDOS) {
       try {
-        const model = client.getGenerativeModel({
+        const response = await ai.models.generateContent({
           model: nombre,
-          generationConfig: { responseMimeType: "application/json", temperature: 0.1 },
+          contents,
+          config: {
+            responseMimeType: "application/json",
+            temperature: 0.1,
+          },
         });
-        const result = await model.generateContent([prompt, imageInput]);
-        responseText = result.response.text();
+        responseText = response.text ?? null;
         console.log(`[ai] usando modelo: ${nombre}`);
         break;
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         lastError = e;
-        // Si es 404 (modelo no existe), prueba con el siguiente
-        if (msg.includes("404") || msg.includes("not found")) {
+        if (msg.includes("404") || msg.includes("not found") || msg.includes("not supported")) {
           console.warn(`[ai] modelo ${nombre} no disponible, probando siguiente...`);
           continue;
         }
-        // Cualquier otro error (auth, cuota, etc.) → no tiene sentido seguir intentando
         throw e;
       }
     }
@@ -201,13 +206,9 @@ function compararNombres(extraido: string | null, esperado: string): boolean {
   const a = normalizarNombre(extraido);
   const b = normalizarNombre(esperado);
 
-  // Coincidencia exacta
   if (a === b) return true;
-
-  // Uno contiene al otro (ej. "Juan Pérez García" extraído vs "Juan Pérez" esperado)
   if (a.includes(b) || b.includes(a)) return true;
 
-  // Al menos 2 palabras en común y de longitud similar
   const palabrasA = a.split(" ").filter(p => p.length > 2);
   const palabrasB = b.split(" ").filter(p => p.length > 2);
   const enComun = palabrasA.filter(p => palabrasB.includes(p)).length;
