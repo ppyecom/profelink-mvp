@@ -52,13 +52,10 @@ export default function RegisterForm() {
         return;
       }
 
-      const rol = data.usuario.rol as string;
-      const destinos: Record<string, string> = {
-        ESTUDIANTE: "/estudiante",
-        PROFESOR: "/profesor",
-      };
-
-      router.push(destinos[rol] ?? "/");
+      // Después del registro mandamos a /bienvenida (wizard de onboarding).
+      // Esa página redirige sola al dashboard si el perfil ya está completo
+      // (no aplica al recién registrado, pero sí si vuelve a entrar después).
+      router.push("/bienvenida");
       router.refresh();
     } finally {
       setLoading(false);
