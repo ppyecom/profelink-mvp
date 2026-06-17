@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
     include: {
       usuario: { select: { nombre: true, email: true } },
       especialidades: { select: { materia: true } },
+      _count: { select: { disponibilidad: true } },
     },
   });
 
@@ -42,5 +43,6 @@ export async function GET(req: NextRequest) {
     yapeQrUrl: perfil.yapeQrUrl,
     plinNumero: perfil.plinNumero,
     plinQrUrl: perfil.plinQrUrl,
+    disponibilidadCount: perfil._count.disponibilidad,
   });
 }

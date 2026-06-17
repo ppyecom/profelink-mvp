@@ -1,16 +1,21 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { CheckCircle, Save, Plus, X, Upload, Camera, Loader2 } from "lucide-react";
 import CredencialesSection from "@/components/profesores/CredencialesSection";
 import VideoPresentacion from "@/components/profesores/VideoPresentacion";
 import AutoCompletarPerfil from "@/components/profesores/AutoCompletarPerfil";
+import EstadoPerfilCard from "@/components/profesores/EstadoPerfilCard";
 
 const NIVELES = ["SECUNDARIA", "TECNICA", "UNIVERSITARIA"] as const;
 const NIVEL_LABELS: Record<string, string> = { SECUNDARIA: "Secundaria", TECNICA: "Técnica", UNIVERSITARIA: "Universitaria" };
 
 export default function ProfesorPerfilPage() {
+  const searchParams = useSearchParams();
+  const vieneDeIA    = searchParams.get("bienvenida") === "1";
+  const [disponibilidadCount, setDispCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [ok, setOk] = useState(false);
@@ -101,6 +106,7 @@ export default function ProfesorPerfilPage() {
           plinNumero: data.plinNumero ?? "",
           plinQrUrl: data.plinQrUrl ?? "",
         });
+        setDispCount(data.disponibilidadCount ?? 0);
         setNivelVerificacion(data.nivelVerificacion ?? "BASICO");
       })
       .finally(() => setLoading(false));
@@ -148,6 +154,36 @@ export default function ProfesorPerfilPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
         <p className="text-gray-500 text-sm mt-1">Esta información es visible para los estudiantes</p>
+      </div>
+
+      {/* Estado del perfil + Banner IA (si viene de /bienvenida) */}
+      <div className="max-w-2xl mb-5">
+        <EstadoPerfilCard
+          perfil={{
+            bio: form.bio || null,
+            fotoUrl: form.fotoUrl || null,
+            videoPresentacion: form.videoPresentacion || null,
+            ciudad: form.ciudad || null,
+            institucion: form.institucion || null,
+            anosExperiencia: form.anosExperiencia ?? 0,
+            precio30min: form.precio30min,
+            nivel: form.nivel,
+            especialidades: form.especialidades,
+            yapeNumero: form.yapeNumero || null,
+            plinNumero: form.plinNumero || null,
+            yapeQrUrl: form.yapeQrUrl || null,
+            plinQrUrl: form.plinQrUrl || null,
+          }}
+          vieneDeIA={vieneDeIA}
+          llenadosPorIA={vieneDeIA ? [
+            ...(form.bio          ? ["Bio profesional"] : []),
+            ...(form.ciudad       ? ["Ciudad"] : []),
+            ...(form.institucion  ? ["Institución"] : []),
+            ...(form.anosExperiencia > 0 ? ["Años de experiencia"] : []),
+            ...(form.especialidades.length > 0 ? [`${form.especialidades.length} materias`] : []),
+          ] : []}
+          disponibilidad={disponibilidadCount}
+        />
       </div>
 
       <div className="max-w-2xl mb-5">
