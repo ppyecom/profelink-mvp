@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Award, Plus, X, Clock, CheckCircle, XCircle, FileText, Link2, Loader2, Trophy, Shield, BadgeCheck, Upload, Paperclip } from "lucide-react";
+import { Award, Plus, X, Clock, CheckCircle, XCircle, FileText, Link2, Loader2, Trophy, Shield, BadgeCheck, Upload, Paperclip, Sparkles, AlertTriangle } from "lucide-react";
 
 interface Credencial {
   id: string;
@@ -45,6 +45,7 @@ export default function CredencialesSection({ nivelVerificacion }: { nivelVerifi
   const [enviando, setEnviando] = useState(false);
   const [subiendoArchivo, setSubiendoArchivo] = useState(false);
   const [error, setError] = useState("");
+  const [analisisIA, setAnalisisIA] = useState<{ visible: boolean; estado: "analizando" | "aprobada" | "rechazada" | "pendiente" | "error"; mensaje: string } | null>(null);
 
   const cargar = async () => {
     setLoading(true);
@@ -80,8 +81,33 @@ export default function CredencialesSection({ nivelVerificacion }: { nivelVerifi
     const data = await res.json();
     setEnviando(false);
     if (!res.ok) { setError(data.error ?? "Error"); return; }
+
+    const credencialId = data.credencial?.id;
+    const esImagen = form.archivoUrl && /\.(jpe?g|png|webp)$/i.test(form.archivoUrl);
+
     setModalOpen(false);
     setForm({ tipo: "CERTIFICADO", titulo: "", descripcion: "", enlaceExterno: "", archivoUrl: "", archivoNombre: "" });
+
+    // 🤖 Si subió imagen, lanzamos el análisis IA automático
+    if (credencialId && esImagen) {
+      setAnalisisIA({ visible: true, estado: "analizando", mensaje: "Verificando con IA..." });
+      try {
+        const r = await fetch(`/api/credenciales/${credencialId}/analizar`, { method: "POST" });
+        const d = await r.json();
+        if (!r.ok) {
+          setAnalisisIA({ visible: true, estado: "error", mensaje: d.error ?? "No se pudo analizar" });
+        } else if (d.autoAprobada) {
+          setAnalisisIA({ visible: true, estado: "aprobada", mensaje: d.analisis?.resumen ?? "Credencial aprobada automáticamente" });
+        } else if (d.autoRechazada) {
+          setAnalisisIA({ visible: true, estado: "rechazada", mensaje: d.analisis?.resumen ?? "Rechazada — el archivo no parece un documento válido" });
+        } else {
+          setAnalisisIA({ visible: true, estado: "pendiente", mensaje: d.analisis?.resumen ?? "Análisis hecho — pendiente de revisión manual" });
+        }
+      } catch {
+        setAnalisisIA({ visible: true, estado: "error", mensaje: "Error de red durante el análisis" });
+      }
+    }
+
     cargar();
   };
 
@@ -117,6 +143,37 @@ export default function CredencialesSection({ nivelVerificacion }: { nivelVerifi
 
   return (
     <div className="bento p-5 elev-1 space-y-4">
+      {/* Toast de análisis IA */}
+      {analisisIA?.visible && (
+        <div className={
+          "p-4 rounded-2xl border-2 flex items-start gap-3 " +
+          (analisisIA.estado === "analizando" ? "bg-violet-50 border-violet-200" :
+           analisisIA.estado === "aprobada"   ? "bg-emerald-50 border-emerald-300" :
+           analisisIA.estado === "rechazada"  ? "bg-rose-50 border-rose-300" :
+           analisisIA.estado === "error"      ? "bg-amber-50 border-amber-300" :
+                                                  "bg-blue-50 border-blue-200")
+        }>
+          {analisisIA.estado === "analizando" ? <Loader2 className="w-5 h-5 animate-spin text-violet-600 mt-0.5" /> :
+           analisisIA.estado === "aprobada"   ? <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5" /> :
+           analisisIA.estado === "rechazada"  ? <XCircle className="w-5 h-5 text-rose-600 mt-0.5" /> :
+           analisisIA.estado === "error"      ? <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" /> :
+                                                  <Sparkles className="w-5 h-5 text-blue-600 mt-0.5" />}
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm text-ink-900 flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5 text-violet-500" />
+              Verificación con IA
+              {analisisIA.estado === "aprobada"  && <span className="text-emerald-700">— ¡Aprobada!</span>}
+              {analisisIA.estado === "rechazada" && <span className="text-rose-700">— Rechazada</span>}
+              {analisisIA.estado === "pendiente" && <span className="text-blue-700">— Revisión manual</span>}
+            </p>
+            <p className="text-xs text-ink-700 mt-1">{analisisIA.mensaje}</p>
+          </div>
+          <button onClick={() => setAnalisisIA(null)} className="text-ink-400 hover:text-ink-700">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header con nivel actual */}
       <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
         <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${info.color} flex items-center justify-center text-white shadow-elev-2`}>
@@ -167,8 +224,15 @@ export default function CredencialesSection({ nivelVerificacion }: { nivelVerifi
                       </a>
                     )}
                   </div>
-                  {c.notaAdmin && c.estado === "RECHAZADA" && (
-                    <p className="text-xs text-red-600 italic mt-1">Motivo: {c.notaAdmin}</p>
+                  {c.notaAdmin && (
+                    <p className={`text-xs italic mt-1 flex items-start gap-1 ${
+                      c.estado === "RECHAZADA" ? "text-rose-600" :
+                      c.estado === "APROBADA"  ? "text-emerald-700" :
+                                                  "text-ink-600"
+                    }`}>
+                      {c.notaAdmin.startsWith("🤖") && <Sparkles className="w-3 h-3 mt-0.5 flex-shrink-0" />}
+                      <span>{c.notaAdmin}</span>
+                    </p>
                   )}
                 </div>
                 <span className={`inline-flex items-center gap-1 ${style.bg} ${style.text} text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap`}>
