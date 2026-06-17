@@ -8,6 +8,8 @@ import CredencialesSection from "@/components/profesores/CredencialesSection";
 import VideoPresentacion from "@/components/profesores/VideoPresentacion";
 import AutoCompletarPerfil from "@/components/profesores/AutoCompletarPerfil";
 import EstadoPerfilCard from "@/components/profesores/EstadoPerfilCard";
+import DisponibilidadEditor from "@/components/disponibilidad/DisponibilidadEditor";
+import GoogleCalendarSection from "@/components/auth/GoogleCalendarSection";
 
 const NIVELES = ["SECUNDARIA", "TECNICA", "UNIVERSITARIA"] as const;
 const NIVEL_LABELS: Record<string, string> = { SECUNDARIA: "Secundaria", TECNICA: "Técnica", UNIVERSITARIA: "Universitaria" };
@@ -542,6 +544,28 @@ export default function ProfesorPerfilPage() {
               <Plus className="w-4 h-4" />
             </button>
           </div>
+        </div>
+
+        {/* Disponibilidad — integrada en el perfil */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <DisponibilidadEditor compact />
+        </div>
+
+        {/* Google Calendar — fuertemente recomendado */}
+        <div>
+          <div className="mb-2 px-1 flex items-center justify-between flex-wrap gap-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-700">
+              💡 Recomendado: vincula tu Google Calendar
+            </p>
+            <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded-full">
+              OPCIONAL · MUY ÚTIL
+            </span>
+          </div>
+          <GoogleCalendarSection />
+          <p className="text-[10px] text-gray-500 mt-2 px-1">
+            Si lo conectas: cada reserva aparecerá en tu calendario, y los alumnos
+            no podrán reservar cuando estés ocupado en otra cosa (lo detectamos automático).
+          </p>
         </div>
 
         {error && <p className="text-red-500 text-sm bg-red-50 rounded-xl px-4 py-3">{error}</p>}
