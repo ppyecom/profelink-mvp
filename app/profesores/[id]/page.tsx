@@ -53,7 +53,7 @@ export default async function ProfesorDetallePage({ params }: PageProps) {
   const perfil = await prisma.perfilProfesor.findUnique({
     where: { id },
     include: {
-      usuario: { select: { nombre: true } },
+      usuario: { select: { nombre: true, activo: true } },
       especialidades: { select: { materia: true } },
       disponibilidad: { where: { activo: true }, orderBy: [{ diaSemana: "asc" }, { horaInicio: "asc" }] },
       resenas: {
@@ -63,7 +63,8 @@ export default async function ProfesorDetallePage({ params }: PageProps) {
     },
   });
 
-  if (!perfil) notFound();
+  // Profe eliminado → 404 (no exponemos cuentas inactivas en perfil público)
+  if (!perfil || !perfil.usuario.activo) notFound();
 
   const rating  = Number(perfil.ratingPromedio);
   const precio  = Number(perfil.precioHora);

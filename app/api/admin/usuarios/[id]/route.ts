@@ -35,6 +35,16 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     },
   });
 
+  // Si es profesor, también desactiva su perfil (no aparece en búsquedas
+  // ni reciben reservas). El perfil no se borra para mantener integridad
+  // referencial con sesiones/reseñas pasadas.
+  if (usuario.rol === "PROFESOR") {
+    await prisma.perfilProfesor.updateMany({
+      where: { usuarioId: id },
+      data: { estado: "RECHAZADO" },
+    });
+  }
+
   await auditar({
     usuarioId: session.sub,
     accion: "ADMIN_ELIMINAR_USUARIO",

@@ -18,6 +18,8 @@ export async function GET(req: NextRequest) {
 
   const where: Record<string, unknown> = {
     estado: "VERIFICADO",
+    // Excluir profesores cuyo usuario fue eliminado (soft-delete)
+    usuario: { activo: true },
     ...(precioMax && { precioHora: { lte: precioMax } }),
     ...(modalidad && { modalidad }),
     ...(nivel && { nivel: { has: nivel } }),

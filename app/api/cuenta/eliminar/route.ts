@@ -77,6 +77,14 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // Si es profesor, deshabilita el perfil — para que no aparezca en búsquedas
+  if (session.rol === "PROFESOR") {
+    await prisma.perfilProfesor.updateMany({
+      where: { usuarioId: session.sub },
+      data: { estado: "RECHAZADO" },
+    });
+  }
+
   await auditar({
     usuarioId: session.sub,
     accion: "ELIMINAR_CUENTA",
