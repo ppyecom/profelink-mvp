@@ -8,7 +8,7 @@ import CredencialesSection from "@/components/profesores/CredencialesSection";
 import VideoPresentacion from "@/components/profesores/VideoPresentacion";
 import AutoCompletarPerfil from "@/components/profesores/AutoCompletarPerfil";
 import EstadoPerfilCard from "@/components/profesores/EstadoPerfilCard";
-import DisponibilidadEditor from "@/components/disponibilidad/DisponibilidadEditor";
+import DisponibilidadEditor, { type DisponibilidadEditorRef } from "@/components/disponibilidad/DisponibilidadEditor";
 import GoogleCalendarSection from "@/components/auth/GoogleCalendarSection";
 
 const NIVELES = ["SECUNDARIA", "TECNICA", "UNIVERSITARIA"] as const;
@@ -18,6 +18,7 @@ export default function ProfesorPerfilPage() {
   const searchParams = useSearchParams();
   const vieneDeIA    = searchParams.get("bienvenida") === "1";
   const [disponibilidadCount, setDispCount] = useState(0);
+  const disponibilidadRef = useRef<DisponibilidadEditorRef>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [ok, setOk] = useState(false);
@@ -131,19 +132,36 @@ export default function ProfesorPerfilPage() {
   const guardar = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true); setError(""); setOk(false);
+
+    // Guardamos el perfil principal
     const res = await fetch("/api/profesores", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, precioHora: Number(form.precioHora) || 50 }),
     });
-    if (res.ok) { setOk(true); setTimeout(() => setOk(false), 3000); }
-    else {
+
+    if (!res.ok) {
       const d = await res.json();
       const detail = d.details?.fieldErrors
         ? Object.entries(d.details.fieldErrors).map(([k,v]) => `${k}: ${(v as string[]).join(", ")}`).join(" | ")
         : null;
       setError(detail ?? d.error ?? "Error al guardar");
+      setSaving(false);
+      return;
     }
+
+    // También guardamos la disponibilidad si hubo cambios
+    if (disponibilidadRef.current?.esDirty()) {
+      const okDisp = await disponibilidadRef.current.guardar();
+      if (!okDisp) {
+        setError("Perfil guardado, pero falló la disponibilidad.");
+        setSaving(false);
+        return;
+      }
+    }
+
+    setOk(true);
+    setTimeout(() => setOk(false), 3000);
     setSaving(false);
   };
 
@@ -546,9 +564,9 @@ export default function ProfesorPerfilPage() {
           </div>
         </div>
 
-        {/* Disponibilidad — integrada en el perfil */}
+        {/* Disponibilidad — integrada en el perfil (el botón principal de abajo la guarda también) */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <DisponibilidadEditor compact />
+          <DisponibilidadEditor ref={disponibilidadRef} compact />
         </div>
 
         {/* Google Calendar — fuertemente recomendado */}
