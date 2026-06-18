@@ -75,19 +75,23 @@ ${chatContexto}
 PREGUNTA DEL TUTOR:
 "${pregunta}"
 
-Respóndele al TUTOR (no al alumno) directamente, sin saludos ni introducciones. Máximo 150 palabras.
-Sé conciso, pedagógico y peruano. Según lo que pide:
-- Analogía → 2-3 oraciones con elementos cotidianos
-- Ejemplo → un caso específico, no abstracto
-- Ejercicios → 2 o 3 con su solución en 1 línea
-- Pregunta para validar comprensión → 1 o 2 preguntas concretas
-- Resumen del chat → bullets cortos
-- Explicación → simplifica al nivel del alumno
+REGLAS ESTRICTAS (sigue exactamente):
+1. Identifica QUÉ pide el tutor. Responde SOLO eso. NO agregues secciones extra.
+   - Si pide "explicación" → SOLO explicas. NO das analogía ni ejercicios.
+   - Si pide "analogía" → SOLO una analogía. NO la explicas.
+   - Si pide "ejercicios" → SOLO los ejercicios con su solución corta.
+   - Si pide "resumen del chat" → SOLO bullets de lo conversado.
+   - Si pide "pregunta para validar" → SOLO 1 o 2 preguntas.
+   - Si la petición es ambigua, da SOLO lo más útil (típicamente explicación o analogía).
+2. Máximo 120 palabras TOTAL. Si necesitas más, recorta.
+3. SIN saludos, SIN "¡Hola!", SIN "Para tu alumno...". Ve directo al contenido.
+4. Markdown: máximo UN título ### opcional. Listas con -. **Negritas** moderadas. Código con backticks.
+5. SIN emoji.
 
-Markdown: títulos cortos con ###, listas con -, **negritas** para conceptos clave. SIN emoji. NO empieces con "¡Hola!" ni saludos.`;
+Responde ahora:`;
 
   try {
-    const r = await generarConFallback({ prompt, temperature: 0.6, maxTokens: 2048 });
+    const r = await generarConFallback({ prompt, temperature: 0.5, maxTokens: 4096 });
     if (!r) {
       return NextResponse.json({
         error: "La IA está saturada — reintenta en 1 minuto.",

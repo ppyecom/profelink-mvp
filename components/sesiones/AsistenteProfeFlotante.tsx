@@ -17,11 +17,11 @@ interface Props {
 }
 
 const SUGERENCIAS = [
-  "Dame una analogía simple para explicar este tema",
-  "Genera 3 ejercicios de práctica con su solución",
-  "Pregunta para validar si el alumno entendió",
-  "Resume lo que llevamos del chat",
-  "Explica esto de una manera más simple",
+  "Dame SOLO una analogía simple para este tema (sin nada más)",
+  "Dame SOLO 3 ejercicios con su solución (sin explicación)",
+  "Dame SOLO 1 pregunta para validar si el alumno entendió",
+  "Resume el chat en 4 bullets cortos",
+  "Explica este tema en 3 oraciones máximo",
 ];
 
 export default function AsistenteProfeFlotante({ sesionId, esProfesor }: Props) {
@@ -90,7 +90,7 @@ export default function AsistenteProfeFlotante({ sesionId, esProfesor }: Props) 
 
   // ────────── Panel abierto ──────────
   return (
-    <div className="fixed bottom-6 right-6 z-40 w-[380px] max-w-[calc(100vw-2rem)] bg-white border-2 border-violet-500 rounded-2xl shadow-2xl flex flex-col max-h-[600px]">
+    <div className="fixed bottom-6 right-6 z-40 w-[440px] max-w-[calc(100vw-2rem)] bg-white border-2 border-violet-500 rounded-2xl shadow-2xl flex flex-col max-h-[640px]">
       {/* Header */}
       <div className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-4 py-3 rounded-t-2xl flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -142,29 +142,35 @@ export default function AsistenteProfeFlotante({ sesionId, esProfesor }: Props) 
                 {m.rol === "tutor" ? (
                   <p className="whitespace-pre-wrap leading-relaxed">{m.texto}</p>
                 ) : (
-                  <div className="markdown-ia text-[13px] leading-relaxed">
+                  <div className="markdown-ia text-[13px] leading-relaxed space-y-2">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={{
-                        h1: ({ children }) => <h1 className="font-bold text-base mt-2 mb-1 text-violet-900">{children}</h1>,
-                        h2: ({ children }) => <h2 className="font-bold text-sm mt-2 mb-1 text-violet-900">{children}</h2>,
-                        h3: ({ children }) => <h3 className="font-bold text-sm mt-2 mb-1 text-violet-900">{children}</h3>,
-                        h4: ({ children }) => <h4 className="font-semibold text-[13px] mt-1.5 mb-0.5 text-violet-800">{children}</h4>,
-                        p:  ({ children }) => <p className="my-1">{children}</p>,
-                        strong: ({ children }) => <strong className="font-semibold text-violet-900">{children}</strong>,
-                        em: ({ children }) => <em className="italic">{children}</em>,
-                        ul: ({ children }) => <ul className="list-disc pl-4 my-1 space-y-0.5">{children}</ul>,
-                        ol: ({ children }) => <ol className="list-decimal pl-4 my-1 space-y-0.5">{children}</ol>,
-                        li: ({ children }) => <li className="my-0.5">{children}</li>,
+                        h1: ({ children }) => <h1 className="font-bold text-[14px] mt-3 mb-1.5 pb-1 border-b border-violet-200 text-violet-900 first:mt-0">{children}</h1>,
+                        h2: ({ children }) => <h2 className="font-bold text-[14px] mt-3 mb-1.5 pb-1 border-b border-violet-200 text-violet-900 first:mt-0">{children}</h2>,
+                        h3: ({ children }) => <h3 className="font-bold text-[13px] mt-3 mb-1.5 pb-1 border-b border-violet-200 text-violet-900 first:mt-0 uppercase tracking-wide">{children}</h3>,
+                        h4: ({ children }) => <h4 className="font-semibold text-[12px] mt-2 mb-1 text-violet-800 uppercase tracking-wide">{children}</h4>,
+                        p:  ({ children }) => <p className="my-1.5 leading-[1.55]">{children}</p>,
+                        strong: ({ children }) => <strong className="font-bold text-violet-900">{children}</strong>,
+                        em: ({ children }) => <em className="italic text-ink-700">{children}</em>,
+                        ul: ({ children }) => <ul className="my-1.5 pl-1 space-y-1.5">{children}</ul>,
+                        ol: ({ children }) => <ol className="my-1.5 pl-5 space-y-1.5 list-decimal">{children}</ol>,
+                        li: ({ children }) => (
+                          <li className="flex gap-2 leading-[1.5]">
+                            <span className="text-violet-500 mt-0.5 flex-shrink-0">▸</span>
+                            <span className="flex-1">{children}</span>
+                          </li>
+                        ),
                         code: ({ children, className }) => {
                           const inline = !className;
                           return inline
-                            ? <code className="bg-violet-100 text-violet-900 px-1 py-0.5 rounded text-[12px] font-mono">{children}</code>
-                            : <code className="block bg-ink-900 text-amber-200 p-2 rounded-md my-1 text-[12px] font-mono overflow-x-auto">{children}</code>;
+                            ? <code className="bg-violet-100 text-violet-900 px-1.5 py-0.5 rounded text-[12px] font-mono break-all">{children}</code>
+                            : <code className="block bg-ink-900 text-amber-200 p-2.5 rounded-md text-[12px] font-mono overflow-x-auto whitespace-pre">{children}</code>;
                         },
-                        pre: ({ children }) => <pre className="my-1 overflow-x-auto">{children}</pre>,
+                        pre: ({ children }) => <pre className="my-2 overflow-x-auto">{children}</pre>,
                         a:  ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-violet-700 underline">{children}</a>,
-                        blockquote: ({ children }) => <blockquote className="border-l-2 border-violet-300 pl-2 italic text-ink-700 my-1">{children}</blockquote>,
+                        blockquote: ({ children }) => <blockquote className="border-l-2 border-violet-300 pl-2 italic text-ink-700 my-1.5">{children}</blockquote>,
+                        hr: () => <hr className="my-3 border-violet-100" />,
                       }}
                     >
                       {m.texto}
