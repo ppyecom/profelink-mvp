@@ -26,24 +26,42 @@ async function ProfesoresGrid({ searchParams }: { searchParams: Awaited<PageProp
   const limit = 12;
   const skip = (page - 1) * limit;
 
+  // Buscamos por cada palabra del término independientemente (OR), permite
+  // que "SQL Python" matchee profes con SQL o Python o ambos.
+  const palabrasMateria = materia
+    ? materia.trim().split(/\s+/).filter(Boolean)
+    : [];
+
   const where: Record<string, unknown> = {
     estado: "VERIFICADO",
+    usuario: { activo: true },
     ...(precioMax && { precioHora: { lte: Number(precioMax) } }),
     ...(modalidad && { modalidad: modalidad as ModalidadSesion }),
     ...(nivel && { nivel: { has: nivel as NivelAcademico } }),
     ...(nivelVerificacion && { nivelVerificacion }),
     ...(primeraGratis === "1" && { aceptaPrimeraGratis: true }),
-    ...(materia && {
-      especialidades: { some: { materia: { contains: materia, mode: "insensitive" } } },
+    ...(palabrasMateria.length > 0 && {
+      especialidades: {
+        some: {
+          OR: palabrasMateria.map((palabra) => ({
+            materia: { contains: palabra, mode: "insensitive" as const },
+          })),
+        },
+      },
     }),
   };
 
-  const [total, perfiles] = await Promise.all([
+  // Cuando hay múltiples palabras, traemos más candidatos para re-rankear
+  // por número de coincidencias (mejor match primero)
+  const fetchLimit = palabrasMateria.length > 1 ? 60 : limit;
+  const fetchSkip  = palabrasMateria.length > 1 ? 0  : skip;
+
+  const [total, perfilesRaw] = await Promise.all([
     prisma.perfilProfesor.count({ where }),
     prisma.perfilProfesor.findMany({
       where,
-      skip,
-      take: limit,
+      skip: fetchSkip,
+      take: fetchLimit,
       orderBy: [{ ratingPromedio: "desc" }, { totalResenas: "desc" }],
       include: {
         usuario: { select: { nombre: true } },
@@ -51,6 +69,20 @@ async function ProfesoresGrid({ searchParams }: { searchParams: Awaited<PageProp
       },
     }),
   ]);
+
+  // Re-rank cuando hay multi-palabra: primero quien matchea TODAS
+  let perfiles = perfilesRaw;
+  if (palabrasMateria.length > 1) {
+    const palabras = palabrasMateria.map(p => p.toLowerCase());
+    perfiles = [...perfilesRaw]
+      .map(p => {
+        const espStr = p.especialidades.map(e => e.materia.toLowerCase()).join(" | ");
+        const score = palabras.reduce((acc, pal) => acc + (espStr.includes(pal) ? 1 : 0), 0);
+        return { ...p, _score: score };
+      })
+      .sort((a, b) => b._score - a._score || Number(b.ratingPromedio) - Number(a.ratingPromedio))
+      .slice(skip, skip + limit);
+  }
 
   const profesores = perfiles.map((p) => ({
     id: p.id,
