@@ -10,6 +10,13 @@ import type { ModalidadSesion } from "@/types";
 
 interface Slot { id: string; diaSemana: number; horaInicio: string; horaFin: string }
 
+interface TemaRestante {
+  orden: number;
+  titulo: string;
+  descripcion: string;
+  duracionMin: number;
+}
+
 interface PlanContext {
   planId: string;
   meta: string;
@@ -17,6 +24,7 @@ interface PlanContext {
   temaAsignado: string;
   descripcionTema: string;
   totalSesiones: number;
+  temasRestantes: TemaRestante[];
 }
 
 interface Props {
@@ -81,11 +89,13 @@ function expandirSlot(slot: Slot, duracionMin: number): { hora: string; label: s
 export default function ReservarSesionForm({ profesorId, disponibilidad, modalidad, precioHora, precio30min, aceptaPrimeraGratis, planContext }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<{ slotId: string; hora: string; fechaIso: string } | null>(null);
-  // Si viene de un plan, fuerza duración 60 (las sesiones del plan tienen su propia duración).
-  // Si el tema sugiere 30, lo respetamos.
-  const duracionPlan = planContext ? 60 : 60; // simple por ahora; el tema podría traer duracionMin
-  const [duracion, setDuracion] = useState<30 | 60>(duracionPlan as 30 | 60);
-  const [repetir, setRepetir]   = useState<number>(1); // semanas a repetir
+  const [duracion, setDuracion] = useState<30 | 60>(60);
+  const [repetir, setRepetir]   = useState<number>(1); // semanas a repetir (modo libre)
+
+  // Modo plan: cuántas sesiones del plan reservar con ESTE tutor, y si seguidas o por semana
+  const sesionesRestantesPlan = planContext?.temasRestantes.length ?? 0;
+  const [cantPlan, setCantPlan] = useState<number>(1);
+  const [modoPlan, setModoPlan] = useState<"SEGUIDAS" | "SEMANAL">("SEMANAL");
   const [notas, setNotas]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
@@ -169,12 +179,27 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
     const [hNum, mNum] = selected.hora.split(":").map(s => parseInt(s, 10));
 
     let creadas = 0;
-    let errores: string[] = [];
+    const errores: string[] = [];
 
-    for (let i = 0; i < repetir; i++) {
-      const fecha = addDays(fechaBase, i * 7);
-      const fechaInicio = setMinutes(setHours(fecha, hNum), mNum || 0);
-      const fechaFin    = duracion === 30 ? addMinutes(fechaInicio, 30) : addHours(fechaInicio, 1);
+    // Cantidad real a crear: modo plan = cantPlan, modo libre = repetir
+    const totalAReservar = planContext ? cantPlan : repetir;
+
+    for (let i = 0; i < totalAReservar; i++) {
+      // Cálculo de fecha según modo:
+      // - Plan SEGUIDAS = mismo día, cada sesión empieza tras la anterior (en horas)
+      // - Plan SEMANAL o modo libre = sumar i semanas
+      let fechaInicio: Date;
+      if (planContext && modoPlan === "SEGUIDAS") {
+        const base = setMinutes(setHours(fechaBase, hNum), mNum || 0);
+        fechaInicio = duracion === 30 ? addMinutes(base, i * 30) : addHours(base, i);
+      } else {
+        const fecha = addDays(fechaBase, i * 7);
+        fechaInicio = setMinutes(setHours(fecha, hNum), mNum || 0);
+      }
+      const fechaFin = duracion === 30 ? addMinutes(fechaInicio, 30) : addHours(fechaInicio, 1);
+
+      // En modo plan, cada iteración usa el tema correspondiente del plan
+      const temaIter = planContext?.temasRestantes[i];
 
       const res = await fetch("/api/sesiones", {
         method: "POST",
@@ -188,50 +213,56 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
           // Cupón solo en la primera (no se duplica)
           cuponCodigo: i === 0 && cuponCodigo ? cuponCodigo : undefined,
           notas: notas || undefined,
-          // Sólo asocia al plan en la PRIMERA sesión del lote (las repeticiones
-          // no son parte del plan, son sesiones sueltas continuas)
-          planId:       i === 0 && planContext ? planContext.planId       : undefined,
-          ordenEnPlan:  i === 0 && planContext ? planContext.ordenEnPlan  : undefined,
-          temaAsignado: i === 0 && planContext ? planContext.temaAsignado : undefined,
+          // En modo plan: cada sesión se vincula al plan con SU PROPIO tema
+          planId:       planContext && temaIter ? planContext.planId : undefined,
+          ordenEnPlan:  planContext && temaIter ? temaIter.orden     : undefined,
+          temaAsignado: planContext && temaIter ? temaIter.titulo    : undefined,
         }),
       });
       if (res.ok) creadas++;
       else {
         const data = await res.json();
-        errores.push(`Semana ${i+1}: ${data.error ?? "error"}`);
+        const etiqueta = planContext
+          ? `Sesión ${(planContext.ordenEnPlan + i)}`
+          : `Semana ${i+1}`;
+        errores.push(`${etiqueta}: ${data.error ?? "error"}`);
       }
     }
 
     if (creadas === 0) {
       setError(errores[0] ?? "Error al reservar");
     } else {
-      if (errores.length) setError(`Se reservaron ${creadas} de ${repetir} sesiones. ${errores.join(" · ")}`);
+      if (errores.length) setError(`Se reservaron ${creadas} de ${totalAReservar} sesiones. ${errores.join(" · ")}`);
       setSuccess(true);
-      // Si viene de un plan y quedan sesiones por reservar, vuelve a la búsqueda
-      // de tutor con el planId. Si no, a sus sesiones.
-      const destino = planContext && planContext.ordenEnPlan < planContext.totalSesiones
+      // Plan: si aún quedan sesiones por reservar, vuelve al buscador con el planId.
+      const reservadasPlan = planContext ? creadas : 0;
+      const quedanPlan = planContext ? sesionesRestantesPlan - reservadasPlan : 0;
+      const destino = planContext && quedanPlan > 0
         ? `/profesores?planId=${planContext.planId}`
         : "/estudiante/sesiones";
-      setTimeout(() => router.push(destino), 2200);
+      setTimeout(() => router.push(destino), 2500);
     }
     setLoading(false);
   };
 
   if (success) {
-    const quedan = planContext ? planContext.totalSesiones - planContext.ordenEnPlan : 0;
+    const reservadasOk = planContext ? cantPlan : repetir;
+    const quedan = planContext ? sesionesRestantesPlan - reservadasOk : 0;
     return (
       <div className="text-center py-4">
         <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
           <CheckCircle className="w-8 h-8 text-emerald-600" />
         </div>
-        <p className="font-heading font-bold text-brand-text">¡Sesión reservada!</p>
+        <p className="font-heading font-bold text-brand-text">
+          {reservadasOk === 1 ? "¡Sesión reservada!" : `¡${reservadasOk} sesiones reservadas!`}
+        </p>
         {planContext && quedan > 0 ? (
           <p className="text-sm text-violet-600 mt-1">
-            Te llevamos a buscar tutor para la sesión {planContext.ordenEnPlan + 1} de {planContext.totalSesiones}...
+            Te llevamos a buscar tutor para las {quedan} sesiones restantes de tu plan...
           </p>
         ) : planContext ? (
           <p className="text-sm text-emerald-600 mt-1 font-semibold">
-            🎉 Completaste tu plan! Redirigiendo a tus sesiones...
+            🎉 ¡Plan completo! Todas tus sesiones quedaron agendadas.
           </p>
         ) : (
           <p className="text-sm text-gray-400 mt-1">Redirigiendo a tus sesiones...</p>
@@ -292,7 +323,7 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
         </div>
       </div>
 
-      {/* Recurrencia — solo cuando NO hay plan IA (el plan ya define las sesiones) */}
+      {/* Recurrencia — solo cuando NO hay plan IA */}
       {!planContext && (
         <div>
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Repetir esta sesión</p>
@@ -317,15 +348,76 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
         </div>
       )}
 
-      {/* Aclaración cuando viene de un plan IA */}
-      {planContext && (
-        <div className="bg-violet-50 border-2 border-violet-200 rounded-xl p-3 text-xs text-violet-800 leading-relaxed">
-          <p className="font-bold mb-1">📌 ¿Y las otras {planContext.totalSesiones - 1} sesiones del plan?</p>
-          <p>
-            Ahora reservas <strong>solo la sesión {planContext.ordenEnPlan}</strong>. Una vez confirmada,
-            podrás elegir el <strong>mismo tutor u otro distinto</strong> para cada sesión siguiente.
-            Esto te da flexibilidad de probar diferentes profes según el tema.
-          </p>
+      {/* Selector multi-sesión cuando viene de un plan IA */}
+      {planContext && sesionesRestantesPlan > 1 && (
+        <div className="bg-violet-50 border-2 border-violet-200 rounded-2xl p-3 space-y-3">
+          <div>
+            <p className="text-xs font-bold text-violet-800 uppercase tracking-wider mb-2">
+              ¿Cuántas sesiones del plan quieres con este tutor?
+            </p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {[1, 2, 3, sesionesRestantesPlan].filter((v, i, a) => a.indexOf(v) === i && v <= sesionesRestantesPlan).map(n => (
+                <button key={n} type="button" onClick={() => setCantPlan(n)}
+                  className={cn(
+                    "py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all",
+                    cantPlan === n
+                      ? "bg-violet-600 border-violet-600 text-white"
+                      : "bg-white border-violet-300 text-violet-700 hover:border-violet-500"
+                  )}>
+                  {n === sesionesRestantesPlan && n > 3 ? `Todas (${n})` : `${n} ${n === 1 ? "sesión" : "sesiones"}`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {cantPlan > 1 && (
+            <div>
+              <p className="text-xs font-bold text-violet-800 uppercase tracking-wider mb-2">
+                ¿Cómo las agendamos?
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button type="button" onClick={() => setModoPlan("SEGUIDAS")}
+                  className={cn(
+                    "py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-left",
+                    modoPlan === "SEGUIDAS"
+                      ? "bg-fuchsia-600 border-fuchsia-600 text-white"
+                      : "bg-white border-fuchsia-200 text-fuchsia-700 hover:border-fuchsia-400"
+                  )}>
+                  <p className="font-bold">⚡ Seguidas el mismo día</p>
+                  <p className="text-[10px] opacity-80 mt-0.5 font-normal">
+                    {cantPlan}h continuas desde la hora elegida
+                  </p>
+                </button>
+                <button type="button" onClick={() => setModoPlan("SEMANAL")}
+                  className={cn(
+                    "py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-left",
+                    modoPlan === "SEMANAL"
+                      ? "bg-fuchsia-600 border-fuchsia-600 text-white"
+                      : "bg-white border-fuchsia-200 text-fuchsia-700 hover:border-fuchsia-400"
+                  )}>
+                  <p className="font-bold">📅 Una por semana</p>
+                  <p className="text-[10px] opacity-80 mt-0.5 font-normal">
+                    Mismo día y hora, semanas seguidas
+                  </p>
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="text-[11px] text-violet-700 leading-relaxed border-t border-violet-200 pt-2">
+            <p className="font-bold mb-1">📌 Temas que cubrirás con este tutor:</p>
+            <ol className="list-decimal pl-4 space-y-0.5">
+              {planContext.temasRestantes.slice(0, cantPlan).map(t => (
+                <li key={t.orden}>{t.titulo}</li>
+              ))}
+            </ol>
+            {sesionesRestantesPlan - cantPlan > 0 && (
+              <p className="mt-1.5 text-violet-600">
+                Quedan {sesionesRestantesPlan - cantPlan} sesiones del plan para reservar después
+                (con este u otro tutor).
+              </p>
+            )}
+          </div>
         </div>
       )}
 
@@ -465,26 +557,31 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
       </div>
 
       {/* Resumen del precio */}
-      <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 space-y-1">
-        <div className="flex justify-between text-xs text-gray-600">
-          <span>Precio sesión ({duracion} min) × {repetir}</span>
-          <span>{formatSoles(precioBase * repetir)}</span>
-        </div>
-        {descuento > 0 && (
-          <div className="flex justify-between text-xs text-emerald-700">
-            <span>Cupón {cuponCodigo} (solo 1ª sesión)</span>
-            <span>-{formatSoles(descuento)}</span>
+      {(() => {
+        const totalSesiones = planContext ? cantPlan : repetir;
+        const totalBase = precioBase * totalSesiones;
+        const totalFinal = Math.max(0, totalBase - descuento);
+        return (
+          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 space-y-1">
+            <div className="flex justify-between text-xs text-gray-600">
+              <span>Precio sesión ({duracion} min) × {totalSesiones}</span>
+              <span>{formatSoles(totalBase)}</span>
+            </div>
+            {descuento > 0 && (
+              <div className="flex justify-between text-xs text-emerald-700">
+                <span>Cupón {cuponCodigo} (solo 1ª sesión)</span>
+                <span>-{formatSoles(descuento)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-sm pt-1 border-t border-indigo-200">
+              <span className="text-brand-text">Total a pagar</span>
+              <span className={totalFinal === 0 ? "text-emerald-600" : "text-indigo-700"}>
+                {totalFinal === 0 ? "¡GRATIS! 🎁" : formatSoles(totalFinal)}
+              </span>
+            </div>
           </div>
-        )}
-        <div className="flex justify-between font-bold text-sm pt-1 border-t border-indigo-200">
-          <span className="text-brand-text">Total a pagar</span>
-          <span className={precioBase * repetir - descuento === 0 ? "text-emerald-600" : "text-indigo-700"}>
-            {(precioBase * repetir - descuento) === 0
-              ? "¡GRATIS! 🎁"
-              : formatSoles(precioBase * repetir - descuento)}
-          </span>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Notas */}
       <div>

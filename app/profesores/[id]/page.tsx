@@ -55,7 +55,7 @@ export default async function ProfesorDetallePage({ params, searchParams }: Page
   const session = await getSession();
 
   // Si viene de un plan, calculamos la SIGUIENTE sesión pendiente del plan
-  // (la primera del array de temas que aún no tiene una sesión creada).
+  // y TODAS las que quedan por reservar (para permitir multi-reserva con el mismo tutor).
   let planContext: {
     planId: string;
     meta: string;
@@ -63,6 +63,7 @@ export default async function ProfesorDetallePage({ params, searchParams }: Page
     temaAsignado: string;
     descripcionTema: string;
     totalSesiones: number;
+    temasRestantes: Array<{ orden: number; titulo: string; descripcion: string; duracionMin: number }>;
   } | null = null;
 
   if (planId && session?.rol === "ESTUDIANTE") {
@@ -73,9 +74,10 @@ export default async function ProfesorDetallePage({ params, searchParams }: Page
     if (plan && plan.estudianteId === session.sub) {
       const temas = Array.isArray(plan.temas) ? plan.temas as Array<{ orden: number; titulo: string; descripcion: string; duracionMin: number }> : [];
       const ordenesYaReservados = new Set(plan.sesiones.map(s => s.ordenEnPlan).filter((n): n is number => n !== null));
-      const proximoTema = temas
+      const restantes = temas
         .sort((a, b) => a.orden - b.orden)
-        .find(t => !ordenesYaReservados.has(t.orden));
+        .filter(t => !ordenesYaReservados.has(t.orden));
+      const proximoTema = restantes[0];
 
       if (proximoTema) {
         planContext = {
@@ -85,6 +87,7 @@ export default async function ProfesorDetallePage({ params, searchParams }: Page
           temaAsignado: proximoTema.titulo,
           descripcionTema: proximoTema.descripcion,
           totalSesiones: plan.numSesionesRecomendadas,
+          temasRestantes: restantes,
         };
       }
     }
