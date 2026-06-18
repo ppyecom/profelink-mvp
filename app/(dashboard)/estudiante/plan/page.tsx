@@ -255,14 +255,22 @@ export default function PlanEstudiosPage() {
               Ahora reserva la primera sesión. El tema se asignará automáticamente al tutor que elijas.
             </p>
           </div>
-          <Link
-            href={`/profesores?planId=${planGuardado}`}
-            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl"
-          >
-            <BookOpen className="w-4 h-4" />
-            Buscar tutor para empezar
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <Link
+              href={`/profesores?planId=${planGuardado}`}
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl"
+            >
+              <BookOpen className="w-4 h-4" />
+              Buscar tutor para empezar
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/estudiante/mis-planes"
+              className="inline-flex items-center gap-2 bg-white hover:bg-emerald-50 border-2 border-emerald-400 text-emerald-700 font-bold px-5 py-3 rounded-xl"
+            >
+              Ver mis planes
+            </Link>
+          </div>
         </div>
       )}
     </div>
