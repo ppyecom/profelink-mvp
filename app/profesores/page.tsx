@@ -186,7 +186,7 @@ async function ProfesoresGrid({ searchParams }: { searchParams: Awaited<PageProp
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-            {profesores.map((p) => <ProfesorCard key={p.id} profesor={p} />)}
+            {profesores.map((p) => <ProfesorCard key={p.id} profesor={p} planId={planId} />)}
           </div>
 
           {totalPages > 1 && (

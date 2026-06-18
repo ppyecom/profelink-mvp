@@ -13,7 +13,10 @@ import NivelBadge from "@/components/profesores/NivelBadge";
 import BotonFavorito from "@/components/profesores/BotonFavorito";
 import type { NivelAcademico, ModalidadSesion } from "@/types";
 
-interface PageProps { params: Promise<{ id: string }> }
+interface PageProps {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ planId?: string }>;
+}
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
@@ -46,9 +49,46 @@ function RatingBreakdown({ rating, total }: { rating: number; total: number }) {
   );
 }
 
-export default async function ProfesorDetallePage({ params }: PageProps) {
+export default async function ProfesorDetallePage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const { planId } = await searchParams;
   const session = await getSession();
+
+  // Si viene de un plan, calculamos la SIGUIENTE sesión pendiente del plan
+  // (la primera del array de temas que aún no tiene una sesión creada).
+  let planContext: {
+    planId: string;
+    meta: string;
+    ordenEnPlan: number;
+    temaAsignado: string;
+    descripcionTema: string;
+    totalSesiones: number;
+  } | null = null;
+
+  if (planId && session?.rol === "ESTUDIANTE") {
+    const plan = await prisma.planEstudio.findUnique({
+      where: { id: planId },
+      include: { sesiones: { select: { ordenEnPlan: true } } },
+    });
+    if (plan && plan.estudianteId === session.sub) {
+      const temas = Array.isArray(plan.temas) ? plan.temas as Array<{ orden: number; titulo: string; descripcion: string; duracionMin: number }> : [];
+      const ordenesYaReservados = new Set(plan.sesiones.map(s => s.ordenEnPlan).filter((n): n is number => n !== null));
+      const proximoTema = temas
+        .sort((a, b) => a.orden - b.orden)
+        .find(t => !ordenesYaReservados.has(t.orden));
+
+      if (proximoTema) {
+        planContext = {
+          planId: plan.id,
+          meta: plan.meta,
+          ordenEnPlan: proximoTema.orden,
+          temaAsignado: proximoTema.titulo,
+          descripcionTema: proximoTema.descripcion,
+          totalSesiones: plan.numSesionesRecomendadas,
+        };
+      }
+    }
+  }
 
   const perfil = await prisma.perfilProfesor.findUnique({
     where: { id },
@@ -335,14 +375,32 @@ export default async function ProfesorDetallePage({ params }: PageProps) {
                 {/* Booking form */}
                 <div className="p-5">
                   {session?.rol === "ESTUDIANTE" ? (
-                    <ReservarSesionForm
-                      profesorId={perfil.id}
-                      disponibilidad={slots}
-                      modalidad={perfil.modalidad as ModalidadSesion}
-                      precioHora={Number(perfil.precioHora)}
-                      precio30min={perfil.precio30min ? Number(perfil.precio30min) : null}
-                      aceptaPrimeraGratis={perfil.aceptaPrimeraGratis}
-                    />
+                    <>
+                      {planContext && (
+                        <div className="mb-4 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-2xl p-4 border-2 border-ink-900 shadow-[4px_4px_0_0_rgba(28,25,23,1)]">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Sparkles className="w-4 h-4" />
+                            <p className="text-[10px] font-bold uppercase tracking-wider">
+                              Reservando sesión {planContext.ordenEnPlan} de {planContext.totalSesiones} de tu plan IA
+                            </p>
+                          </div>
+                          <p className="font-display font-black text-base leading-tight mb-2">{planContext.temaAsignado}</p>
+                          <p className="text-xs text-white/90 leading-snug">{planContext.descripcionTema}</p>
+                          <p className="text-[10px] text-white/70 mt-2 italic">
+                            El profesor recibirá automáticamente el tema asignado.
+                          </p>
+                        </div>
+                      )}
+                      <ReservarSesionForm
+                        profesorId={perfil.id}
+                        disponibilidad={slots}
+                        modalidad={perfil.modalidad as ModalidadSesion}
+                        precioHora={Number(perfil.precioHora)}
+                        precio30min={perfil.precio30min ? Number(perfil.precio30min) : null}
+                        aceptaPrimeraGratis={perfil.aceptaPrimeraGratis}
+                        planContext={planContext}
+                      />
+                    </>
                   ) : !session ? (
                     <div className="space-y-3">
                       <Link href="/register" className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-4 rounded-2xl transition-all shadow-elev-2 hover:-translate-y-0.5">
