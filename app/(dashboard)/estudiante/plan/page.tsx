@@ -16,7 +16,7 @@ interface Plan {
   meta: string;
   numSesiones: number;
   diasAntesObjetivo: number | null;
-  materiaPrincipal: string;
+  materiaPrincipal: string;   // viene de la IA
   nivel: string;
   temas: Tema[];
   resumenEstrategia: string;
@@ -71,6 +71,7 @@ export default function PlanEstudiosPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           meta: plan.meta,
+          materiaPrincipal: plan.materiaPrincipal,
           fechaObjetivo: fecha || null,
           temas: plan.temas,
           numSesionesRecomendadas: plan.numSesiones,

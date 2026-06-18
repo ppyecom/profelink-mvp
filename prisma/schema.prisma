@@ -337,6 +337,7 @@ model PlanEstudio {
   estudianteId           String      @map("estudiante_id") @db.Uuid
   profesorId             String?     @map("profesor_id") @db.Uuid
   meta                   String      @db.VarChar(300)
+  materiaPrincipal       String?     @map("materia_principal") @db.VarChar(80)
   fechaObjetivo          DateTime?   @map("fecha_objetivo") @db.Timestamptz()
   temas                  Json        // [{ orden, titulo, descripcion, duracionMin }]
   numSesionesRecomendadas Int        @map("num_sesiones_recomendadas")

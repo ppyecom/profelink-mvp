@@ -17,11 +17,27 @@ interface PageProps {
     nivelVerificacion?: string;
     primeraGratis?: string;
     page?: string;
+    planId?: string;
   }>;
 }
 
 async function ProfesoresGrid({ searchParams }: { searchParams: Awaited<PageProps["searchParams"]> }) {
-  const { materia, nivel, precioMax, modalidad, nivelVerificacion, primeraGratis, page: pageStr } = searchParams;
+  const { nivel, precioMax, modalidad, nivelVerificacion, primeraGratis, page: pageStr, planId } = searchParams;
+  let materia = searchParams.materia;
+
+  // Si llega ?planId=X, autofiltramos por la materia principal del plan
+  let plan: { id: string; meta: string; materiaPrincipal: string | null; numSesionesRecomendadas: number } | null = null;
+  if (planId) {
+    plan = await prisma.planEstudio.findUnique({
+      where: { id: planId },
+      select: { id: true, meta: true, materiaPrincipal: true, numSesionesRecomendadas: true },
+    });
+    // Si el plan tiene materia y el alumno NO especificó otra, usamos la del plan
+    if (plan?.materiaPrincipal && !materia) {
+      materia = plan.materiaPrincipal;
+    }
+  }
+
   const page = Math.max(1, Number(pageStr ?? "1"));
   const limit = 12;
   const skip = (page - 1) * limit;
@@ -111,12 +127,44 @@ async function ProfesoresGrid({ searchParams }: { searchParams: Awaited<PageProp
     if (nivel) params.set("nivel", nivel);
     if (precioMax) params.set("precioMax", precioMax);
     if (modalidad) params.set("modalidad", modalidad);
+    if (planId) params.set("planId", planId);
     params.set("page", String(p));
     return `/profesores?${params.toString()}`;
   };
 
   return (
     <>
+      {/* Banner contexto del plan de estudios IA */}
+      {plan && (
+        <div className="mb-5 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white border-2 border-ink-900 rounded-2xl p-4 shadow-[4px_4px_0_0_rgba(28,25,23,1)]">
+          <div className="flex items-start gap-3 flex-wrap">
+            <div className="w-10 h-10 bg-white text-violet-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              ✨
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/80">Buscando tutor para tu plan IA</p>
+              <p className="font-display font-black text-lg leading-tight">{plan.meta}</p>
+              <div className="flex flex-wrap gap-2 mt-1.5">
+                {plan.materiaPrincipal && (
+                  <span className="text-xs bg-white/20 backdrop-blur px-2 py-0.5 rounded-full font-bold">
+                    📚 Materia: {plan.materiaPrincipal}
+                  </span>
+                )}
+                <span className="text-xs bg-white/20 backdrop-blur px-2 py-0.5 rounded-full font-bold">
+                  📅 {plan.numSesionesRecomendadas} sesiones
+                </span>
+              </div>
+            </div>
+            <Link
+              href="/profesores"
+              className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg font-semibold transition-colors"
+            >
+              Quitar filtro ✕
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-ink-500 font-medium">
           {total === 0 ? "Sin resultados" : <><strong className="text-ink-900">{total}</strong> tutor{total !== 1 ? "es" : ""} {total === 1 ? "encontrado" : "encontrados"}</>}
