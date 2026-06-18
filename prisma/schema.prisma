@@ -112,6 +112,7 @@ model Usuario {
   cupones                Cupon[]
   favoritos              Favorito[]
   archivosSubidos        ArchivoSesion[]
+  planesEstudio          PlanEstudio[] @relation("PlanesEstudiante")
 
   @@map("usuarios")
 }
@@ -206,6 +207,7 @@ model PerfilProfesor {
   retiros         SolicitudRetiro[]
   credenciales    Credencial[]
   favoritedBy     Favorito[]
+  planesAsignados PlanEstudio[]
 
   @@map("perfiles_profesor")
 }
@@ -321,7 +323,32 @@ model Sesion {
   archivos        ArchivoSesion[]
   trazosPizarra   TrazoPizarra[]
 
+  // Plan de estudios IA (opcional)
+  planId          String?         @map("plan_id") @db.Uuid
+  ordenEnPlan     Int?            @map("orden_en_plan")
+  temaAsignado    String?         @map("tema_asignado") @db.VarChar(200)
+  plan            PlanEstudio?    @relation(fields: [planId], references: [id], onDelete: SetNull)
+
   @@map("sesiones")
+}
+
+model PlanEstudio {
+  id                     String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  estudianteId           String      @map("estudiante_id") @db.Uuid
+  profesorId             String?     @map("profesor_id") @db.Uuid
+  meta                   String      @db.VarChar(300)
+  fechaObjetivo          DateTime?   @map("fecha_objetivo") @db.Timestamptz()
+  temas                  Json        // [{ orden, titulo, descripcion, duracionMin }]
+  numSesionesRecomendadas Int        @map("num_sesiones_recomendadas")
+  estado                 String      @default("ACTIVO") @db.VarChar(20)
+  createdAt              DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+
+  estudiante             Usuario        @relation("PlanesEstudiante", fields: [estudianteId], references: [id], onDelete: Cascade)
+  profesor               PerfilProfesor? @relation(fields: [profesorId], references: [id], onDelete: SetNull)
+  sesiones               Sesion[]
+
+  @@index([estudianteId, estado])
+  @@map("planes_estudio")
 }
 
 model TrazoPizarra {

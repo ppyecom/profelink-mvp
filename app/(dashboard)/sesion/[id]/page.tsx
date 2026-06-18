@@ -26,6 +26,18 @@ export default async function SesionPage({ params }: PageProps) {
     include: {
       estudiante: { select: { id: true, nombre: true } },
       profesor: { include: { usuario: { select: { id: true, nombre: true } } } },
+      plan: {
+        select: {
+          id: true,
+          meta: true,
+          temas: true,
+          numSesionesRecomendadas: true,
+          sesiones: {
+            select: { id: true, ordenEnPlan: true, estado: true, temaAsignado: true },
+            orderBy: { ordenEnPlan: "asc" },
+          },
+        },
+      },
     },
   });
 
@@ -78,6 +90,50 @@ export default async function SesionPage({ params }: PageProps) {
           </div>
         </div>
       </div>
+
+      {/* Banner de plan de estudios (si esta sesión es parte de un plan) */}
+      {sesion.plan && (
+        <div className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 text-white border-2 border-ink-900 rounded-2xl p-5 shadow-[4px_4px_0_0_rgba(28,25,23,1)]">
+          <div className="flex items-start gap-3 flex-wrap">
+            <div className="w-12 h-12 bg-white text-violet-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span className="font-display font-black text-xl">
+                {sesion.ordenEnPlan ?? "?"}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-90">
+                ✨ Sesión {sesion.ordenEnPlan ?? "?"} de {sesion.plan.numSesionesRecomendadas} — Plan de estudios IA
+              </p>
+              <h2 className="font-display font-black text-xl mt-0.5">{sesion.plan.meta}</h2>
+              {sesion.temaAsignado && (
+                <div className="mt-3 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1">
+                    🎯 Tema sugerido para hoy
+                  </p>
+                  <p className="font-bold text-white">{sesion.temaAsignado}</p>
+                </div>
+              )}
+              {/* Progreso del plan */}
+              <div className="mt-3 flex gap-1">
+                {sesion.plan.sesiones.map((s) => {
+                  const isActual = s.id === sesion.id;
+                  const completada = s.estado === "COMPLETADA";
+                  return (
+                    <div
+                      key={s.id}
+                      title={s.temaAsignado ?? `Sesión ${s.ordenEnPlan}`}
+                      className={`h-2 flex-1 rounded-full ${
+                        isActual ? "bg-white" :
+                        completada ? "bg-emerald-300" : "bg-white/30"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {sesion.modalidad === "VIRTUAL" && (
         <>

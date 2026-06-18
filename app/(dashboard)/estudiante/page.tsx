@@ -197,6 +197,27 @@ export default async function EstudianteDashboard() {
         </div>
       </div>
 
+      {/* ── CTA Plan de estudios IA ────────── */}
+      <Link
+        href="/estudiante/plan"
+        data-cursor="hover"
+        className="block bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 hover:from-violet-600 hover:via-fuchsia-600 hover:to-pink-600 text-white border-2 border-ink-900 rounded-2xl p-5 shadow-[4px_4px_0_0_rgba(28,25,23,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0_0_rgba(28,25,23,1)] transition-all"
+      >
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="w-14 h-14 bg-white text-violet-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-7 h-7" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">✨ Nuevo · Powered by IA</p>
+            <h2 className="font-display font-black text-xl">Crea tu plan de estudios con IA</h2>
+            <p className="text-sm text-white/90 mt-0.5">
+              Dile tu meta — Ej: <em>&quot;Preparar parcial Cálculo II del 30 jun&quot;</em> — y la IA arma un plan con temas + sesiones + ejercicios.
+            </p>
+          </div>
+          <ArrowRight className="w-6 h-6" />
+        </div>
+      </Link>
+
       {/* ── ACCIONES rápidas como stickers ────────── */}
       <div>
         <p className="font-mono text-xs uppercase tracking-widest text-ink-700 font-bold mb-3">⚡ Acciones rápidas</p>

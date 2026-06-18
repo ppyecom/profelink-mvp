@@ -86,6 +86,11 @@ export async function POST(req: NextRequest) {
   }
 
   const { profesorId, fechaInicio, fechaFin, modalidad, notas, duracionMinutos, cuponCodigo } = parsed.data;
+  // Plan de estudios (opcional) — vienen del body sin validar por Zod (campos extra)
+  const body2 = await req.clone().json().catch(() => ({}));
+  const planId       = body2.planId       as string | undefined;
+  const ordenEnPlan  = body2.ordenEnPlan  as number | undefined;
+  const temaAsignado = body2.temaAsignado as string | undefined;
 
   const perfil = await prisma.perfilProfesor.findUnique({
     where: { id: profesorId, estado: "VERIFICADO" },
@@ -167,6 +172,10 @@ export async function POST(req: NextRequest) {
         descuentoCupon: descuento,
         cuponCodigo: cuponAplicado,
         notas,
+        // Plan de estudios IA (opcional)
+        planId: planId ?? null,
+        ordenEnPlan: ordenEnPlan ?? null,
+        temaAsignado: temaAsignado ?? null,
       },
     });
 
