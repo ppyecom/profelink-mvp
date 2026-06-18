@@ -86,11 +86,10 @@ export async function POST(req: NextRequest) {
   }
 
   const { profesorId, fechaInicio, fechaFin, modalidad, notas, duracionMinutos, cuponCodigo } = parsed.data;
-  // Plan de estudios (opcional) — vienen del body sin validar por Zod (campos extra)
-  const body2 = await req.clone().json().catch(() => ({}));
-  const planId       = body2.planId       as string | undefined;
-  const ordenEnPlan  = body2.ordenEnPlan  as number | undefined;
-  const temaAsignado = body2.temaAsignado as string | undefined;
+  // Plan de estudios (opcional) — leídos del MISMO body ya parseado (no se puede leer req 2 veces)
+  const planId       = (body as { planId?: string       }).planId;
+  const ordenEnPlan  = (body as { ordenEnPlan?: number  }).ordenEnPlan;
+  const temaAsignado = (body as { temaAsignado?: string }).temaAsignado;
 
   const perfil = await prisma.perfilProfesor.findUnique({
     where: { id: profesorId, estado: "VERIFICADO" },
