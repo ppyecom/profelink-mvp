@@ -86,9 +86,11 @@ function expandirSlot(slot: Slot, duracionMin: number): { hora: string; label: s
   return sesiones;
 }
 
+interface SlotPick { slotId: string; hora: string; fechaIso: string }
+
 export default function ReservarSesionForm({ profesorId, disponibilidad, modalidad, precioHora, precio30min, aceptaPrimeraGratis, planContext }: Props) {
   const router = useRouter();
-  const [selected, setSelected] = useState<{ slotId: string; hora: string; fechaIso: string } | null>(null);
+  const [selected, setSelected] = useState<SlotPick | null>(null);
   const [duracion, setDuracion] = useState<30 | 60>(60);
   const [repetir, setRepetir]   = useState<number>(1); // semanas a repetir (modo libre)
 
@@ -96,6 +98,9 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
   const sesionesRestantesPlan = planContext?.temasRestantes.length ?? 0;
   const [cantPlan, setCantPlan] = useState<number>(1);
   const [modoPlan, setModoPlan] = useState<"SEGUIDAS" | "SEMANAL" | "INTERCALADAS">("SEMANAL");
+
+  // INTERCALADAS: multi-select de horarios — uno por cada sesión del plan
+  const [slotsIntercalados, setSlotsIntercalados] = useState<SlotPick[]>([]);
   const [notas, setNotas]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
@@ -116,6 +121,7 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
   // continua cambia y el slot ya elegido puede no ser válido. Reset.
   useEffect(() => {
     setSelected(null);
+    setSlotsIntercalados([]);
   }, [cantPlan, modoPlan, duracion]);
 
   // Cargar cupones disponibles del estudiante
@@ -178,34 +184,45 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
   }
 
   const handleReservar = async () => {
-    if (!selected) return;
-    setError(""); setLoading(true);
+    const esIntercaladas = planContext && modoPlan === "INTERCALADAS" && cantPlan > 1;
 
-    const fechaBase = new Date(selected.fechaIso);
-    const [hNum, mNum] = selected.hora.split(":").map(s => parseInt(s, 10));
+    // Validación de selección
+    if (esIntercaladas && slotsIntercalados.length !== cantPlan) {
+      setError(`Faltan ${cantPlan - slotsIntercalados.length} horarios por seleccionar`);
+      return;
+    }
+    if (!esIntercaladas && !selected) return;
+
+    setError(""); setLoading(true);
 
     let creadas = 0;
     const errores: string[] = [];
 
     // Cantidad real a crear:
-    // - modo plan INTERCALADAS = solo 1 (el alumno elige cada horario individualmente)
-    // - modo plan SEGUIDAS/SEMANAL = cantPlan
+    // - INTERCALADAS = cantPlan (cada slot es uno distinto)
+    // - SEGUIDAS/SEMANAL plan = cantPlan
     // - modo libre (sin plan) = repetir
-    const totalAReservar = planContext
-      ? (modoPlan === "INTERCALADAS" ? 1 : cantPlan)
-      : repetir;
+    const totalAReservar = planContext ? cantPlan : repetir;
 
     for (let i = 0; i < totalAReservar; i++) {
-      // Cálculo de fecha según modo:
-      // - Plan SEGUIDAS = mismo día, cada sesión empieza tras la anterior (en horas)
-      // - Plan SEMANAL o modo libre = sumar i semanas
+      // Resolver fechaInicio según modo
       let fechaInicio: Date;
-      if (planContext && modoPlan === "SEGUIDAS") {
-        const base = setMinutes(setHours(fechaBase, hNum), mNum || 0);
-        fechaInicio = duracion === 30 ? addMinutes(base, i * 30) : addHours(base, i);
+      if (esIntercaladas) {
+        // En INTERCALADAS cada slot del array tiene su propio fecha/hora
+        const pick = slotsIntercalados[i];
+        const fb = new Date(pick.fechaIso);
+        const [phH, phM] = pick.hora.split(":").map(s => parseInt(s, 10));
+        fechaInicio = setMinutes(setHours(fb, phH), phM || 0);
       } else {
-        const fecha = addDays(fechaBase, i * 7);
-        fechaInicio = setMinutes(setHours(fecha, hNum), mNum || 0);
+        const fechaBase = new Date(selected!.fechaIso);
+        const [hNum, mNum] = selected!.hora.split(":").map(s => parseInt(s, 10));
+        if (planContext && modoPlan === "SEGUIDAS") {
+          const base = setMinutes(setHours(fechaBase, hNum), mNum || 0);
+          fechaInicio = duracion === 30 ? addMinutes(base, i * 30) : addHours(base, i);
+        } else {
+          const fecha = addDays(fechaBase, i * 7);
+          fechaInicio = setMinutes(setHours(fecha, hNum), mNum || 0);
+        }
       }
       const fechaFin = duracion === 30 ? addMinutes(fechaInicio, 30) : addHours(fechaInicio, 1);
 
@@ -246,15 +263,11 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
       if (errores.length) setError(`Se reservaron ${creadas} de ${totalAReservar} sesiones. ${errores.join(" · ")}`);
       setSuccess(true);
       // Plan: si aún quedan sesiones por reservar, vuelve al buscador con el planId.
-      // En modo INTERCALADAS volvemos al MISMO tutor para que elija otro horario.
       const reservadasPlan = planContext ? creadas : 0;
       const quedanPlan = planContext ? sesionesRestantesPlan - reservadasPlan : 0;
-      let destino = "/estudiante/sesiones";
-      if (planContext && quedanPlan > 0) {
-        destino = modoPlan === "INTERCALADAS"
-          ? `/profesores/${profesorId}?planId=${planContext.planId}`
-          : `/profesores?planId=${planContext.planId}`;
-      }
+      const destino = planContext && quedanPlan > 0
+        ? `/profesores?planId=${planContext.planId}`
+        : "/estudiante/sesiones";
       setTimeout(() => router.push(destino), 2500);
     }
     setLoading(false);
@@ -430,8 +443,9 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
               </div>
               {modoPlan === "INTERCALADAS" && (
                 <p className="text-[11px] text-fuchsia-700 mt-2 italic leading-snug">
-                  ℹ️ Reservas 1 sesión ahora. Al confirmar te traemos de vuelta a
-                  este mismo tutor para elegir el horario de la siguiente.
+                  ℹ️ Marca {cantPlan} horarios distintos en el grid de abajo (uno
+                  por sesión). Cada slot que clickees se asigna en orden:
+                  1º → sesión {planContext?.temasRestantes[0]?.orden ?? 1}, 2º → sesión {planContext?.temasRestantes[1]?.orden ?? 2}, etc.
                 </p>
               )}
             </div>
@@ -510,28 +524,61 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
                   expandirSlot(slot, duracionContinua)
                     .filter(({ hora }) => !slotYaPaso(fecha, hora))
                     .map(({ hora }) => {
-                      // Label muestra solo la hora inicial + duración total
                       const [slH, slM] = hora.split(":").map(s => parseInt(s, 10));
                       const slotInicio = setMinutes(setHours(new Date(fecha), slH), slM || 0);
                       const slotFin = addMinutes(slotInicio, duracionContinua);
                       const horaFinLabel = `${String(slotFin.getHours()).padStart(2, "0")}:${String(slotFin.getMinutes()).padStart(2, "0")}`;
                       const label = `${hora} – ${horaFinLabel}`;
-                      const isSelected = selected?.slotId === slot.id && selected?.hora === hora;
                       const ocupado = slotOcupadoEnGCal(slotInicio, slotFin);
+                      const esIntercaladas = planContext && modoPlan === "INTERCALADAS" && cantPlan > 1;
+
+                      // En INTERCALADAS: multi-select; cada slot lleva un número (1, 2, 3...)
+                      let numeroAsignado: number | null = null;
+                      let isPickedIntercaladas = false;
+                      if (esIntercaladas) {
+                        const idx = slotsIntercalados.findIndex(s => s.slotId === slot.id && s.hora === hora && s.fechaIso === fecha.toISOString());
+                        if (idx >= 0) {
+                          isPickedIntercaladas = true;
+                          numeroAsignado = idx + 1;
+                        }
+                      }
+                      const isSelected = !esIntercaladas && selected?.slotId === slot.id && selected?.hora === hora;
+
+                      const onClickSlot = () => {
+                        if (ocupado) return;
+                        if (esIntercaladas) {
+                          // Toggle dentro del array
+                          const exists = slotsIntercalados.findIndex(s => s.slotId === slot.id && s.hora === hora && s.fechaIso === fecha.toISOString());
+                          if (exists >= 0) {
+                            setSlotsIntercalados(slotsIntercalados.filter((_, i) => i !== exists));
+                          } else if (slotsIntercalados.length < cantPlan) {
+                            setSlotsIntercalados([...slotsIntercalados, { slotId: slot.id, hora, fechaIso: fecha.toISOString() }]);
+                          }
+                        } else {
+                          setSelected({ slotId: slot.id, hora, fechaIso: fecha.toISOString() });
+                        }
+                      };
 
                       return (
                         <button key={`${slot.id}-${hora}`} type="button"
                           disabled={ocupado}
                           title={ocupado ? "Tutor ocupado en Google Calendar" : undefined}
-                          onClick={() => !ocupado && setSelected({ slotId: slot.id, hora, fechaIso: fecha.toISOString() })}
+                          onClick={onClickSlot}
                           className={cn(
-                            "text-xs font-semibold px-3 py-2 rounded-xl border-2 transition-all",
-                            isSelected
-                              ? "bg-indigo-600 border-indigo-600 text-white shadow-elev-2"
-                              : ocupado
-                                ? "bg-gray-100 border-gray-200 text-gray-400 line-through cursor-not-allowed"
-                                : "bg-white border-indigo-100 text-indigo-700 hover:border-indigo-400 hover:bg-indigo-50"
+                            "relative text-xs font-semibold px-3 py-2 rounded-xl border-2 transition-all",
+                            isPickedIntercaladas
+                              ? "bg-fuchsia-600 border-fuchsia-600 text-white shadow-elev-2 pl-7"
+                              : isSelected
+                                ? "bg-indigo-600 border-indigo-600 text-white shadow-elev-2"
+                                : ocupado
+                                  ? "bg-gray-100 border-gray-200 text-gray-400 line-through cursor-not-allowed"
+                                  : "bg-white border-indigo-100 text-indigo-700 hover:border-indigo-400 hover:bg-indigo-50"
                           )}>
+                          {numeroAsignado !== null && (
+                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 bg-white text-fuchsia-700 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black">
+                              {numeroAsignado}
+                            </span>
+                          )}
                           {label}
                           {ocupado && <span className="ml-1">🚫</span>}
                         </button>
@@ -544,8 +591,51 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
         })}
       </div>
 
-      {/* Resumen seleccionado */}
-      {selected && (() => {
+      {/* Resumen multi-slot (INTERCALADAS) */}
+      {planContext && modoPlan === "INTERCALADAS" && cantPlan > 1 && (
+        <div className="bg-fuchsia-50 border-2 border-fuchsia-200 rounded-2xl p-3 space-y-2">
+          <p className="text-xs font-bold text-fuchsia-800 uppercase tracking-wider">
+            Tu selección ({slotsIntercalados.length}/{cantPlan})
+          </p>
+          {slotsIntercalados.length === 0 ? (
+            <p className="text-[11px] text-fuchsia-600 italic">
+              Marca {cantPlan} horarios en el grid de arriba.
+            </p>
+          ) : (
+            <ol className="space-y-1.5">
+              {slotsIntercalados.map((s, i) => {
+                const tema = planContext.temasRestantes[i];
+                const fecha = new Date(s.fechaIso);
+                return (
+                  <li key={i} className="flex items-start gap-2 text-xs bg-white border border-fuchsia-200 rounded-lg p-2">
+                    <span className="bg-fuchsia-600 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold text-[10px] flex-shrink-0">
+                      {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-fuchsia-900 truncate">{tema?.titulo ?? `Sesión ${i + 1}`}</p>
+                      <p className="text-fuchsia-700 text-[11px]">
+                        {format(fecha, "EEEE d MMM", { locale: es })} · {s.hora}
+                      </p>
+                    </div>
+                    <button type="button" onClick={() => setSlotsIntercalados(slotsIntercalados.filter((_, j) => j !== i))}
+                      className="text-fuchsia-400 hover:text-rose-600">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+          {slotsIntercalados.length < cantPlan && slotsIntercalados.length > 0 && (
+            <p className="text-[11px] text-fuchsia-600">
+              Faltan {cantPlan - slotsIntercalados.length} {cantPlan - slotsIntercalados.length === 1 ? "horario" : "horarios"} más.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Resumen seleccionado (modo simple) */}
+      {!(planContext && modoPlan === "INTERCALADAS" && cantPlan > 1) && selected && (() => {
         const fecha = new Date(selected.fechaIso);
         const [sH, sM] = selected.hora.split(":").map(s => parseInt(s, 10));
         const inicio = setMinutes(setHours(fecha, sH), sM || 0);
@@ -629,10 +719,7 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
 
       {/* Resumen del precio */}
       {(() => {
-        // En INTERCALADAS solo pagas 1 ahora; las otras al reservar siguientes.
-        const totalSesiones = planContext
-          ? (modoPlan === "INTERCALADAS" ? 1 : cantPlan)
-          : repetir;
+        const totalSesiones = planContext ? cantPlan : repetir;
         const totalBase = precioBase * totalSesiones;
         const totalFinal = Math.max(0, totalBase - descuento);
         return (
@@ -667,25 +754,46 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
 
       {error && <p className="text-red-500 text-sm bg-red-50 rounded-xl px-3 py-2">{error}</p>}
 
-      {!selected && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 flex items-center gap-2 text-xs text-amber-700">
-          <Clock className="w-4 h-4 flex-shrink-0" />
-          <span>Selecciona un horario disponible arriba para continuar.</span>
-        </div>
-      )}
+      {(() => {
+        const esIntercaladas = planContext && modoPlan === "INTERCALADAS" && cantPlan > 1;
+        const completo = esIntercaladas
+          ? slotsIntercalados.length === cantPlan
+          : !!selected;
+        const faltaMsg = esIntercaladas
+          ? `Marca ${cantPlan - slotsIntercalados.length} ${cantPlan - slotsIntercalados.length === 1 ? "horario" : "horarios"} más en el grid`
+          : "Selecciona un horario disponible arriba para continuar.";
+        const totalReservas = planContext ? cantPlan : repetir;
 
-      <button onClick={handleReservar} disabled={!selected || loading}
-        aria-disabled={!selected || loading}
-        className={cn(
-          "w-full font-bold py-4 rounded-2xl transition-all text-sm",
-          !selected
-            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-            : loading
-              ? "bg-indigo-400 text-white cursor-wait"
-              : "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-elev-2 hover:-translate-y-0.5 cursor-pointer"
-        )}>
-        {loading ? "Reservando..." : selected ? "Confirmar reserva →" : "Selecciona un horario primero"}
-      </button>
+        return (
+          <>
+            {!completo && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 flex items-center gap-2 text-xs text-amber-700">
+                <Clock className="w-4 h-4 flex-shrink-0" />
+                <span>{faltaMsg}</span>
+              </div>
+            )}
+
+            <button onClick={handleReservar} disabled={!completo || loading}
+              aria-disabled={!completo || loading}
+              className={cn(
+                "w-full font-bold py-4 rounded-2xl transition-all text-sm",
+                !completo
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : loading
+                    ? "bg-indigo-400 text-white cursor-wait"
+                    : "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-elev-2 hover:-translate-y-0.5 cursor-pointer"
+              )}>
+              {loading
+                ? "Reservando..."
+                : !completo
+                  ? "Selecciona los horarios"
+                  : totalReservas > 1
+                    ? `Confirmar ${totalReservas} reservas →`
+                    : "Confirmar reserva →"}
+            </button>
+          </>
+        );
+      })()}
     </div>
   );
 }
