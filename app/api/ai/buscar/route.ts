@@ -1,33 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth";
-import { GoogleGenAI } from "@google/genai";
+import { generarConFallback } from "@/lib/ai-fallback";
+import { cacheGet, cacheSet, normalizarClave } from "@/lib/ai-cache";
 
 export const maxDuration = 30;
 export const dynamic = "force-dynamic";
 
-const MODELOS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"];
-
 interface FiltrosExtraidos {
-  materia: string | null;          // "Cálculo I", "Python", etc.
+  materia: string | null;
   nivel: "SECUNDARIA" | "TECNICA" | "UNIVERSITARIA" | null;
-  precioMax: number | null;        // en soles
+  precioMax: number | null;
   modalidad: "VIRTUAL" | "PRESENCIAL" | null;
-  urgencia: "ALTA" | "MEDIA" | "BAJA";  // "para mañana" = ALTA
-  primeraGratis: boolean;          // "gratis", "primera sin costo"
-  explicacion: string;             // texto humano que resume lo que entendió
+  urgencia: "ALTA" | "MEDIA" | "BAJA";
+  primeraGratis: boolean;
+  explicacion: string;
 }
 
 /**
  * POST /api/ai/buscar
  *
- * Body: { texto: string }    ← consulta en lenguaje natural
- *
- * Toma la consulta y devuelve:
- *  - filtros estructurados (materia, nivel, precio, etc.)
- *  - una explicación humana de lo que entendió la IA
- *
- * El frontend usa esos filtros para llamar a /api/profesores
- * con los query params correspondientes.
+ * Toma una consulta en lenguaje natural y devuelve filtros estructurados.
+ * Failover: Gemini → Groq. Cache 1h por query normalizada.
  */
 export async function POST(req: NextRequest) {
   const session = await getSessionFromRequest(req);
@@ -38,10 +31,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Escribe lo que buscas (mín 3 caracteres)" }, { status: 400 });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: "IA no configurada" }, { status: 500 });
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Cache hit → respondemos inmediato sin tocar IA
+  const claveCache = `buscar:${normalizarClave(texto)}`;
+  const cacheado = cacheGet<FiltrosExtraidos>(claveCache);
+  if (cacheado) {
+    return NextResponse.json({ ok: true, filtros: cacheado, cache: true });
+  }
 
   const prompt = `Eres un asistente de búsqueda en una plataforma peruana de tutorías llamada ProfeLink.
 
@@ -68,43 +63,16 @@ Reglas:
 `;
 
   try {
-    let raw: string | null = null;
-    let lastErr: unknown = null;
-    for (const modelo of MODELOS) {
-      try {
-        const r = await ai.models.generateContent({
-          model: modelo,
-          contents: prompt,
-          config: { responseMimeType: "application/json", temperature: 0.2 },
-        });
-        raw = r.text ?? null;
-        if (raw) break;
-      } catch (e) {
-        lastErr = e;
-        const msg = e instanceof Error ? e.message : String(e);
-        // Reintenta siguiente modelo si: no existe, está saturado, cuota o rate limit
-        const reintentable =
-          msg.includes("404") ||
-          msg.includes("not found") ||
-          msg.includes("503") ||
-          msg.includes("UNAVAILABLE") ||
-          msg.includes("429") ||
-          msg.includes("quota") ||
-          msg.includes("high demand");
-        if (reintentable) continue;
-        throw e;
-      }
-    }
-
-    if (!raw) {
-      console.error("[ai buscar] todos los modelos fallaron", lastErr);
+    const r = await generarConFallback({ prompt, jsonMode: true, temperature: 0.2 });
+    if (!r) {
       return NextResponse.json({
-        error: "La IA está saturada en este momento. Usa el buscador tradicional abajo o reintenta en 1 minuto.",
+        error: "La IA está saturada. Usa el buscador tradicional abajo o reintenta en 1 minuto.",
       }, { status: 503 });
     }
 
-    const filtros: FiltrosExtraidos = JSON.parse(raw);
-    return NextResponse.json({ ok: true, filtros });
+    const filtros: FiltrosExtraidos = JSON.parse(r.texto);
+    cacheSet(claveCache, filtros);
+    return NextResponse.json({ ok: true, filtros, proveedor: r.proveedor });
   } catch (err) {
     console.error("[ai buscar]", err);
     return NextResponse.json({ error: "Error al interpretar la búsqueda" }, { status: 500 });

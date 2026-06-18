@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth";
-import { GoogleGenAI } from "@google/genai";
+import { generarConFallback } from "@/lib/ai-fallback";
 
 export const maxDuration = 30;
 export const dynamic = "force-dynamic";
 
-const MODELOS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"];
-
 interface TemaPlan {
   orden: number;
-  titulo: string;          // "Derivadas avanzadas"
-  descripcion: string;     // 1 línea con qué se cubre
-  ejerciciosSugeridos: string[]; // 2-3 ejercicios concretos
-  duracionMin: number;     // 30, 60, 90
+  titulo: string;
+  descripcion: string;
+  ejerciciosSugeridos: string[];
+  duracionMin: number;
 }
 
 interface PlanGenerado {
@@ -22,17 +20,14 @@ interface PlanGenerado {
   materiaPrincipal: string;
   nivel: "SECUNDARIA" | "TECNICA" | "UNIVERSITARIA";
   temas: TemaPlan[];
-  resumenEstrategia: string; // 1-2 frases del enfoque pedagógico
+  resumenEstrategia: string;
 }
 
 /**
  * POST /api/ai/generar-plan
  *
- * Body: { meta: string, fechaObjetivo?: ISO date }
- *
- * Devuelve un plan estructurado con N sesiones, cada una con un tema
- * específico, descripción y ejercicios sugeridos. El frontend lo muestra
- * y el estudiante decide si lo reserva.
+ * Genera un plan de estudios estructurado con N sesiones.
+ * Failover automático Gemini → Groq.
  */
 export async function POST(req: NextRequest) {
   const session = await getSessionFromRequest(req);
@@ -42,11 +37,6 @@ export async function POST(req: NextRequest) {
   if (!meta || typeof meta !== "string" || meta.trim().length < 5) {
     return NextResponse.json({ error: "Describe tu meta (mín 5 caracteres)" }, { status: 400 });
   }
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: "IA no configurada" }, { status: 500 });
-
-  const ai = new GoogleGenAI({ apiKey });
 
   let diasHastaObjetivo: number | null = null;
   if (fechaObjetivo) {
@@ -90,36 +80,15 @@ REGLAS IMPORTANTES:
 `;
 
   try {
-    let raw: string | null = null;
-    for (const modelo of MODELOS) {
-      try {
-        const r = await ai.models.generateContent({
-          model: modelo,
-          contents: prompt,
-          config: { responseMimeType: "application/json", temperature: 0.3 },
-        });
-        raw = r.text ?? null;
-        if (raw) break;
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        const reintentable =
-          msg.includes("404") || msg.includes("not found") ||
-          msg.includes("503") || msg.includes("UNAVAILABLE") ||
-          msg.includes("429") || msg.includes("quota") ||
-          msg.includes("high demand");
-        if (reintentable) continue;
-        throw e;
-      }
-    }
-
-    if (!raw) {
+    const r = await generarConFallback({ prompt, jsonMode: true, temperature: 0.3, maxTokens: 4096 });
+    if (!r) {
       return NextResponse.json({
         error: "La IA está saturada. Reintenta en 1 minuto.",
       }, { status: 503 });
     }
 
-    const plan: PlanGenerado = JSON.parse(raw);
-    return NextResponse.json({ ok: true, plan });
+    const plan: PlanGenerado = JSON.parse(r.texto);
+    return NextResponse.json({ ok: true, plan, proveedor: r.proveedor });
   } catch (err) {
     console.error("[ai generar-plan]", err);
     return NextResponse.json({ error: "Error al generar el plan" }, { status: 500 });
