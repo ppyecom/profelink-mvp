@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
       take: limit,
       orderBy: { createdAt: "desc" },
       include: {
-        usuario: { select: { nombre: true, email: true, createdAt: true } },
+        usuario: { select: { id: true, nombre: true, email: true, createdAt: true, activo: true } },
         especialidades: { select: { materia: true } },
         _count: { select: { sesiones: true, resenas: true } },
       },
@@ -35,8 +35,10 @@ export async function GET(req: NextRequest) {
 
   const data = perfiles.map((p) => ({
     id: p.id,
+    usuarioId: p.usuario.id,
     nombre: p.usuario.nombre,
     email: p.usuario.email,
+    activo: p.usuario.activo,
     fotoUrl: p.fotoUrl,
     estado: p.estado,
     precioHora: Number(p.precioHora),

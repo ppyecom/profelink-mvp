@@ -3,6 +3,42 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { auditar } from "@/lib/auditoria";
 
+/**
+ * PATCH /api/admin/usuarios/[id]
+ * Body: { activo: boolean }
+ *
+ * Suspende o reactiva una cuenta sin borrarla. Un profesor suspendido
+ * deja de aparecer en /profesores (que filtra por usuario.activo).
+ */
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getSession();
+  if (!session || session.rol !== "ADMIN") {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+  const { id } = await params;
+  if (id === session.sub) {
+    return NextResponse.json({ error: "No puedes suspender tu propia cuenta admin" }, { status: 400 });
+  }
+
+  const body = await req.json();
+  const activo = Boolean(body.activo);
+
+  const usuario = await prisma.usuario.findUnique({ where: { id }, select: { email: true, rol: true } });
+  if (!usuario) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+
+  await prisma.usuario.update({ where: { id }, data: { activo } });
+
+  await auditar({
+    usuarioId: session.sub,
+    accion: activo ? "ADMIN_REACTIVAR_USUARIO" : "ADMIN_SUSPENDER_USUARIO",
+    entidad: "Usuario",
+    entidadId: id,
+    metadata: { email: usuario.email, rol: usuario.rol },
+  });
+
+  return NextResponse.json({ ok: true, activo });
+}
+
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (!session || session.rol !== "ADMIN") {

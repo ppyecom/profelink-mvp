@@ -3,13 +3,15 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Pause, Play } from "lucide-react";
 import { formatSoles } from "@/lib/utils";
 
 interface ProfesorAdmin {
   id: string;
+  usuarioId: string;
   nombre: string;
   email: string;
+  activo: boolean;
   fotoUrl: string | null;
   estado: "PENDIENTE" | "VERIFICADO" | "RECHAZADO";
   precioHora: number;
@@ -57,6 +59,18 @@ export default function AdminProfesoresPage() {
       body: JSON.stringify({ profesorId, estado: nuevoEstado }),
     });
     if (res.ok) cargar();
+  };
+
+  const toggleActivo = async (usuarioId: string, activo: boolean) => {
+    const accion = activo ? "reactivar" : "suspender";
+    if (!confirm(`¿Seguro de ${accion} esta cuenta?`)) return;
+    const res = await fetch(`/api/admin/usuarios/${usuarioId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ activo }),
+    });
+    if (res.ok) cargar();
+    else alert("Error al cambiar el estado");
   };
 
   return (
@@ -107,6 +121,11 @@ export default function AdminProfesoresPage() {
                         <cfg.icon className="w-3 h-3" />
                         {p.estado}
                       </span>
+                      {!p.activo && (
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-bold bg-gray-800 text-white">
+                          <Pause className="w-3 h-3" /> SUSPENDIDO
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-gray-500">{p.email}</p>
                     <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-400">
@@ -118,7 +137,7 @@ export default function AdminProfesoresPage() {
                   </div>
 
                   {/* Acciones */}
-                  <div className="flex gap-2 flex-shrink-0">
+                  <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
                     {p.estado !== "VERIFICADO" && (
                       <button
                         onClick={() => cambiarEstado(p.id, "VERIFICADO")}
@@ -135,6 +154,25 @@ export default function AdminProfesoresPage() {
                       >
                         <XCircle className="w-3.5 h-3.5" />
                         Rechazar
+                      </button>
+                    )}
+                    {p.activo ? (
+                      <button
+                        onClick={() => toggleActivo(p.usuarioId, false)}
+                        title="No aparecerá en búsquedas hasta que lo reactives"
+                        className="inline-flex items-center gap-1.5 border border-amber-300 text-amber-700 hover:bg-amber-50 text-xs px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        <Pause className="w-3.5 h-3.5" />
+                        Suspender
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => toggleActivo(p.usuarioId, true)}
+                        title="Volverá a aparecer en búsquedas"
+                        className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        <Play className="w-3.5 h-3.5" />
+                        Reactivar
                       </button>
                     )}
                   </div>
