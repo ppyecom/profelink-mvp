@@ -51,7 +51,7 @@ El estudiante escribió esta consulta en lenguaje natural:
 Extrae los siguientes filtros como JSON. Si un campo no se menciona, déjalo en null.
 
 {
-  "materia": string | null,           // PALABRA CLAVE GENÉRICA — UNA sola palabra base. Ej: "Cálculo II diferencial" → "Cálculo". "Python avanzado" → "Python". "Inglés para entrevista" → "Inglés". La palabra debe ser buscable como substring en lo que el profesor registró.
+  "materia": string | null,           // PALABRAS CLAVE GENÉRICAS separadas por espacio. Si el alumno menciona varias materias, ponlas TODAS separadas por espacios. Ej: "SQL y Python" → "SQL Python". "Cálculo II diferencial" → "Cálculo". "React y JavaScript" → "React JavaScript". Cada palabra se busca como substring en lo que el profesor registró.
   "nivel": "SECUNDARIA" | "TECNICA" | "UNIVERSITARIA" | null,
   "precioMax": number | null,         // en soles. Si dice "barato" estima 30, "máximo X" usa X.
   "modalidad": "VIRTUAL" | "PRESENCIAL" | null,
