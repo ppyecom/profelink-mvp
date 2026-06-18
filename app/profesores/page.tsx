@@ -43,9 +43,10 @@ async function ProfesoresGrid({ searchParams }: { searchParams: Awaited<PageProp
   const skip = (page - 1) * limit;
 
   // Buscamos por cada palabra del término independientemente (OR), permite
-  // que "SQL Python" matchee profes con SQL o Python o ambos.
+  // que "SQL Python" o "Cálculo, Matemática, Derivadas" matcheen tutores que
+  // tengan cualquiera de esas keywords. Splittea por coma O espacios.
   const palabrasMateria = materia
-    ? materia.trim().split(/\s+/).filter(Boolean)
+    ? materia.trim().split(/[,\s]+/).filter(p => p.length >= 3)
     : [];
 
   const where: Record<string, unknown> = {

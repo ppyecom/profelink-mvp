@@ -26,12 +26,12 @@ export async function GET(req: NextRequest) {
     ...(nivelVerif && { nivelVerificacion: nivelVerif }),
     ...(primeraGratis && { aceptaPrimeraGratis: true }),
     ...(materia && {
-      // Buscamos cada palabra del término independientemente (más flexible).
-      // Ej: si IA dice "Cálculo Diferencial" y el profe puso "Cálculo I"
-      // ambos matchean por "Cálculo".
+      // Buscamos cada palabra/keyword del término independientemente.
+      // Splittea por coma O espacios — la IA del plan devuelve
+      // "Cálculo, Matemática, Derivadas" para matchear tutores más amplios.
       especialidades: {
         some: {
-          OR: materia.trim().split(/\s+/).filter(Boolean).map((palabra) => ({
+          OR: materia.trim().split(/[,\s]+/).filter(p => p.length >= 3).map((palabra) => ({
             materia: { contains: palabra, mode: "insensitive" as const },
           })),
         },
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
   };
 
   const palabrasMateria = materia
-    ? materia.trim().split(/\s+/).filter(Boolean).map(p => p.toLowerCase())
+    ? materia.trim().split(/[,\s]+/).filter(p => p.length >= 3).map(p => p.toLowerCase())
     : [];
 
   // Cuando hay búsqueda multi-palabra, traemos más candidatos (top 60)
