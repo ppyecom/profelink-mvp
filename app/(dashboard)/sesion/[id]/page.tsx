@@ -11,6 +11,7 @@ import ChatSesion from "@/components/chat/ChatSesion";
 import ArchivosSesion from "@/components/sesiones/ArchivosSesion";
 import TareasSesion from "@/components/sesiones/TareasSesion";
 import VerificarPagoBanner from "@/components/sesiones/VerificarPagoBanner";
+import AsistenteProfeFlotante from "@/components/sesiones/AsistenteProfeFlotante";
 import { MessageSquare } from "lucide-react";
 
 interface PageProps { params: Promise<{ id: string }> }
@@ -176,7 +177,6 @@ export default async function SesionPage({ params }: PageProps) {
             <VideoLlamada
               sesionId={sesion.id}
               nombreUsuario={session.nombre}
-              abrirAutomaticamente={enVivo}
             />
           ) : (
             <div className="bento p-5 elev-1 text-center">
@@ -208,6 +208,12 @@ export default async function SesionPage({ params }: PageProps) {
         <h2 className="font-heading font-bold text-brand-text mb-3">Chat de la sesión</h2>
         <ChatSesion sesionId={sesion.id} nombreOtro={contraparte} />
       </div>
+
+      {/* Asistente IA para el profesor — flotante abajo a la derecha, alumno NO lo ve */}
+      <AsistenteProfeFlotante
+        sesionId={sesion.id}
+        esProfesor={esProfesor || session.rol === "ADMIN"}
+      />
     </div>
   );
 }
