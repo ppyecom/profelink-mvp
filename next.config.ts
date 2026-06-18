@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Modo standalone: genera .next/standalone con server.js + deps mínimas
-  // → permite empaquetar en Docker liviano para Cloud Run
-  output: "standalone",
+  // Modo standalone solo cuando construimos para Docker/Cloud Run.
+  // En VM con PM2 + next start usamos el modo normal.
+  ...(process.env.BUILD_TARGET === "docker" ? { output: "standalone" as const } : {}),
   typescript: { ignoreBuildErrors: true },
   eslint:     { ignoreDuringBuilds: true },
   // Socket.io necesita que Next.js no intercepte /api/socket

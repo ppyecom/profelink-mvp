@@ -26,7 +26,16 @@ export async function GET(req: NextRequest) {
     ...(nivelVerif && { nivelVerificacion: nivelVerif }),
     ...(primeraGratis && { aceptaPrimeraGratis: true }),
     ...(materia && {
-      especialidades: { some: { materia: { contains: materia, mode: "insensitive" } } },
+      // Buscamos cada palabra del término independientemente (más flexible).
+      // Ej: si IA dice "Cálculo Diferencial" y el profe puso "Cálculo I"
+      // ambos matchean por "Cálculo".
+      especialidades: {
+        some: {
+          OR: materia.trim().split(/\s+/).filter(Boolean).map((palabra) => ({
+            materia: { contains: palabra, mode: "insensitive" as const },
+          })),
+        },
+      },
     }),
   };
 

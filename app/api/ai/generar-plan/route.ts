@@ -99,15 +99,24 @@ REGLAS IMPORTANTES:
           config: { responseMimeType: "application/json", temperature: 0.3 },
         });
         raw = r.text ?? null;
-        break;
+        if (raw) break;
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        if (msg.includes("404") || msg.includes("not found")) continue;
+        const reintentable =
+          msg.includes("404") || msg.includes("not found") ||
+          msg.includes("503") || msg.includes("UNAVAILABLE") ||
+          msg.includes("429") || msg.includes("quota") ||
+          msg.includes("high demand");
+        if (reintentable) continue;
         throw e;
       }
     }
 
-    if (!raw) return NextResponse.json({ error: "Ningún modelo Gemini disponible" }, { status: 500 });
+    if (!raw) {
+      return NextResponse.json({
+        error: "La IA está saturada. Reintenta en 1 minuto.",
+      }, { status: 503 });
+    }
 
     const plan: PlanGenerado = JSON.parse(raw);
     return NextResponse.json({ ok: true, plan });

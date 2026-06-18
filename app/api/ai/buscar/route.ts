@@ -51,13 +51,13 @@ El estudiante escribió esta consulta en lenguaje natural:
 Extrae los siguientes filtros como JSON. Si un campo no se menciona, déjalo en null.
 
 {
-  "materia": string | null,           // tema/curso solicitado (ej: "Cálculo", "Python", "Inglés", "Física"). Normaliza al término más común.
+  "materia": string | null,           // PALABRA CLAVE GENÉRICA — UNA sola palabra base. Ej: "Cálculo II diferencial" → "Cálculo". "Python avanzado" → "Python". "Inglés para entrevista" → "Inglés". La palabra debe ser buscable como substring en lo que el profesor registró.
   "nivel": "SECUNDARIA" | "TECNICA" | "UNIVERSITARIA" | null,
   "precioMax": number | null,         // en soles. Si dice "barato" estima 30, "máximo X" usa X.
   "modalidad": "VIRTUAL" | "PRESENCIAL" | null,
-  "urgencia": "ALTA" | "MEDIA" | "BAJA",   // ALTA si menciona "ya", "urgente", "para mañana"; BAJA por defecto
-  "primeraGratis": boolean,           // true si menciona "gratis" o "sin costo"
-  "explicacion": string               // 1 oración humana en español resumiendo lo que entendiste, ej: "Buscas profe de cálculo presencial barato para tu examen del jueves"
+  "urgencia": "ALTA" | "MEDIA" | "BAJA",
+  "primeraGratis": boolean,
+  "explicacion": string               // 1 oración humana en español resumiendo lo que entendiste
 }
 
 Reglas:
@@ -69,6 +69,7 @@ Reglas:
 
   try {
     let raw: string | null = null;
+    let lastErr: unknown = null;
     for (const modelo of MODELOS) {
       try {
         const r = await ai.models.generateContent({
@@ -77,15 +78,30 @@ Reglas:
           config: { responseMimeType: "application/json", temperature: 0.2 },
         });
         raw = r.text ?? null;
-        break;
+        if (raw) break;
       } catch (e) {
+        lastErr = e;
         const msg = e instanceof Error ? e.message : String(e);
-        if (msg.includes("404") || msg.includes("not found")) continue;
+        // Reintenta siguiente modelo si: no existe, está saturado, cuota o rate limit
+        const reintentable =
+          msg.includes("404") ||
+          msg.includes("not found") ||
+          msg.includes("503") ||
+          msg.includes("UNAVAILABLE") ||
+          msg.includes("429") ||
+          msg.includes("quota") ||
+          msg.includes("high demand");
+        if (reintentable) continue;
         throw e;
       }
     }
 
-    if (!raw) return NextResponse.json({ error: "Ningún modelo Gemini disponible" }, { status: 500 });
+    if (!raw) {
+      console.error("[ai buscar] todos los modelos fallaron", lastErr);
+      return NextResponse.json({
+        error: "La IA está saturada en este momento. Usa el buscador tradicional abajo o reintenta en 1 minuto.",
+      }, { status: 503 });
+    }
 
     const filtros: FiltrosExtraidos = JSON.parse(raw);
     return NextResponse.json({ ok: true, filtros });

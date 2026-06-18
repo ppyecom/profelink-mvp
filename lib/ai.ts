@@ -169,8 +169,13 @@ export async function analizarCredencial(
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         lastError = e;
-        if (msg.includes("404") || msg.includes("not found") || msg.includes("not supported")) {
-          console.warn(`[ai] modelo ${nombre} no disponible, probando siguiente...`);
+        const reintentable =
+          msg.includes("404") || msg.includes("not found") || msg.includes("not supported") ||
+          msg.includes("503") || msg.includes("UNAVAILABLE") ||
+          msg.includes("429") || msg.includes("quota") ||
+          msg.includes("high demand");
+        if (reintentable) {
+          console.warn(`[ai] modelo ${nombre} no disponible (${msg.slice(0, 80)}), probando siguiente...`);
           continue;
         }
         throw e;
