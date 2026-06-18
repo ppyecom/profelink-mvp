@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { GoogleGenAI } from "@google/genai";
+import { generarConFallback } from "@/lib/ai-fallback";
 
 export const maxDuration = 30;
 export const dynamic = "force-dynamic";
-
-const MODELOS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"];
 
 /**
  * POST /api/ai/asistente-profe
@@ -63,10 +61,6 @@ export async function POST(req: NextRequest) {
         })
         .join("\n");
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: "IA no configurada" }, { status: 500 });
-  const ai = new GoogleGenAI({ apiKey });
-
   const prompt = `Eres un asistente pedagógico de ProfeLink — una plataforma peruana de tutorías.
 
 CONTEXTO DE LA SESIÓN:
@@ -93,34 +87,13 @@ Sé concreto, pedagógico y peruano. Si pide:
 Usa formato markdown: títulos cortos, listas con guiones, **negritas** para conceptos clave. NO uses emoji excesivo.`;
 
   try {
-    let raw: string | null = null;
-    for (const modelo of MODELOS) {
-      try {
-        const r = await ai.models.generateContent({
-          model: modelo,
-          contents: prompt,
-          config: { temperature: 0.7 }, // un poco más creativo
-        });
-        raw = r.text ?? null;
-        if (raw) break;
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        const reintentable =
-          msg.includes("404") || msg.includes("not found") ||
-          msg.includes("503") || msg.includes("UNAVAILABLE") ||
-          msg.includes("429") || msg.includes("quota") || msg.includes("high demand");
-        if (reintentable) continue;
-        throw e;
-      }
-    }
-
-    if (!raw) {
+    const r = await generarConFallback({ prompt, temperature: 0.7, maxTokens: 1024 });
+    if (!r) {
       return NextResponse.json({
         error: "La IA está saturada — reintenta en 1 minuto.",
       }, { status: 503 });
     }
-
-    return NextResponse.json({ ok: true, respuesta: raw });
+    return NextResponse.json({ ok: true, respuesta: r.texto, proveedor: r.proveedor });
   } catch (err) {
     console.error("[ai asistente-profe]", err);
     return NextResponse.json({ error: "Error al consultar la IA" }, { status: 500 });

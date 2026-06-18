@@ -147,38 +147,54 @@ export async function analizarCredencial(
       { inlineData: { data: imagenBuffer.toString("base64"), mimeType } },
     ];
 
-    // Probamos cada modelo en orden hasta que uno responda OK
+    // Probamos cada modelo en orden con retry (backoff exponencial) por saturación
     let responseText: string | null = null;
     let lastError: unknown = null;
+    const BACKOFFS = [0, 1500, 4000]; // ms entre reintentos
 
-    for (const nombre of MODELOS_PREFERIDOS) {
-      try {
-        const t0 = Date.now();
-        console.log(`[ai] intentando ${nombre} (mime: ${mimeType}, size: ${(imagenBuffer.length / 1024).toFixed(0)} KB)`);
-        const response = await ai.models.generateContent({
-          model: nombre,
-          contents,
-          config: {
-            responseMimeType: "application/json",
-            temperature: 0.1,
-          },
-        });
-        responseText = response.text ?? null;
-        console.log(`[ai] ${nombre} respondió en ${((Date.now() - t0) / 1000).toFixed(1)}s`);
-        break;
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        lastError = e;
-        const reintentable =
-          msg.includes("404") || msg.includes("not found") || msg.includes("not supported") ||
-          msg.includes("503") || msg.includes("UNAVAILABLE") ||
-          msg.includes("429") || msg.includes("quota") ||
-          msg.includes("high demand");
-        if (reintentable) {
-          console.warn(`[ai] modelo ${nombre} no disponible (${msg.slice(0, 80)}), probando siguiente...`);
-          continue;
+    outer: for (const nombre of MODELOS_PREFERIDOS) {
+      for (let intento = 0; intento < BACKOFFS.length; intento++) {
+        if (BACKOFFS[intento] > 0) {
+          await new Promise(r => setTimeout(r, BACKOFFS[intento]));
+          console.log(`[ai] reintento #${intento} de ${nombre}...`);
         }
-        throw e;
+        try {
+          const t0 = Date.now();
+          console.log(`[ai] intentando ${nombre} (mime: ${mimeType}, size: ${(imagenBuffer.length / 1024).toFixed(0)} KB)`);
+          const response = await ai.models.generateContent({
+            model: nombre,
+            contents,
+            config: {
+              responseMimeType: "application/json",
+              temperature: 0.1,
+            },
+          });
+          responseText = response.text ?? null;
+          console.log(`[ai] ${nombre} respondió en ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+          break outer;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          lastError = e;
+
+          const modeloNoExiste = msg.includes("404") || msg.includes("not found") || msg.includes("not supported");
+          const saturado = msg.includes("503") || msg.includes("UNAVAILABLE") ||
+                           msg.includes("429") || msg.includes("quota") || msg.includes("high demand") ||
+                           msg.includes("overloaded");
+
+          if (modeloNoExiste) {
+            console.warn(`[ai] modelo ${nombre} no disponible, probando siguiente...`);
+            break; // pasa al siguiente modelo (sin reintentar este)
+          }
+          if (saturado && intento < BACKOFFS.length - 1) {
+            console.warn(`[ai] ${nombre} saturado (${msg.slice(0, 80)}), backoff ${BACKOFFS[intento + 1]}ms...`);
+            continue; // reintenta este modelo con espera
+          }
+          if (saturado) {
+            console.warn(`[ai] ${nombre} sigue saturado tras reintentos, probando siguiente modelo`);
+            break; // pasa al siguiente
+          }
+          throw e; // error real
+        }
       }
     }
 
