@@ -39,12 +39,22 @@ export async function GET(req: NextRequest) {
     }),
   };
 
+  const palabrasMateria = materia
+    ? materia.trim().split(/\s+/).filter(Boolean).map(p => p.toLowerCase())
+    : [];
+
+  // Cuando hay búsqueda multi-palabra, traemos más candidatos (top 60)
+  // y los re-rankeamos en código para mostrar primero los que matchean
+  // TODAS las palabras, luego los que matchean menos.
+  const fetchLimit = palabrasMateria.length > 1 ? 60 : limit;
+  const fetchSkip  = palabrasMateria.length > 1 ? 0   : skip;
+
   const [total, perfiles] = await Promise.all([
     prisma.perfilProfesor.count({ where }),
     prisma.perfilProfesor.findMany({
       where,
-      skip,
-      take: limit,
+      skip: fetchSkip,
+      take: fetchLimit,
       orderBy: [{ ratingPromedio: "desc" }, { totalResenas: "desc" }],
       include: {
         usuario: { select: { nombre: true } },
@@ -53,7 +63,28 @@ export async function GET(req: NextRequest) {
     }),
   ]);
 
-  const data = perfiles.map((p) => ({
+  // Calcula cuántas palabras de la búsqueda matchea cada profe
+  function matchScore(p: typeof perfiles[0]): number {
+    if (palabrasMateria.length === 0) return 0;
+    const esp = p.especialidades.map(e => e.materia.toLowerCase()).join(" | ");
+    return palabrasMateria.reduce((acc, pal) => acc + (esp.includes(pal) ? 1 : 0), 0);
+  }
+
+  // Re-rank: primero los que coinciden con TODAS las palabras, luego con menos
+  let ordenados = perfiles;
+  if (palabrasMateria.length > 1) {
+    ordenados = [...perfiles]
+      .map(p => ({ p, score: matchScore(p), rating: Number(p.ratingPromedio) }))
+      .sort((a, b) =>
+        b.score - a.score ||              // 1º — más coincidencias
+        b.rating - a.rating ||             // 2º — mejor rating
+        b.p.totalResenas - a.p.totalResenas
+      )
+      .slice(skip, skip + limit)
+      .map(x => x.p);
+  }
+
+  const data = ordenados.map((p) => ({
     id: p.id,
     usuarioId: p.usuarioId,
     nombre: p.usuario.nombre,
@@ -69,6 +100,9 @@ export async function GET(req: NextRequest) {
     ratingPromedio: Number(p.ratingPromedio),
     totalResenas: p.totalResenas,
     especialidades: p.especialidades.map((e) => e.materia),
+    // Sólo lo enviamos cuando hubo búsqueda multi-palabra (para mostrar badge)
+    coincidencias: palabrasMateria.length > 1 ? matchScore(p) : undefined,
+    totalPalabrasBuscadas: palabrasMateria.length > 1 ? palabrasMateria.length : undefined,
   }));
 
   return NextResponse.json({ data, total, page, limit, totalPages: Math.ceil(total / limit) });
