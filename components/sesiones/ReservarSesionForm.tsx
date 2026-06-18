@@ -10,6 +10,15 @@ import type { ModalidadSesion } from "@/types";
 
 interface Slot { id: string; diaSemana: number; horaInicio: string; horaFin: string }
 
+interface PlanContext {
+  planId: string;
+  meta: string;
+  ordenEnPlan: number;
+  temaAsignado: string;
+  descripcionTema: string;
+  totalSesiones: number;
+}
+
 interface Props {
   profesorId: string;
   disponibilidad: Slot[];
@@ -17,6 +26,7 @@ interface Props {
   precioHora: number;
   precio30min?: number | null;
   aceptaPrimeraGratis?: boolean;
+  planContext?: PlanContext | null;
 }
 
 interface CuponDisponible { id: string; codigo: string; tipo: string; valor: number }
@@ -68,10 +78,13 @@ function expandirSlot(slot: Slot, duracionMin: number): { hora: string; label: s
   return sesiones;
 }
 
-export default function ReservarSesionForm({ profesorId, disponibilidad, modalidad, precioHora, precio30min, aceptaPrimeraGratis }: Props) {
+export default function ReservarSesionForm({ profesorId, disponibilidad, modalidad, precioHora, precio30min, aceptaPrimeraGratis, planContext }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<{ slotId: string; hora: string; fechaIso: string } | null>(null);
-  const [duracion, setDuracion] = useState<30 | 60>(60);
+  // Si viene de un plan, fuerza duración 60 (las sesiones del plan tienen su propia duración).
+  // Si el tema sugiere 30, lo respetamos.
+  const duracionPlan = planContext ? 60 : 60; // simple por ahora; el tema podría traer duracionMin
+  const [duracion, setDuracion] = useState<30 | 60>(duracionPlan as 30 | 60);
   const [repetir, setRepetir]   = useState<number>(1); // semanas a repetir
   const [notas, setNotas]       = useState("");
   const [loading, setLoading]   = useState(false);
@@ -175,6 +188,11 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
           // Cupón solo en la primera (no se duplica)
           cuponCodigo: i === 0 && cuponCodigo ? cuponCodigo : undefined,
           notas: notas || undefined,
+          // Sólo asocia al plan en la PRIMERA sesión del lote (las repeticiones
+          // no son parte del plan, son sesiones sueltas continuas)
+          planId:       i === 0 && planContext ? planContext.planId       : undefined,
+          ordenEnPlan:  i === 0 && planContext ? planContext.ordenEnPlan  : undefined,
+          temaAsignado: i === 0 && planContext ? planContext.temaAsignado : undefined,
         }),
       });
       if (res.ok) creadas++;

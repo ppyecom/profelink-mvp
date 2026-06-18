@@ -13,13 +13,17 @@ interface Props {
     nivelVerificacion?: string;
     aceptaPrimeraGratis?: boolean;
   };
+  planId?: string;
 }
 
-export default function ProfesorCard({ profesor }: Props) {
+export default function ProfesorCard({ profesor, planId }: Props) {
   const rating = Number(profesor.ratingPromedio);
+  const href = planId
+    ? `/profesores/${profesor.id}?planId=${planId}`
+    : `/profesores/${profesor.id}`;
 
   return (
-    <Link href={`/profesores/${profesor.id}`} data-cursor="hover" className="group relative block">
+    <Link href={href} data-cursor="hover" className="group relative block">
       <div className="absolute top-3 right-3 z-10">
         <BotonFavorito profesorId={profesor.id} size="sm" />
       </div>
