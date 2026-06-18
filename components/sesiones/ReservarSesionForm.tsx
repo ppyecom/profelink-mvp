@@ -112,6 +112,12 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
   const precioBase = duracion === 30 ? (precio30min ?? precioHora / 2) : precioHora;
   const precioFinal = Math.max(0, precioBase - descuento);
 
+  // Si cambia el contexto del plan (cantidad o modalidad), la duración
+  // continua cambia y el slot ya elegido puede no ser válido. Reset.
+  useEffect(() => {
+    setSelected(null);
+  }, [cantPlan, modoPlan, duracion]);
+
   // Cargar cupones disponibles del estudiante
   useEffect(() => {
     fetch("/api/cupones")
@@ -423,11 +429,19 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
 
       <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Selecciona tu horario</p>
 
+      {/* Duración EFECTIVA por cada hora elegida (en min):
+          - plan + SEGUIDAS: cantPlan × duración (necesita N horas continuas)
+          - resto: duración normal (semanas separadas, no necesita continuidad) */}
+      {(() => null)()}
+
       <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
         {diasOrdenados.map(({ dia, fecha, slots }) => {
           const ahora = new Date();
           const esHoy = isSameDay(fecha, ahora);
           const fechaLabel = format(fecha, "d MMM", { locale: es });
+          const duracionContinua = (planContext && modoPlan === "SEGUIDAS" && cantPlan > 1)
+            ? duracion * cantPlan
+            : duracion;
 
           return (
             <div key={dia}>
@@ -447,13 +461,18 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
               {/* Slots de hora */}
               <div className="flex flex-wrap gap-2">
                 {slots.flatMap(slot =>
-                  expandirSlot(slot, duracion)
+                  // expandimos con la duración CONTINUA para que solo
+                  // aparezcan horas iniciales donde caben todas las sesiones
+                  expandirSlot(slot, duracionContinua)
                     .filter(({ hora }) => !slotYaPaso(fecha, hora))
-                    .map(({ hora, label }) => {
-                      const isSelected = selected?.slotId === slot.id && selected?.hora === hora;
+                    .map(({ hora }) => {
+                      // Label muestra solo la hora inicial + duración total
                       const [slH, slM] = hora.split(":").map(s => parseInt(s, 10));
                       const slotInicio = setMinutes(setHours(new Date(fecha), slH), slM || 0);
-                      const slotFin = duracion === 30 ? addMinutes(slotInicio, 30) : addHours(slotInicio, 1);
+                      const slotFin = addMinutes(slotInicio, duracionContinua);
+                      const horaFinLabel = `${String(slotFin.getHours()).padStart(2, "0")}:${String(slotFin.getMinutes()).padStart(2, "0")}`;
+                      const label = `${hora} – ${horaFinLabel}`;
+                      const isSelected = selected?.slotId === slot.id && selected?.hora === hora;
                       const ocupado = slotOcupadoEnGCal(slotInicio, slotFin);
 
                       return (
@@ -484,11 +503,16 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
       {/* Resumen seleccionado */}
       {selected && (() => {
         const fecha = new Date(selected.fechaIso);
-        // Calcular hora fin del slot seleccionado
         const [sH, sM] = selected.hora.split(":").map(s => parseInt(s, 10));
         const inicio = setMinutes(setHours(fecha, sH), sM || 0);
-        const finCalc = duracion === 30 ? addMinutes(inicio, 30) : addHours(inicio, 1);
+        // Duración total = N sesiones × duración (solo si plan SEGUIDAS), si no solo una
+        const sesionesContinuas = (planContext && modoPlan === "SEGUIDAS") ? cantPlan : 1;
+        const minutosTotal = duracion * sesionesContinuas;
+        const finCalc = addMinutes(inicio, minutosTotal);
         const finLabel = `${String(finCalc.getHours()).padStart(2, "0")}:${String(finCalc.getMinutes()).padStart(2, "0")}`;
+        const duracionTxt = minutosTotal >= 60
+          ? `${Math.floor(minutosTotal / 60)}h${minutosTotal % 60 ? ` ${minutosTotal % 60}min` : ""}`
+          : `${minutosTotal} min`;
 
         return (
           <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-3 flex items-center gap-3">
@@ -498,7 +522,10 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
                 {format(fecha, "EEEE d 'de' MMMM", { locale: es })}
               </p>
               <p className="text-xs text-indigo-500">
-                {selected.hora} – {finLabel} · {duracion === 30 ? "30 min" : "1 hora"}
+                {selected.hora} – {finLabel} · {duracionTxt}
+                {sesionesContinuas > 1 && (
+                  <span className="text-fuchsia-600 font-bold"> ({sesionesContinuas} sesiones continuas)</span>
+                )}
               </p>
             </div>
           </div>
