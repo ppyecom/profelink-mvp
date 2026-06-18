@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Sparkles, Target, CheckCircle2, Calendar, Clock, ArrowRight, Plus, BookOpen, Circle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import BotonEliminarPlan from "@/components/planes/BotonEliminarPlan";
 
 export const metadata = { title: "Mis planes de estudio — ProfeLink" };
 export const dynamic = "force-dynamic";
@@ -136,6 +137,11 @@ export default async function MisPlanesPage() {
                         )}
                       </div>
                     </div>
+                    <BotonEliminarPlan
+                      planId={plan.id}
+                      planMeta={plan.meta}
+                      tieneReservas={plan.sesiones.length > 0}
+                    />
                   </div>
 
                   {/* Barra de progreso */}
