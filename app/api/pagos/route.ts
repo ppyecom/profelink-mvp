@@ -63,15 +63,15 @@ export async function POST(req: NextRequest) {
     // Simular delay de pasarela (800ms)
     await new Promise((r) => setTimeout(r, 800));
 
+    // El estado inicial es PENDIENTE_VERIFICACION — el profe debe confirmar
+    // que recibió el dinero en su Yape/Plin antes de que la sesión se confirme.
     if (pagoExistente.length > 0) {
-      // Actualizar pago existente
       await prisma.$executeRaw`
         UPDATE pagos
-        SET estado = 'PAGADO', referencia = ${referencia}, updated_at = NOW()
+        SET estado = 'PENDIENTE_VERIFICACION', referencia = ${referencia}, updated_at = NOW()
         WHERE sesion_id = ${sesionId}::uuid
       `;
     } else {
-      // Insertar nuevo pago
       await prisma.$executeRaw`
         INSERT INTO pagos (sesion_id, estudiante_id, monto, comision, monto_profe, metodo, estado, referencia)
         VALUES (
@@ -81,19 +81,16 @@ export async function POST(req: NextRequest) {
           ${comision}::numeric,
           ${montoProfe}::numeric,
           ${metodo},
-          'PAGADO',
+          'PENDIENTE_VERIFICACION',
           ${referencia}
         )
       `;
     }
 
-    // Confirmar sesión automáticamente al pagar
-    await prisma.sesion.update({
-      where: { id: sesionId },
-      data: { estado: "CONFIRMADA" },
-    });
+    // La sesión queda en PENDIENTE hasta que el profesor verifique
+    // (NO auto-confirmamos al recibir solo el aviso del alumno)
 
-    // Notificar al profesor sobre el pago
+    // Notificar al profesor: "Luis dice que pagó X, verifica"
     try {
       const sesionFull = await prisma.sesion.findUnique({
         where: { id: sesionId },
@@ -105,12 +102,23 @@ export async function POST(req: NextRequest) {
       if (sesionFull) {
         await crearNotificacion({
           usuarioId: sesionFull.profesor.usuarioId,
-          ...Notif.pagoRecibido(montoProfe, sesionFull.estudiante.nombre),
+          tipo: "PAGO_PENDIENTE_VERIF",
+          titulo: "🔔 Verifica un pago",
+          mensaje: `${sesionFull.estudiante.nombre} marcó que pagó S/${monto.toFixed(2)} (${metodo}). Confirma cuando lo recibas en tu ${metodo === "YAPE" ? "Yape" : metodo === "PLIN" ? "Plin" : "cuenta"}.`,
+          url: `/profesor/sesiones`,
         });
       }
     } catch (e) { console.error("[notif]", e); }
 
-    return NextResponse.json({ ok: true, referencia, monto, montoProfe, comision });
+    return NextResponse.json({
+      ok: true,
+      referencia,
+      monto,
+      montoProfe,
+      comision,
+      estado: "PENDIENTE_VERIFICACION",
+      mensaje: "Le avisamos al tutor — confirmará cuando reciba el pago en su Yape/Plin.",
+    });
   } catch (err) {
     console.error("[pagos POST]", err);
     const msg = err instanceof Error ? err.message : "Error al procesar el pago";

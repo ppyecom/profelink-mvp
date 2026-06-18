@@ -10,6 +10,8 @@ import AgregarCalendar from "@/components/sesiones/AgregarCalendar";
 import ChatSesion from "@/components/chat/ChatSesion";
 import ArchivosSesion from "@/components/sesiones/ArchivosSesion";
 import TareasSesion from "@/components/sesiones/TareasSesion";
+import VerificarPagoBanner from "@/components/sesiones/VerificarPagoBanner";
+import { MessageSquare } from "lucide-react";
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -42,6 +44,12 @@ export default async function SesionPage({ params }: PageProps) {
   });
 
   if (!sesion) notFound();
+
+  // Cargar pago para mostrar verificación si está pendiente
+  const pagos = await prisma.$queryRaw<{ id: string; estado: string; monto: number; metodo: string; referencia: string | null }[]>`
+    SELECT id, estado, monto::float, metodo, referencia FROM pagos WHERE sesion_id = ${id}::uuid LIMIT 1
+  `;
+  const pago = pagos[0] ?? null;
 
   const esEstudiante = sesion.estudianteId === session.sub;
   const esProfesor = sesion.profesor.usuarioId === session.sub;
@@ -130,6 +138,33 @@ export default async function SesionPage({ params }: PageProps) {
                   );
                 })}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Banner de verificación de pago (si hay pago pendiente) */}
+      {pago && (
+        <VerificarPagoBanner
+          sesionId={sesion.id}
+          pago={pago}
+          esProfesor={esProfesor || session.rol === "ADMIN"}
+          nombreAlumno={sesion.estudiante.nombre}
+        />
+      )}
+
+      {/* Notas del alumno (mensaje al profesor al reservar) */}
+      {sesion.notas && (
+        <div className="bg-indigo-50 border-2 border-indigo-300 rounded-2xl p-4 shadow-[3px_3px_0_0_#4338ca]">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center flex-shrink-0">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 mb-0.5">
+                💬 {esEstudiante ? "Tu mensaje al tutor" : `Mensaje de ${sesion.estudiante.nombre}`}
+              </p>
+              <p className="text-sm text-indigo-900 italic whitespace-pre-wrap">&ldquo;{sesion.notas}&rdquo;</p>
             </div>
           </div>
         </div>
