@@ -31,8 +31,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Escribe lo que buscas (mín 3 caracteres)" }, { status: 400 });
   }
 
-  // Cache hit → respondemos inmediato sin tocar IA
-  const claveCache = `buscar:${normalizarClave(texto)}`;
+  // Cache hit → respondemos inmediato sin tocar IA. v2 = nuevo prompt amplio.
+  const claveCache = `buscar:v2:${normalizarClave(texto)}`;
   const cacheado = cacheGet<FiltrosExtraidos>(claveCache);
   if (cacheado) {
     return NextResponse.json({ ok: true, filtros: cacheado, cache: true });
@@ -46,7 +46,7 @@ El estudiante escribió esta consulta en lenguaje natural:
 Extrae los siguientes filtros como JSON. Si un campo no se menciona, déjalo en null.
 
 {
-  "materia": string | null,           // PALABRAS CLAVE GENÉRICAS separadas por espacio. Si el alumno menciona varias materias, ponlas TODAS separadas por espacios. Ej: "SQL y Python" → "SQL Python". "Cálculo II diferencial" → "Cálculo". "React y JavaScript" → "React JavaScript". Cada palabra se busca como substring en lo que el profesor registró.
+  "materia": string | null,           // PALABRAS CLAVE GENÉRICAS Y AMPLIAS separadas por coma. Incluye sinónimos y categorías relacionadas para matchear más tutores. Ej: "cálculo II diferencial" → "Cálculo, Matemática, Derivadas, Análisis". "Python OOP" → "Python, Programación, Backend, Programación Orientada a Objetos". "Inglés conversacional" → "Inglés, Idiomas, Conversación". Cada keyword se busca como substring (case-insensitive). Si el alumno menciona varias materias DISTINTAS, ponlas TODAS con sus sinónimos.
   "nivel": "SECUNDARIA" | "TECNICA" | "UNIVERSITARIA" | null,
   "precioMax": number | null,         // en soles. Si dice "barato" estima 30, "máximo X" usa X.
   "modalidad": "VIRTUAL" | "PRESENCIAL" | null,

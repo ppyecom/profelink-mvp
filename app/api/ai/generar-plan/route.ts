@@ -56,7 +56,7 @@ Genera un plan de estudios estructurado con sesiones progresivas. Devuelve SOLO 
   "meta": string,                       // reformula la meta de forma clara
   "numSesiones": number,                // 3 a 8 sesiones según complejidad
   "diasAntesObjetivo": number | null,
-  "materiaPrincipal": string,           // ej: "Cálculo II"
+  "materiaPrincipal": string,           // PALABRAS CLAVE GENÉRICAS Y AMPLIAS separadas por coma para buscar tutores. Incluye 3 a 5 sinónimos / categorías relacionadas. NO uses nombres específicos como "Cálculo Diferencial II" — usa términos amplios. Ej: "Cálculo, Matemática, Derivadas, Análisis" o "Python, Programación, Backend" o "Inglés, Idiomas, Conversación".
   "nivel": "SECUNDARIA" | "TECNICA" | "UNIVERSITARIA",
   "temas": [
     {
