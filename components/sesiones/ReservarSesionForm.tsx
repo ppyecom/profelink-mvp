@@ -452,32 +452,17 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
           )}
 
           <div className="text-[11px] text-violet-700 leading-relaxed border-t border-violet-200 pt-2">
-            {modoPlan === "INTERCALADAS" ? (
-              <>
-                <p className="font-bold mb-1">📌 Tema de esta sesión:</p>
-                <ol className="list-decimal pl-4">
-                  <li>{planContext.temasRestantes[0].titulo}</li>
-                </ol>
-                <p className="mt-1.5 text-violet-600">
-                  Quedan {sesionesRestantesPlan - 1} sesiones más con este tutor (las irás
-                  reservando una por una con el horario que tú elijas).
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="font-bold mb-1">📌 Temas que cubrirás con este tutor:</p>
-                <ol className="list-decimal pl-4 space-y-0.5">
-                  {planContext.temasRestantes.slice(0, cantPlan).map(t => (
-                    <li key={t.orden}>{t.titulo}</li>
-                  ))}
-                </ol>
-                {sesionesRestantesPlan - cantPlan > 0 && (
-                  <p className="mt-1.5 text-violet-600">
-                    Quedan {sesionesRestantesPlan - cantPlan} sesiones del plan para reservar después
-                    (con este u otro tutor).
-                  </p>
-                )}
-              </>
+            <p className="font-bold mb-1">📌 Temas que cubrirás con este tutor:</p>
+            <ol className="list-decimal pl-4 space-y-0.5">
+              {planContext.temasRestantes.slice(0, cantPlan).map(t => (
+                <li key={t.orden}>{t.titulo}</li>
+              ))}
+            </ol>
+            {sesionesRestantesPlan - cantPlan > 0 && (
+              <p className="mt-1.5 text-violet-600">
+                Quedan {sesionesRestantesPlan - cantPlan} sesiones del plan para reservar después
+                (con este u otro tutor).
+              </p>
             )}
           </div>
         </div>
@@ -532,11 +517,20 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
                       const ocupado = slotOcupadoEnGCal(slotInicio, slotFin);
                       const esIntercaladas = planContext && modoPlan === "INTERCALADAS" && cantPlan > 1;
 
+                      // Identidad del slot = solo fecha (YYYY-MM-DD) + slotId + hora.
+                      // Antes incluíamos fechaIso completa pero los ms cambian cada
+                      // render -> permitía añadir el mismo slot 2 veces.
+                      const fechaKey = fecha.toISOString().slice(0, 10);
+                      const matchSlot = (s: SlotPick) =>
+                        s.slotId === slot.id &&
+                        s.hora === hora &&
+                        s.fechaIso.slice(0, 10) === fechaKey;
+
                       // En INTERCALADAS: multi-select; cada slot lleva un número (1, 2, 3...)
                       let numeroAsignado: number | null = null;
                       let isPickedIntercaladas = false;
                       if (esIntercaladas) {
-                        const idx = slotsIntercalados.findIndex(s => s.slotId === slot.id && s.hora === hora && s.fechaIso === fecha.toISOString());
+                        const idx = slotsIntercalados.findIndex(matchSlot);
                         if (idx >= 0) {
                           isPickedIntercaladas = true;
                           numeroAsignado = idx + 1;
@@ -547,8 +541,7 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
                       const onClickSlot = () => {
                         if (ocupado) return;
                         if (esIntercaladas) {
-                          // Toggle dentro del array
-                          const exists = slotsIntercalados.findIndex(s => s.slotId === slot.id && s.hora === hora && s.fechaIso === fecha.toISOString());
+                          const exists = slotsIntercalados.findIndex(matchSlot);
                           if (exists >= 0) {
                             setSlotsIntercalados(slotsIntercalados.filter((_, i) => i !== exists));
                           } else if (slotsIntercalados.length < cantPlan) {
