@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Sparkles, Send, X, Loader2, Lightbulb, Copy, Check } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Mensaje {
   rol: "tutor" | "ia";
@@ -137,7 +139,38 @@ export default function AsistenteProfeFlotante({ sesionId, esProfesor }: Props) 
                     : "bg-white border-2 border-violet-200 text-ink-900 rounded-bl-sm"
                 }`}
               >
-                <p className="whitespace-pre-wrap leading-relaxed">{m.texto}</p>
+                {m.rol === "tutor" ? (
+                  <p className="whitespace-pre-wrap leading-relaxed">{m.texto}</p>
+                ) : (
+                  <div className="markdown-ia text-[13px] leading-relaxed">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h1: ({ children }) => <h1 className="font-bold text-base mt-2 mb-1 text-violet-900">{children}</h1>,
+                        h2: ({ children }) => <h2 className="font-bold text-sm mt-2 mb-1 text-violet-900">{children}</h2>,
+                        h3: ({ children }) => <h3 className="font-bold text-sm mt-2 mb-1 text-violet-900">{children}</h3>,
+                        h4: ({ children }) => <h4 className="font-semibold text-[13px] mt-1.5 mb-0.5 text-violet-800">{children}</h4>,
+                        p:  ({ children }) => <p className="my-1">{children}</p>,
+                        strong: ({ children }) => <strong className="font-semibold text-violet-900">{children}</strong>,
+                        em: ({ children }) => <em className="italic">{children}</em>,
+                        ul: ({ children }) => <ul className="list-disc pl-4 my-1 space-y-0.5">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-4 my-1 space-y-0.5">{children}</ol>,
+                        li: ({ children }) => <li className="my-0.5">{children}</li>,
+                        code: ({ children, className }) => {
+                          const inline = !className;
+                          return inline
+                            ? <code className="bg-violet-100 text-violet-900 px-1 py-0.5 rounded text-[12px] font-mono">{children}</code>
+                            : <code className="block bg-ink-900 text-amber-200 p-2 rounded-md my-1 text-[12px] font-mono overflow-x-auto">{children}</code>;
+                        },
+                        pre: ({ children }) => <pre className="my-1 overflow-x-auto">{children}</pre>,
+                        a:  ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-violet-700 underline">{children}</a>,
+                        blockquote: ({ children }) => <blockquote className="border-l-2 border-violet-300 pl-2 italic text-ink-700 my-1">{children}</blockquote>,
+                      }}
+                    >
+                      {m.texto}
+                    </ReactMarkdown>
+                  </div>
+                )}
                 {m.rol === "ia" && (
                   <button
                     onClick={() => copiar(m.texto, i)}
