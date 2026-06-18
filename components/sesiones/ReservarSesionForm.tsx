@@ -92,10 +92,10 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
   const [duracion, setDuracion] = useState<30 | 60>(60);
   const [repetir, setRepetir]   = useState<number>(1); // semanas a repetir (modo libre)
 
-  // Modo plan: cuántas sesiones del plan reservar con ESTE tutor, y si seguidas o por semana
+  // Modo plan: cuántas sesiones del plan reservar con ESTE tutor, y cómo agendarlas
   const sesionesRestantesPlan = planContext?.temasRestantes.length ?? 0;
   const [cantPlan, setCantPlan] = useState<number>(1);
-  const [modoPlan, setModoPlan] = useState<"SEGUIDAS" | "SEMANAL">("SEMANAL");
+  const [modoPlan, setModoPlan] = useState<"SEGUIDAS" | "SEMANAL" | "INTERCALADAS">("SEMANAL");
   const [notas, setNotas]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
@@ -187,8 +187,13 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
     let creadas = 0;
     const errores: string[] = [];
 
-    // Cantidad real a crear: modo plan = cantPlan, modo libre = repetir
-    const totalAReservar = planContext ? cantPlan : repetir;
+    // Cantidad real a crear:
+    // - modo plan INTERCALADAS = solo 1 (el alumno elige cada horario individualmente)
+    // - modo plan SEGUIDAS/SEMANAL = cantPlan
+    // - modo libre (sin plan) = repetir
+    const totalAReservar = planContext
+      ? (modoPlan === "INTERCALADAS" ? 1 : cantPlan)
+      : repetir;
 
     for (let i = 0; i < totalAReservar; i++) {
       // Cálculo de fecha según modo:
@@ -241,11 +246,15 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
       if (errores.length) setError(`Se reservaron ${creadas} de ${totalAReservar} sesiones. ${errores.join(" · ")}`);
       setSuccess(true);
       // Plan: si aún quedan sesiones por reservar, vuelve al buscador con el planId.
+      // En modo INTERCALADAS volvemos al MISMO tutor para que elija otro horario.
       const reservadasPlan = planContext ? creadas : 0;
       const quedanPlan = planContext ? sesionesRestantesPlan - reservadasPlan : 0;
-      const destino = planContext && quedanPlan > 0
-        ? `/profesores?planId=${planContext.planId}`
-        : "/estudiante/sesiones";
+      let destino = "/estudiante/sesiones";
+      if (planContext && quedanPlan > 0) {
+        destino = modoPlan === "INTERCALADAS"
+          ? `/profesores/${profesorId}?planId=${planContext.planId}`
+          : `/profesores?planId=${planContext.planId}`;
+      }
       setTimeout(() => router.push(destino), 2500);
     }
     setLoading(false);
@@ -381,7 +390,7 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
               <p className="text-xs font-bold text-violet-800 uppercase tracking-wider mb-2">
                 ¿Cómo las agendamos?
               </p>
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
                 <button type="button" onClick={() => setModoPlan("SEGUIDAS")}
                   className={cn(
                     "py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-left",
@@ -389,7 +398,7 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
                       ? "bg-fuchsia-600 border-fuchsia-600 text-white"
                       : "bg-white border-fuchsia-200 text-fuchsia-700 hover:border-fuchsia-400"
                   )}>
-                  <p className="font-bold">⚡ Seguidas el mismo día</p>
+                  <p className="font-bold">⚡ Seguidas mismo día</p>
                   <p className="text-[10px] opacity-80 mt-0.5 font-normal">
                     {cantPlan}h continuas desde la hora elegida
                   </p>
@@ -406,22 +415,55 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
                     Mismo día y hora, semanas seguidas
                   </p>
                 </button>
+                <button type="button" onClick={() => setModoPlan("INTERCALADAS")}
+                  className={cn(
+                    "py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all text-left",
+                    modoPlan === "INTERCALADAS"
+                      ? "bg-fuchsia-600 border-fuchsia-600 text-white"
+                      : "bg-white border-fuchsia-200 text-fuchsia-700 hover:border-fuchsia-400"
+                  )}>
+                  <p className="font-bold">🎯 Yo elijo cada horario</p>
+                  <p className="text-[10px] opacity-80 mt-0.5 font-normal">
+                    Días/horas distintos, mismo tutor
+                  </p>
+                </button>
               </div>
+              {modoPlan === "INTERCALADAS" && (
+                <p className="text-[11px] text-fuchsia-700 mt-2 italic leading-snug">
+                  ℹ️ Reservas 1 sesión ahora. Al confirmar te traemos de vuelta a
+                  este mismo tutor para elegir el horario de la siguiente.
+                </p>
+              )}
             </div>
           )}
 
           <div className="text-[11px] text-violet-700 leading-relaxed border-t border-violet-200 pt-2">
-            <p className="font-bold mb-1">📌 Temas que cubrirás con este tutor:</p>
-            <ol className="list-decimal pl-4 space-y-0.5">
-              {planContext.temasRestantes.slice(0, cantPlan).map(t => (
-                <li key={t.orden}>{t.titulo}</li>
-              ))}
-            </ol>
-            {sesionesRestantesPlan - cantPlan > 0 && (
-              <p className="mt-1.5 text-violet-600">
-                Quedan {sesionesRestantesPlan - cantPlan} sesiones del plan para reservar después
-                (con este u otro tutor).
-              </p>
+            {modoPlan === "INTERCALADAS" ? (
+              <>
+                <p className="font-bold mb-1">📌 Tema de esta sesión:</p>
+                <ol className="list-decimal pl-4">
+                  <li>{planContext.temasRestantes[0].titulo}</li>
+                </ol>
+                <p className="mt-1.5 text-violet-600">
+                  Quedan {sesionesRestantesPlan - 1} sesiones más con este tutor (las irás
+                  reservando una por una con el horario que tú elijas).
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-bold mb-1">📌 Temas que cubrirás con este tutor:</p>
+                <ol className="list-decimal pl-4 space-y-0.5">
+                  {planContext.temasRestantes.slice(0, cantPlan).map(t => (
+                    <li key={t.orden}>{t.titulo}</li>
+                  ))}
+                </ol>
+                {sesionesRestantesPlan - cantPlan > 0 && (
+                  <p className="mt-1.5 text-violet-600">
+                    Quedan {sesionesRestantesPlan - cantPlan} sesiones del plan para reservar después
+                    (con este u otro tutor).
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -439,6 +481,8 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
           const ahora = new Date();
           const esHoy = isSameDay(fecha, ahora);
           const fechaLabel = format(fecha, "d MMM", { locale: es });
+          // Solo en modo SEGUIDAS el tutor necesita N horas continuas. En INTERCALADAS
+          // y SEMANAL cada sesión es independiente, así que slot normal de duracion.
           const duracionContinua = (planContext && modoPlan === "SEGUIDAS" && cantPlan > 1)
             ? duracion * cantPlan
             : duracion;
@@ -585,7 +629,10 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
 
       {/* Resumen del precio */}
       {(() => {
-        const totalSesiones = planContext ? cantPlan : repetir;
+        // En INTERCALADAS solo pagas 1 ahora; las otras al reservar siguientes.
+        const totalSesiones = planContext
+          ? (modoPlan === "INTERCALADAS" ? 1 : cantPlan)
+          : repetir;
         const totalBase = precioBase * totalSesiones;
         const totalFinal = Math.max(0, totalBase - descuento);
         return (
