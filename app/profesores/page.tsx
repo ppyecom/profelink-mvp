@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import BuscadorFiltros from "@/components/profesores/BuscadorFiltros";
+import BusquedaConversacional from "@/components/profesores/BusquedaConversacional";
 import ProfesorCard from "@/components/profesores/ProfesorCard";
 import Link from "next/link";
 import type { NivelAcademico, ModalidadSesion } from "@/types";
@@ -166,6 +167,13 @@ export default async function ProfesoresPage({ searchParams }: PageProps) {
       </div>
 
       <div className="max-w-6xl mx-auto px-5 py-10">
+        {/* Búsqueda conversacional con IA */}
+        <div className="mb-5">
+          <Suspense>
+            <BusquedaConversacional />
+          </Suspense>
+        </div>
+
         <Suspense>
           <BuscadorFiltros />
         </Suspense>
