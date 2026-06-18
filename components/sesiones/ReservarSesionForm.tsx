@@ -207,19 +207,35 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
     } else {
       if (errores.length) setError(`Se reservaron ${creadas} de ${repetir} sesiones. ${errores.join(" · ")}`);
       setSuccess(true);
-      setTimeout(() => router.push("/estudiante/sesiones"), 2200);
+      // Si viene de un plan y quedan sesiones por reservar, vuelve a la búsqueda
+      // de tutor con el planId. Si no, a sus sesiones.
+      const destino = planContext && planContext.ordenEnPlan < planContext.totalSesiones
+        ? `/profesores?planId=${planContext.planId}`
+        : "/estudiante/sesiones";
+      setTimeout(() => router.push(destino), 2200);
     }
     setLoading(false);
   };
 
   if (success) {
+    const quedan = planContext ? planContext.totalSesiones - planContext.ordenEnPlan : 0;
     return (
       <div className="text-center py-4">
         <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
           <CheckCircle className="w-8 h-8 text-emerald-600" />
         </div>
         <p className="font-heading font-bold text-brand-text">¡Sesión reservada!</p>
-        <p className="text-sm text-gray-400 mt-1">Redirigiendo a tus sesiones...</p>
+        {planContext && quedan > 0 ? (
+          <p className="text-sm text-violet-600 mt-1">
+            Te llevamos a buscar tutor para la sesión {planContext.ordenEnPlan + 1} de {planContext.totalSesiones}...
+          </p>
+        ) : planContext ? (
+          <p className="text-sm text-emerald-600 mt-1 font-semibold">
+            🎉 Completaste tu plan! Redirigiendo a tus sesiones...
+          </p>
+        ) : (
+          <p className="text-sm text-gray-400 mt-1">Redirigiendo a tus sesiones...</p>
+        )}
       </div>
     );
   }
@@ -276,28 +292,42 @@ export default function ReservarSesionForm({ profesorId, disponibilidad, modalid
         </div>
       </div>
 
-      {/* Recurrencia */}
-      <div>
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Repetir esta sesión</p>
-        <div className="grid grid-cols-4 gap-1.5">
-          {[1, 4, 8, 12].map(n => (
-            <button key={n} type="button" onClick={() => setRepetir(n)}
-              className={cn(
-                "py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all",
-                repetir === n
-                  ? "bg-violet-600 border-violet-600 text-white"
-                  : "bg-white border-violet-100 text-violet-700 hover:border-violet-300"
-              )}>
-              {n === 1 ? "Solo una" : `${n} semanas`}
-            </button>
-          ))}
+      {/* Recurrencia — solo cuando NO hay plan IA (el plan ya define las sesiones) */}
+      {!planContext && (
+        <div>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Repetir esta sesión</p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {[1, 4, 8, 12].map(n => (
+              <button key={n} type="button" onClick={() => setRepetir(n)}
+                className={cn(
+                  "py-2 px-2 rounded-xl text-xs font-semibold border-2 transition-all",
+                  repetir === n
+                    ? "bg-violet-600 border-violet-600 text-white"
+                    : "bg-white border-violet-100 text-violet-700 hover:border-violet-300"
+                )}>
+                {n === 1 ? "Solo una" : `${n} semanas`}
+              </button>
+            ))}
+          </div>
+          {repetir > 1 && (
+            <p className="text-xs text-violet-600 mt-1.5">
+              Se reservarán {repetir} sesiones (una por semana, mismo día y hora)
+            </p>
+          )}
         </div>
-        {repetir > 1 && (
-          <p className="text-xs text-violet-600 mt-1.5">
-            Se reservarán {repetir} sesiones (una por semana, mismo día y hora)
+      )}
+
+      {/* Aclaración cuando viene de un plan IA */}
+      {planContext && (
+        <div className="bg-violet-50 border-2 border-violet-200 rounded-xl p-3 text-xs text-violet-800 leading-relaxed">
+          <p className="font-bold mb-1">📌 ¿Y las otras {planContext.totalSesiones - 1} sesiones del plan?</p>
+          <p>
+            Ahora reservas <strong>solo la sesión {planContext.ordenEnPlan}</strong>. Una vez confirmada,
+            podrás elegir el <strong>mismo tutor u otro distinto</strong> para cada sesión siguiente.
+            Esto te da flexibilidad de probar diferentes profes según el tema.
           </p>
-        )}
-      </div>
+        </div>
+      )}
 
       <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Selecciona tu horario</p>
 
