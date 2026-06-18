@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { meta, fechaObjetivo, temas, numSesionesRecomendadas, profesorId } = body;
+  const { meta, materiaPrincipal, fechaObjetivo, temas, numSesionesRecomendadas, profesorId } = body;
 
   if (!meta || !Array.isArray(temas) || temas.length === 0) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
       estudianteId: session.sub,
       profesorId: profesorId ?? null,
       meta: String(meta).slice(0, 300),
+      materiaPrincipal: materiaPrincipal ? String(materiaPrincipal).slice(0, 80) : null,
       fechaObjetivo: fechaObjetivo ? new Date(fechaObjetivo) : null,
       temas,
       numSesionesRecomendadas: numSesionesRecomendadas ?? temas.length,
