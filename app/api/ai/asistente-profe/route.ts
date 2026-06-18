@@ -75,19 +75,19 @@ ${chatContexto}
 PREGUNTA DEL TUTOR:
 "${pregunta}"
 
-Respóndele al TUTOR (no al alumno) en español, en máximo 200 palabras.
-Sé concreto, pedagógico y peruano. Si pide:
-- Una analogía → da una creativa con elementos cotidianos
-- Un ejemplo → da un caso específico, no abstracto
-- Ejercicios → da 2 o 3 con su solución resumida
-- Una pregunta para validar comprensión → 1 o 2 preguntas concretas
-- Un resumen del chat → resume en bullets cortos
-- Explicación → simplifica usando lenguaje del nivel del alumno
+Respóndele al TUTOR (no al alumno) directamente, sin saludos ni introducciones. Máximo 150 palabras.
+Sé conciso, pedagógico y peruano. Según lo que pide:
+- Analogía → 2-3 oraciones con elementos cotidianos
+- Ejemplo → un caso específico, no abstracto
+- Ejercicios → 2 o 3 con su solución en 1 línea
+- Pregunta para validar comprensión → 1 o 2 preguntas concretas
+- Resumen del chat → bullets cortos
+- Explicación → simplifica al nivel del alumno
 
-Usa formato markdown: títulos cortos, listas con guiones, **negritas** para conceptos clave. NO uses emoji excesivo.`;
+Markdown: títulos cortos con ###, listas con -, **negritas** para conceptos clave. SIN emoji. NO empieces con "¡Hola!" ni saludos.`;
 
   try {
-    const r = await generarConFallback({ prompt, temperature: 0.7, maxTokens: 1024 });
+    const r = await generarConFallback({ prompt, temperature: 0.6, maxTokens: 2048 });
     if (!r) {
       return NextResponse.json({
         error: "La IA está saturada — reintenta en 1 minuto.",
